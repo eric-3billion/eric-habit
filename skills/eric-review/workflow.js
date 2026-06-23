@@ -8,32 +8,21 @@ export const meta = {
   ]
 }
 
-// 메인 루프가 args로 전달: { pr, habitsDir, diff, files: [{ path, content }] }
+// 메인 루프가 args로 전달: { pr, habitsDir, baseDir, diffPath, files: [relative paths] }
 //
-// [왜 파일 내용을 인라인으로 받나]
-// finder/verifier를 로컬 repo cwd 에서 굴리면 에이전트가 본능적으로 git diff/status 를 쳐서
-// 이 PR 과 무관한 "커밋되지 않은 working tree 변경"을 리뷰해버린다(실제로 두 번 오염됨).
-// 그래서 PR head 스냅샷을 디스크 경로가 아니라 본문 자체로 args 에 실어, 에이전트가
-// 파일/ git 을 만질 이유 자체를 없앤다. agentType:'Explore'(검색·git 성향)도 쓰지 않는다.
+// [오염 방지 설계 — 왜 로컬 repo가 아니라 /tmp 스냅샷 경로인가]
+// finder를 로컬 repo cwd 에서 Explore 로 굴리면 본능적으로 git diff/status 를 쳐서
+// 이 PR 과 무관한 "커밋되지 않은 working tree 변경"을 리뷰해버린다(실제로 오염됨). 그래서:
+//   (1) PR head 를 /tmp 스냅샷(baseDir)으로 받아두고, 에이전트는 그 절대경로만 Read.
+//   (2) diff 도 git 이 아니라 diffPath 파일에서 Read.
+//   (3) agentType:'Explore'(검색·git 성향)를 쓰지 않고, git/Bash/live-repo 접근을 금지.
+// 본문을 args 에 인라인하지 않는다 — 큰 파일(예: 수천 줄 types.ts)이 끼면 args 가 비대해져
+// 메인 루프가 워크플로 호출로 재emit 하는 게 비현실적이라, 경로만 넘기고 내용은 Read 로 조달한다.
 const HABITS = (args && args.habitsDir) || '~/code-style/habits'
-const DIFF_TEXT = (args && args.diff) || ''
+const BASE = (args && args.baseDir) || ''
+const DIFF = (args && args.diffPath) || ''
 const FILES = (args && args.files) || []
-
-// 1-based 줄번호를 붙여 임베드 → 에이전트가 추측 없이 정확한 라인을 인용한다.
-function numberLines(content) {
-  return String(content || '')
-    .split('\n')
-    .map((line, i) => `${i + 1}\t${line}`)
-    .join('\n')
-}
-
-const FILE_CONTENT = Object.fromEntries(FILES.map(f => [f.path, f.content]))
-
-const ALL_FILES_BLOCK = FILES.map(f =>
-  `===== FILE: ${f.path} =====\n${numberLines(f.content)}`
-).join('\n\n')
-
-const FILE_LIST = FILES.map(f => `- ${f.path}`).join('\n')
+const FILE_LIST = FILES.map(f => `- ${BASE}/${f}`).join('\n')
 
 // 룰 텍스트는 여기에 박지 않는다 — habits/*.md(SSOT)를 finder가 런타임에 읽는다.
 const LENSES = [
@@ -93,47 +82,40 @@ const results = await pipeline(
     return agent(
 `PR #${args && args.pr} 리뷰. ${habitList}
 
-[리뷰 대상 — 본문은 아래에 전부 인라인으로 주어진다]
-이 PR 의 변경 파일은 다음이 전부이며, head 스냅샷 본문(1-based 줄번호 포함)을 그대로 첨부한다.
-파일 목록:
+[리뷰 대상 — 오직 아래 /tmp 스냅샷만]
+이 PR 의 변경 파일은 다음이 전부이며, head 스냅샷이 아래 절대경로에 저장돼 있다. 반드시 이 경로들만 Read 로 열어 검토하라:
 ${FILE_LIST}
 
+변경 diff 전문은 이 파일에 있다(Read 로 열어 무엇이 어떻게 바뀌었는지 파악): ${DIFF}
+
 [절대 금지 — 매우 중요]
-- 로컬 작업 디렉터리(repo)를 열거나 Read 하지 마라. git status / git diff / git / Bash 로 변경을 찾지 마라.
-  그곳엔 이 PR 과 무관한 커밋되지 않은 변경이 섞여 있어 리뷰가 오염된다.
-- 리뷰 근거는 오직 아래 인라인 본문과 diff 다. (habit 룰 파일 ${HABITS}/ 만 참조용 Read 허용.)
-- 라인 번호는 첨부 본문의 줄번호를 그대로 인용(추측 금지).
+- git status / git diff / git log / Bash 를 실행하지 마라. 변경 내역은 위 ${DIFF} 파일에 이미 다 있다.
+- 로컬 작업 디렉터리(예: /Users/.../gebra.v2/src/...)를 Read·탐색하지 마라. 거긴 이 PR 과 무관한
+  커밋되지 않은 변경이 섞여 있어 리뷰가 오염된다. 너의 근거는 위 ${BASE}/ 스냅샷 + ${DIFF} 뿐이다.
+- habit 룰 파일 ${HABITS}/ 만 참조용 Read 허용.
+- 보고하는 file 경로는 ${BASE}/ 를 뗀 repo-relative (예: src/pages/.../foo.tsx).
 
 집중: ${lens.focus}
 
-규칙: 발견마다 정확한 file+line + 무엇이 왜 문제인지(코드 인용 + 어느 habit 룰 위반) + 구체적 처방. 해당 렌즈에 진짜 해당하는 것만, 과잉보고 금지. file 은 위 목록의 repo-relative 경로 그대로 보고.
-
-========== 변경 DIFF ==========
-${DIFF_TEXT}
-
-========== PR 파일 본문(줄번호 포함) ==========
-${ALL_FILES_BLOCK}`,
+규칙: 스냅샷 파일을 실제로 Read 해 라인 번호를 확인(추측 금지). 발견마다 정확한 file+line + 무엇이 왜 문제인지(코드 인용 + 어느 habit 룰 위반) + 구체적 처방. 해당 렌즈에 진짜 해당하는 것만, 과잉보고 금지.`,
       { label: `find:${lens.key}`, phase: 'Review', schema: FINDINGS_SCHEMA }
     ).then(r => ({ lens: lens.key, findings: (r && r.findings) ? r.findings : [] }))
   },
   found => parallel(found.findings.map((f, i) => () =>
     agent(
-`적대적 검증자. 아래 발견을 confirm 또는 REFUTE하라. 본문으로 확인 못 하면 기본값 "rejected".
+`적대적 검증자. 아래 발견을 스냅샷 파일을 직접 Read 해 confirm 또는 REFUTE하라. 코드로 확인 못 하면 기본값 "rejected".
 
 ${ENGINEERING_NOTE}
 
-[근거는 아래 인라인 본문만. 로컬 repo / git / Bash 금지. habit 룰 파일 ${HABITS}/ 만 참조용 Read 허용.]
+[근거는 ${BASE}/ 스냅샷 파일 + ${DIFF} 뿐. git/Bash/로컬 repo 접근 금지. habit 룰 파일 ${HABITS}/ 만 참조용 Read 허용.]
 
+대상 파일(이 절대경로를 Read 하라): ${BASE}/${f.file}  — 주장 라인 ${f.line} 주변 확인. (이 경로에 파일이 없으면 PR 대상이 아니므로 rejected.)
 발견[${found.lens}]: ${f.title}
-- 파일: ${f.file} (주장 라인 ${f.line})
 - severity(주장): ${f.severity}
 - detail: ${f.detail}
 - suggestion: ${f.suggestion}
 
-스타일 발견이면 habit 룰 기준으로 진짜 지적할 가치가 있는지(주관적 노이즈 아닌지) 판단. 필요하면 ${HABITS}/ 의 해당 룰 파일을 읽어 대조. 정확성 발견이면 실패 시나리오를 구성해보고 불가능하면 기각. 첨부 본문의 줄번호로 라인 정확성을 확인해 틀렸으면 교정, 심각도 과/소 평가면 조정. 본 코드를 인용하고 판정하라.
-
-========== 대상 파일 본문(${f.file}, 줄번호 포함) ==========
-${numberLines(FILE_CONTENT[f.file]) || '(본문 없음 — 이 파일은 PR 대상이 아니다. rejected 처리하라.)'}`,
+스타일 발견이면 habit 룰 기준으로 진짜 지적할 가치가 있는지(주관적 노이즈 아닌지) 판단. 필요하면 ${HABITS}/ 의 해당 룰 파일을 읽어 대조. 정확성 발견이면 실패 시나리오를 구성해보고 불가능하면 기각. 스냅샷의 줄번호로 라인 정확성을 확인해 틀렸으면 교정, 심각도 과/소 평가면 조정. 본 코드를 인용하고 판정하라.`,
       { label: `verify:${found.lens}#${i}`, phase: 'Verify', schema: VERDICT_SCHEMA }
     ).then(v => ({ finding: { ...f, lens: found.lens }, verdict: v })).catch(() => null)
   ))
