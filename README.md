@@ -15,8 +15,7 @@ habits/                       # SSOT — 관심사별 1파일 (단일 관심사)
   06-testing.md               # within 스코프 · mock 충실 · 커버리지 · fixture
   canonical-examples.md       # 실제 코드 예시(도메인 중립): 의도 드러내는 폴백·순수함수 도메인 룰·branded key
 skills/eric-review/           # PR 리뷰 스킬 — habits를 참조, 절차만 보유
-  SKILL.md
-  workflow.js                 # habits/*.md를 런타임에 읽음 (룰을 박지 않음 = 중복 제거)
+  SKILL.md                    # 메인 루프가 직접 멀티렌즈 리뷰 (워크플로/서브에이전트 없음)
 install.sh                    # ~/.claude 로 심링크
 ```
 
