@@ -8,18 +8,51 @@
 - 훅/함수는 **행동(responsibility)**으로 분리: 각 훅은 한 가지 일만.
 - **로직은 사용부로 내리기**: 상위가 모든 로직을 들지 않고, 관심사별 컴포넌트가 자기 로직을 소유.
 
+**① 컴포넌트는 관심사(concern, 주제)로 — 굵게 나눈다**
+
 ```tsx
-// ❌ 여러 관심사 혼재
+// ❌ 한 컴포넌트에 여러 관심사(주제) 혼재
 function ProductPage() {
   const product = useProduct();
   const [quantity, setQuantity] = useState(1);
   const reviews = useReviews();
+  // '상품정보' + '장바구니' + '리뷰' 가 한 곳에 — 바뀔 이유가 셋
 }
-// ✅ 관심사별 분리
+// ✅ 관심사별 컴포넌트로 — 각자 자기 로직을 소유
 function ProductPage() {
   return (<><ProductInfoSection /><CartSection /><ReviewSection /></>);
 }
 ```
+
+**② 훅/함수는 책임(responsibility, 하는 일)으로 — 가늘게 나눈다**
+
+```tsx
+// ❌ 한 훅에 여러 책임 (변경 이유가 여럿)
+function useCart() {
+  const [items, setItems] = useState([]);     // 장바구니 상태
+  const { data: coupons } = useCoupons();      // 쿠폰 조달
+  const total = items.reduce(/* ... */);       // 합계 계산
+  const checkout = () => api.checkout(items);  // 결제 요청
+  // 상태 / fetch / 계산 / 결제 — 하나만 바뀌어도 이 훅을 건드린다
+}
+// ✅ 책임별로 — 각 훅·함수는 한 가지 일만
+function useCartItems() {/* 장바구니 상태만 */}
+const calcTotal = (items: CartItem[]) => /* 합계 계산(순수함수) */;
+function useCheckout() {/* 결제 요청만 */}
+```
+
+**③ 둘이 만나는 지점 — 관심사 컴포넌트가 자기 책임 훅들을 조립**
+
+```tsx
+function CartSection() {                            // 관심사: 장바구니
+  const { items, add, remove } = useCartItems();    // 책임: 상태
+  const total = calcTotal(items);                   // 책임: 합계
+  // ...
+}
+```
+
+> **관심사(concern) = 어느 주제냐(컴포넌트를 굵게), 책임(responsibility) = 그 안에서 무슨 일을 하느냐(훅·함수를 가늘게).** 둘은 대립이 아니라 **분리의 스케일 차이**다. 잘 쪼개면 *작은 관심사 하나 = 책임 하나*로 수렴해 둘이 같아 보이는데(예: `useRowSelection` = '행 선택' 관심사 = '선택 상태·수명 관리' 책임), 그게 정상이다.
+> 판단이 헷갈리면 메서드 수가 아니라 **"이게 바뀔 이유가 몇 개냐"**를 묻는다.
 
 ## 2. 분기는 상위로 끌어올리기 (시점이동)
 
