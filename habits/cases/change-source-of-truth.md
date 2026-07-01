@@ -7,15 +7,15 @@
 
 ## 상황 (Context)
 
-서버사이드 NGS 샘플 테이블:
+서버사이드 목록 테이블(예: 주문 목록):
 - 필터 / 정렬 / 페이지네이션을 **서버사이드**로 처리 (TanStack Table manual 모드)
 - 행 **선택**(체크박스) → 일괄 처리(batch update)
-- 헤더의 **myPage 토글**, URL의 **project** 등으로도 보는 집합이 바뀜
+- 헤더의 **"내 것만 보기" 토글**, URL의 **project** 등으로도 보는 집합이 바뀜
 
-요구사항: **"보는 결과 뷰가 바뀌면(필터/정렬/페이지/myPage 변경) 행 선택을 비운다."**
+요구사항: **"보는 결과 뷰가 바뀌면(필터/정렬/페이지/내것만 변경) 행 선택을 비운다."**
 
 이 화면에서 "현재 보는 뷰"를 정의하는 값들의 합 = `params`
-(`filter + sort + page + pageSize + myPage + project`). 이게 **데이터·선택·카운트 모든 것의 기반(변경의 소스)**이다.
+(`filter + sort + page + pageSize + onlyMine + project`). 이게 **데이터·선택·카운트 모든 것의 기반(변경의 소스)**이다.
 
 ---
 
@@ -24,9 +24,9 @@
 변경의 소스인 `params`가 **데이터 훅 안에 갇혀** 있었다. 그래서 "뷰가 바뀌면 선택을 비운다"를 풀 기준점이 위(orchestrator)에 없었고, 그 빈자리를 **콜백을 위로 주입**해서 메웠다.
 
 ```tsx
-// ❌ Before — params 가 useNgsOverviewTableData 내부에 갇힘
-function NgsSamplesTable() {
-  const selection = useSampleSelection();
+// ❌ Before — params 가 useOverviewTableData 내부에 갇힘
+function RecordsTable() {
+  const selection = useRowSelection();
 
   const { state, handlers } = useServerTableState({
     tableId, columns, initialSorting,
@@ -34,15 +34,15 @@ function NgsSamplesTable() {
   });
 
   // params 를 여기 내부에서 만든다 → 소스가 아래에 갇혀 위에서 못 씀
-  const { tableData } = useNgsOverviewTableData({
+  const { tableData } = useOverviewTableData({
     columnFilters: state.columnFilters, sorting: state.sorting, pagination: state.pagination,
   });
 
   return (
     <>
       {/* reset 이 여기저기 prop 으로 흩뿌려짐 */}
-      <NgsStatusHeader onMyPageToggle={() => { resetPagination(); selection.reset(); }} />
-      <BatchUpdate selectedSamples={selectedSamples} onUpdateEnd={selection.reset} />
+      <TableStatusHeader onOnlyMineToggle={() => { resetPagination(); selection.reset(); }} />
+      <BatchUpdate selectedRows={selectedRows} onUpdateEnd={selection.reset} />
     </>
   );
 }
@@ -77,23 +77,23 @@ function NgsSamplesTable() {
 
 ```tsx
 // ✅ After — 소스를 위에서 선언, 나머지는 파생 (state → params → 데이터·선택)
-function NgsSamplesTable() {
+function RecordsTable() {
   const { state, handlers, resetPagination } = useServerTableState({   // selection 무지 = 범용
     tableId, columns, initialSorting,
   });
 
   // 현재 뷰의 기반 정보(SSOT)를 한 번 선언
-  const params = useNgsOverviewServerParams({
+  const params = useOverviewServerParams({
     columnFilters: state.columnFilters, sorting: state.sorting, pagination: state.pagination,
   });
 
-  const selection = useSampleSelection(params);          // params 파생 — 뷰 바뀌면 스스로 비움
-  const { tableData } = useNgsOverviewTableData(params); // params 파생
+  const selection = useRowSelection(params);           // params 파생 — 뷰 바뀌면 스스로 비움
+  const { tableData } = useOverviewTableData(params);  // params 파생
 
   return (
     <>
-      <NgsStatusHeader onMyPageToggle={resetPagination} />            {/* selection 은 자동 */}
-      <BatchUpdate selectedSamples={selectedSamples} onUpdateEnd={selection.reset} /> {/* reset 은 batch 명시 클리어만 */}
+      <TableStatusHeader onOnlyMineToggle={resetPagination} />          {/* selection 은 자동 */}
+      <BatchUpdate selectedRows={selectedRows} onUpdateEnd={selection.reset} /> {/* reset 은 batch 명시 클리어만 */}
     </>
   );
 }
@@ -102,7 +102,7 @@ function NgsSamplesTable() {
 선택 비움은 콜백 주입이 아니라, selection 훅이 **소스(viewToken)의 변경을 스스로 감지**한다:
 
 ```tsx
-export function useSampleSelection(viewToken: NgsOverviewServerParams) {
+export function useRowSelection(viewToken: OverviewServerParams) {
   const [rowSelection, setRowSelection] = useState(EMPTY_SELECTION);
 
   // 뷰(viewToken)가 바뀌면 렌더 중 보정으로 비운다.
@@ -112,7 +112,7 @@ export function useSampleSelection(viewToken: NgsOverviewServerParams) {
     setPrevViewToken(viewToken);
     if (Object.keys(rowSelection).length > 0) setRowSelection(EMPTY_SELECTION);
   }
-  // ...selectedSamplesOf(rows), reset...
+  // ...selectedRowsOf(rows), reset...
 }
 ```
 
@@ -120,7 +120,7 @@ export function useSampleSelection(viewToken: NgsOverviewServerParams) {
 - 흐름이 **`state → params → (selection · data)`** 단방향 — "필터/소트가 모든 것의 기반"이 코드에 드러남
 - `useServerTableState`는 selection을 1도 모름 → **범용**
 - `onViewChange` 콜백 주입, prop 흩뿌림 **전부 사라짐**
-- myPage·project도 `params`에 포함되므로 토글 시 자동으로 selection 비워짐(별도 처리 불필요)
+- onlyMine·project도 `params`에 포함되므로 토글 시 자동으로 selection 비워짐(별도 처리 불필요)
 
 ---
 
