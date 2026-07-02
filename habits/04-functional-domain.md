@@ -4,11 +4,48 @@
 
 ## 함수형 원칙
 
-- **불변 기본**: 상태 변경은 가변변수 대신 **섀도잉 / 새 인스턴스 반환**. 부수효과 격리.
+각 항목은 스캔용 체크리스트다. 헷갈릴 만한 것만 ❌/✅를 붙인다.
+
+- **불변 기본**: 상태 변경은 가변변수 재할당 대신 **섀도잉 / 새 인스턴스 반환**. 부수효과는 격리.
 - **명시적 루프 금지** → `map`/`filter`/`reduce` 체이닝으로 선언적 표현.
-- **예외 throw 금지** → `Result`/`Option` + 에러 전파.
-- **합타입(Discriminated Union) + 패턴매칭 + exhaustive `never`**로 분기를 컴파일타임에 완전 처리(케이스 누락 방지). 비지터/중첩 if 대체.
+
+  ```ts
+  // ❌ 가변 변수 + 명시적 루프
+  let total = 0;
+  for (const it of items) { if (it.active) total += it.price; }
+  // ✅ 불변 + 선언적
+  const total = items.filter((it) => it.active).reduce((sum, it) => sum + it.price, 0);
+  ```
+
+- **예외 throw 금지** → `Result`/`Option` + 에러 전파. (throw는 시그니처에 안 드러나는 숨은 분기)
+
+  ```ts
+  // ❌ 성공 타입만 노출, 실패는 호출부가 예측 못 함
+  function parsePort(s: string): number { const n = Number(s); if (Number.isNaN(n)) throw Error(); return n; }
+  // ✅ 실패가 반환 타입에 드러남 → 호출부가 반드시 다룸
+  function parsePort(s: string): Result<number, "NaN"> { … }
+  ```
+
+- **합타입(Discriminated Union) + 패턴매칭 + exhaustive `never`**로 분기를 컴파일타임에 완전 처리. 케이스 추가 시 누락을 컴파일러가 잡아줌. 비지터/중첩 if 대체.
+
+  ```ts
+  // ✅ 케이스 빠뜨리면 default에서 컴파일 에러
+  function label(s: Status): string {
+    switch (s.type) {
+      case "loading": return "…";
+      case "error":   return s.message;
+      default: { const _exhaustive: never = s; return _exhaustive; }
+    }
+  }
+  ```
+
 - **DI/팩토리는 커링/부분적용**으로 설정값·런타임 인자 분리(생성/사용 단계 분리). 함수형 DI는 권장 — OOP IoC 상용구만 배제.
+
+  ```ts
+  // ✅ 설정(logger)은 생성 시, 런타임 인자(id)는 사용 시 — 두 단계 분리
+  const makeGetUser = (logger: Logger) => (id: string) => { logger.info(id); return fetchUser(id); };
+  ```
+
 - **리턴 타입 명시**, 메서드 체이닝은 **수직 줄바꿈**.
 
 ## 도메인 룰 = 이름 붙은 순수함수
