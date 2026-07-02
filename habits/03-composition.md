@@ -14,6 +14,49 @@
 <Header right={<SearchButton onClick={...} />} />
 ```
 
+## 추상화는 실제 로직이 정당화할 때만 (얕은 포장 금지)
+
+위 "조합/분리" 원칙의 **브레이크**다. 01·03은 "나눠라"만 말하는데, 그걸 곧이곧대로 받으면
+**하는 일이 없는 껍데기**(래퍼 훅·래퍼 컴포넌트·context)를 만들고 "나눴으니 잘했지" 착각하게 된다.
+쪼개라 ≠ **빈 간접 레이어를 만들어라.** 추상화는 공짜가 아니라 **실제 로직으로 값을 치러야 얻는 것**이다.
+
+**"얕은 포장"이란**: 검증·파생 계산·fetch 같은 실질 로직 이동 없이, 기존 코드를 **이름만 바꿔 한 겹 감싸는 것.**
+파일·레이어만 늘고 state가 어디 있는지 오히려 더 안 보인다.
+
+```tsx
+// ❌ 케이스 A — 이름만 바꾼 래퍼 훅. useState 2개를 감싸기만 하고 하는 일이 없음
+function useOrderForm() {
+  const [name, setName] = useState("");
+  const [qty, setQty] = useState(1);
+  return { name, setName, qty, setQty }; // 검증도 계산도 없이 그대로 전달
+}
+// ❌ 케이스 B — 통과용 래퍼 컴포넌트. prop 받아 그대로 넘기기만 함
+function OrderNameField({ value, onChange }) {
+  return <><label>이름</label><input value={value} onChange={onChange} /></>;
+}
+
+// ✅ 얕으면 그냥 useState + 인라인. 부모 JSX만 봐도 화면이 그대로 보임(UI 이정표)
+function OrderForm() {
+  const [name, setName] = useState("");
+  const [qty, setQty] = useState(1);
+  return (
+    <>
+      <label>이름</label>
+      <input value={name} onChange={(e) => setName(e.target.value)} />
+      {/* qty도 여기 인라인 */}
+    </>
+  );
+}
+```
+
+**그래서 규칙:**
+
+- 얕은 트리(깊이 1~2단)의 폼·모달에서 state를 공유해야 해도 → **`useState` + 명시적 prop이 기본.** context·래퍼 훅·payload 묶음 객체로 성급히 감싸지 말 것.
+- **자기 로직(fetch·파생 계산·검증)을 소유할 때만** 훅·컴포넌트 분리가 정당하다. 로직 없이 prop만 통과시키면 부모에 인라인으로 되돌린다.
+- 판단 질문 하나: **"이 레이어가 로직을 옮기나, 이름만 바꾸나?"** — 이름만 바꾸면 지운다.
+
+(cf. [00-intent](00-intent.md) — 존재 이유를 이름이 설명 못 하는 추상화 금지)
+
 ## 변경 전파 최소화 (blast radius)
 
 - 컴포넌트(특히 모달)는 **자기 데이터를 내부에서 조달**.
