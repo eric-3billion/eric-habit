@@ -77,20 +77,64 @@ function PostDialogBranch({ postId }) {
 
 ## 3. Compound Pattern + Suspense
 
-- `Component.loading`, `Component.error`로 상태를 컴포넌트와 함께 관리.
-- Suspense로 성공 케이스만 신경쓰게 설계.
+- Suspense는 "로딩 UI 도구"가 아니라 **성공 케이스만 신경쓰게 해주는 경계**. 경계 안은 "데이터가 항상 준비됨"으로 가정 → 옵셔널 체이닝(`?.`) 전염 차단.
+- `Component.loading` / `Component.error`를 **정적 프로퍼티로 붙여** 성공·로딩·에러 UI를 한 파일에 응집.
+
+```tsx
+// ❌ 성공/로딩/에러가 한 컴포넌트에 뒤섞이고 ?. 가 전염됨
+function VariantForm({ onClose }: VariantFormProps) {
+  const { data: variant, isLoading, error } = useVariant();
+  if (isLoading) return <FormSkeleton />;
+  if (error) return <FormError />;
+  return <Form variant={variant!} onClose={onClose} />;  // variant? 전염 → non-null 땜빵
+}
+
+// ✅ Suspense 안은 성공만. 로딩/에러는 정적 프로퍼티로 컴포넌트에 응집
+function VariantForm({ onClose }: VariantFormProps) {
+  const variant = useSuspenseVariant();          // 항상 존재 가정 → ?. 없음
+  return <Form variant={variant} onClose={onClose} />;
+}
+VariantForm.loading = () => <FormSkeleton />;
+VariantForm.error = ({ resetError }: { resetError: () => void }) => <FormError onRetry={resetError} />;
+
+// 사용부 — 조립이 JSX에 드러남
+<ErrorBoundary fallback={({ resetError }) => <VariantForm.error resetError={resetError} />}>
+  <Suspense fallback={<VariantForm.loading />}>
+    <VariantForm onClose={handleClose} />
+  </Suspense>
+</ErrorBoundary>
+```
 
 ## 4. 위에서 아래로 흐르는 코드 / JSX = UI
 
 - 트리 구조 활용: 상위에서 복잡도를 해소할수록 하위가 단순.
 - **코드 구조가 화면 레이아웃과 1:1 매핑.** 단순 텍스트는 상수로 빼지 말고 JSX에 직접(UI 이정표).
 
-## 5. 단방향 흐름 / useEffect
+## 5. 예측 가능한 컴포넌트 (역할다움)
+
+컴포넌트가 **자기 본래 역할 밖의 props**를 받기 시작하면 인지 강도가 폭발한다. "input답지 않은 input"이 대표적 — input은 값 입력만 해야 하는데 툴팁·검증·분석까지 받으면, 읽는 사람이 시그니처를 다 뜯어봐야 동작을 예측할 수 있다([00-intent](00-intent.md)).
+
+- props는 그 컴포넌트의 **본래 역할과 일치**해야 한다.
+- 역할 밖 관심사(툴팁·검증·분석 등)는 별도 컴포넌트로 분리해 **조합**으로 얹는다([03-composition](03-composition.md) 슬롯/조합).
+- 재사용성은 "역할 충실"에서 자연히 따라온다 — 옵션 prop을 늘려 범용화하는 게 아니다.
+
+```tsx
+// ❌ input답지 않은 input — 역할 밖 관심사가 prop으로 침투, 예측 불가
+<CustomInput showTooltip validateOnBlur asyncValidation trackAnalytics />
+// ✅ input은 input답게, 나머지는 조합으로 얹음 — 화면 구조가 JSX에 드러남
+<TooltipWrapper>
+  <ValidationLayer validateOnBlur>
+    <Input {...inputProps} />
+  </ValidationLayer>
+</TooltipWrapper>
+```
+
+## 6. 단방향 흐름 / useEffect
 
 - 파생상태를 `useEffect`로 손 동기화(거울 state) 금지 → `key` 리마운트 또는 렌더 중 보정.
 - 단방향: 위→아래로 데이터/이벤트 흐름.
 
-## 6. props · 태그드 유니온 · 주석
+## 7. props · 태그드 유니온 · 주석
 
 - props는 `XxxProps` **인터페이스**로 선언(인라인 타입 금지). 단 **기존 파일 소급 수정 금지** — 한 파일 내 기존 패턴 존중.
 - 합타입 + 패턴매칭 + **exhaustive `never`** 체크. 동일 union switch 중복은 `Record`로.
