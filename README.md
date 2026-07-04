@@ -30,7 +30,12 @@ install.sh                    # ~/.claude 로 심링크
 ```bash
 bash install.sh
 ```
-`~/.claude/skills/eric-review` → `skills/eric-review`, `~/.claude/rules/*` → `habits/*` 심링크.
+install.sh가 하는 일(멱등):
+- `~/.claude/skills/eric-review` → `skills/eric-review` 심링크
+- `~/.claude/rules/*` → `habits/*` 심링크
+- `~/.claude/CLAUDE.md`에 `@rules/*` import 블록 추가 (마커로 감싸 갱신, 기존 내용 보존)
+
+> `~/.claude/rules`는 Claude Code가 자동 로드하지 않는다. 전역 자동 로드 경로는 `~/.claude/CLAUDE.md` 뿐이라, 여기서 habits를 `@import`해야 모든 프로젝트에서 매 세션 자동 적용된다. 이 import 블록은 `# >>> eric-code-habit >>>` 마커로 관리되므로 수동 편집하지 말 것.
 
 > 응답 톤 등 개인 설정(`interaction.md`)은 이 repo에 포함하지 않고 `~/.claude/rules`에 로컬로만 둔다(코드 습관과 별개 관심사).
 

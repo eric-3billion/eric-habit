@@ -37,4 +37,37 @@ for f in "$REPO"/habits/*.md; do
   echo "  linked: $RULES/$name"
 done
 
+echo "== CLAUDE.md @import (rules 전역 자동 로드) =="
+# ~/.claude/rules 는 Claude Code 가 자동 로드하지 않는다.
+# 전역 자동 로드 경로는 ~/.claude/CLAUDE.md 뿐이므로 여기서 habits 를 @import 한다.
+# 마커 블록으로 감싸 멱등하게 갱신한다(사용자의 기존 CLAUDE.md 내용은 보존).
+GLOBAL_MD="$CLAUDE/CLAUDE.md"
+MARK_START="# >>> eric-code-habit (auto-managed) >>>"
+MARK_END="# <<< eric-code-habit <<<"
+
+block="$MARK_START
+# 코드 습관 SSOT: $REPO/habits — install.sh 가 관리한다(수동 편집 금지).
+"
+for f in "$REPO"/habits/*.md; do
+  block="$block@rules/$(basename "$f")
+"
+done
+block="$block$MARK_END"
+
+touch "$GLOBAL_MD"
+if grep -qF "$MARK_START" "$GLOBAL_MD"; then
+  # 기존 마커 블록 교체
+  tmp="$GLOBAL_MD.tmp-$TS"
+  awk -v s="$MARK_START" -v e="$MARK_END" '
+    $0==s {skip=1} !skip {print} $0==e {skip=0}
+  ' "$GLOBAL_MD" > "$tmp"
+  printf '%s\n' "$block" >> "$tmp"
+  mv "$tmp" "$GLOBAL_MD"
+  echo "  updated block in: $GLOBAL_MD"
+else
+  # 최초 추가
+  { [ -s "$GLOBAL_MD" ] && echo ""; printf '%s\n' "$block"; } >> "$GLOBAL_MD"
+  echo "  appended block to: $GLOBAL_MD"
+fi
+
 echo "done."
