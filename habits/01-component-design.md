@@ -132,6 +132,8 @@ VariantForm.error = ({ resetError }: { resetError: () => void }) => <FormError o
 ## 6. 단방향 흐름 / useEffect
 
 - 파생상태를 `useEffect`로 손 동기화(거울 state) 금지 → `key` 리마운트 또는 렌더 중 보정.
+- 외부 환경값(뷰포트 크기 등)도 "리스너 + setState" 거울 금지 → `useSyncExternalStore`로 승격 후 파생.
+  보정 메커니즘 우선순위: CSS → 렌더 중 파생 → 이벤트 구독 → effect(최후).
 - 단방향: 위→아래로 데이터/이벤트 흐름.
 
 ## 7. props · 태그드 유니온 · 주석
