@@ -89,6 +89,27 @@ const d = useDraggableBox(...); // 소비처마다 <Draggable><Resizable>… 직
 </DraggableBox>
 ```
 
+**②-b 한 걸음 더 — 필수·단일 핵심 조각이면 컴파운드도 부족하다. 필수 render prop/슬롯으로 받아라.**
+
+컴파운드는 *내부 연결*(id 맞추기·이벤트·스타일)은 흡수해 닫지만, **개수(cardinality)는 못 닫는다** — children 슬롯은 본질적으로 위치 기반·개수 자유라 소비처가 `.Header`를 **0개(빠뜨림)·2개(중복)** 로 써도 컴파일러가 못 잡는다. 그 조각이 그 컴포넌트의 **핵심 기능**이면(예: 드래그 핸들 겸 `aria-labelledby` 대상인 헤더 — 없으면 드래그가 조용히 죽고, 둘이면 id 중복) 침묵의 고장이 된다. 개수를 런타임에 세려면 렌더 후 DOM을 뒤지는 effect가 필요한데(→ [01-component-design](01-component-design.md) effect 최후 원칙 위반), 그건 증상 땜빵이다.
+
+→ 핵심·필수·단일 조각은 children 컴파운드가 아니라 **필수 prop(render prop/슬롯)** 으로 받는다. 컴포넌트가 그 prop을 내부에서 **정확히 한 번** 렌더하면 "존재·유일성"이 **타입 레벨에서 보장**되고, 스타일과 내부 연결까지 컴포넌트가 소유해 소비처마다 제각각 되던 것도 사라진다(SSOT).
+
+```tsx
+// ❌ 컴파운드 — 내부 연결은 닫혔지만 개수는 열림. 0개면 드래그 죽고 2개면 id 중복(조용히 깨짐)
+<AdjustableDialog>
+  <AdjustableDialog.Header>제목 <닫기/></AdjustableDialog.Header>  {/* 빠뜨려도 컴파일 통과 */}
+  <본문/>
+</AdjustableDialog>
+// ✅ 필수 prop — title 이 없으면 타입 에러. 헤더 마크업·닫기 버튼·드래그 연결을 컴포넌트가 소유
+<AdjustableDialog title="제목" onClose={close} headerActions={<코멘트버튼/>}>
+  <본문/>
+</AdjustableDialog>
+```
+
+- 경계선: **자유 배치·반복·선택적**(카드 안에 아무거나) 슬롯이면 컴파운드가 맞다("JSX=화면"). **필수이고 정확히 하나여야 하는 메커니즘**이면 render prop이 맞다. "컴파운드로 뚫기엔 너무 핵심"이면 후자.
+- 이건 ①의 갈림(렌더 다르냐)과 직교하는 축: ①이 "훅이냐 컴파운드냐"라면 여기선 "컴파운드냐 필수 prop이냐"를 **조각의 필수성·단일성**으로 가른다.
+
 **③ 축이 틀렸다는 냄새 — 접점마다 옵션이 자란다.**
 
 추상화에 소비처를 욱여넣으려고 경계마다 boolean·보정 prop·이중 의미 className이 자라면, 나눈 **축이 틀린** 신호다. "기능이 있냐 없냐"로 가르지 말고(예: "A만 하는 것 vs A+B 하는 것" — B를 옵션으로 끄고 켜다 옵션이 번식한다), **소비처들이 실제로 갈라지는 지점**으로 가른다. 그 지점을 찾으면 옵션 대신 별개 컴포넌트 둘로 갈리고 각자 단순해진다.
@@ -105,7 +126,9 @@ const d = useDraggableBox(...); // 소비처마다 <Draggable><Resizable>… 직
 
 → 단, 표본이 **하나뿐이면 아직 추출하지 마라(rule of three).** 두 번째 실사용이 나타날 때 공통 축이 드러난다 — 표본 1개로 그은 축은 대개 틀린다.
 
-(cf. [00-intent](00-intent.md) — 닫힌 계약 = 예측가능; [02-structure-cohesion](02-structure-cohesion.md) — "변경의 소스" 위치가 축을 정한다)
+(cf. [00-intent](00-intent.md) — 닫힌 계약 = 예측가능; [02-structure-cohesion](02-structure-cohesion.md) — "변경의 소스" 위치가 축을 정한다; [05-types](05-types.md) — 필수 prop = cardinality를 타입으로 보장)
+
+> 위 세 갈림(훅/컴파운드/필수 prop)을 실제로 다 거쳐 답에 온 배경 사례 — 판단 순서도·오답 신호 포함: [cases/abstraction-ladder](cases/abstraction-ladder.md)
 
 ## 변경 전파 최소화 (blast radius)
 
