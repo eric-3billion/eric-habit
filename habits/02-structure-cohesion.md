@@ -27,6 +27,27 @@ const { data } = useTableData(params);          // params 파생
 
 → 연관: [00-intent](00-intent.md)(소스가 갇히면 의도가 안 드러남), [03-composition](03-composition.md)(중간 핸들러 금지 — 같은 뿌리), [01-component-design](01-component-design.md)(외부값→state 리셋은 effect가 아니라 key/렌더중보정).
 
+## SSOT의 범위 — 트리는 하나가 아니라 변경 이유마다 하나
+
+위 절이 SSOT의 **수직 축**(소스 → 파생 단방향)이라면, 이 절은 **수평 축**: 그 트리의 범위를 어디까지로 긋느냐.
+
+- SSOT는 "모든 규칙을 한 곳(전역 config, 커다란 비즈니스 트리)에 모으기"가 **아니다**. **사실 하나마다 주인이 정확히 하나**인 것이다. 트리가 클수록 전파 범위가 커지는 건 힘이 아니라 비용 — 좋은 SSOT의 기준은 "이 규칙이 바뀌면 파일 하나만 고치는가".
+- **같은 축인지 의심하라.** "설정값"·"상수"·"유틸"처럼 **종류**로 묶인 파일에는 변경 이유가 다른 값들이 섞여 있기 마련이다.
+
+  ```ts
+  // ❌ 종류(설정값)로 묶임 — 세 값의 변경 이유(축)가 전부 다르다
+  export const TERM_VALUES = [6, 12, 24] as const;   // 상품 기획이 바뀔 때
+  export const INTEREST_RATE_MULTIPLIER = 0.5;       // 이자 계산식이 바뀔 때
+  export const RECOMMENDED_PRODUCTS_COUNT = 2;       // 화면 요구가 바뀔 때
+  ```
+
+- 처방은 **변경 축별 모듈 + 노출은 의존 범위로**: 한 함수만 쓰는 값은 그 함수 옆 비공개 상수로, 여러 레이어(UI·검증·API)가 쓰면 도메인 정책으로 공개, 호출자마다 달라지는 값은 상수가 아니라 **함수 인자**로.
+- **이름의 구체성이 축 경계를 지킨다.** `INTEREST_RATE_MULTIPLIER` 같은 메커니즘 이름은 아무 이자 규칙이나 재사용하게 만들어 축을 오염시킨다 → `SIMPLE_INTEREST_WEIGHT`처럼 소유 규칙을 이름에 박으면, 새 규칙(복리)이 생길 때 재사용 대신 새 상수를 만들게 된다 ([00-intent](00-intent.md)).
+- **기계 검증과의 분업**: 타입·lint는 경계 **안의** 오용(참조·형태)을 잡지, 경계 자체("이 두 값이 같은 이유로 바뀌나")를 그어주지 못한다. 축은 사람이 긋고, 그어진 경계를 지키는 일(공개 API, import 규칙)을 기계에 맡긴다.
+- 승격은 rule of three: 규칙은 feature 로컬 도메인 모듈에 두고, 두 번째 소비처가 나타날 때 상위로 올린다 ([03-composition](03-composition.md)).
+
+(실제 배경 사례 — 전역 config 세 상수의 축 진단, 개명의 효과 → [cases/ssot-change-axis](cases/ssot-change-axis.md))
+
 ## SSOT — 하드코딩·임시처리는 한 곳에
 
 - 하드코딩·임시처리(temp/hack)를 했다면 **여기저기 흩지 말고 단일 모듈로 모아** 트래킹하기 좋게 (single source of truth).
