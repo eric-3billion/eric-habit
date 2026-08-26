@@ -42,6 +42,8 @@ export function isSubCategory(categoryId: string, rootId: string): boolean {
 
 무엇을 보여주나: "하위 카테고리 = id ≠ rootId"라는 도메인 룰이 여러 곳에 `a !== b`로 흩어지지 않고, **이름 붙은 순수함수 한 곳(SSOT)**에 모여 의도가 드러난다. `@note`로 연동 지점도 명시. 위치 예: `src/entities/category/lib/is-sub-category.ts`.
 
+**한 줄인데 왜 얕은 포장이 아닌가**: 얕은 포장의 죄는 "이름만 바꾸고 하는 일이 없음"인데, 여기서 옮겨진 건 **도메인 규칙 자체**다. `categoryId !== rootId` 를 인라인으로 두면 소비처마다 "하위 카테고리의 정의"를 알아야 하고, 정의가 바뀌면 N 곳이 바뀐다. 갈림은 **길이가 아니라 소비처가 규칙을 알아야 하는지**다 → [03-composition](03-composition.md) 얕은 포장 절.
+
 ## 3. 식별자 생성/판별의 SSOT — branded key 팩토리
 
 ```ts
