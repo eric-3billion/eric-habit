@@ -105,6 +105,24 @@ VariantForm.error = ({ resetError }: { resetError: () => void }) => <FormError o
 </ErrorBoundary>
 ```
 
+### 조달은 팩토리로 노출하고, 둘 이상이면 병렬로 묶는다
+
+- **suspense 쿼리를 커스텀 훅으로 감싸지 않는다.** 감싸면 소비처가 여러 조달을 **한 번에 묶을 수 없어** 워터폴이 고착된다. 쿼리는 `queryOptions` 팩토리로 노출하고, 신선도 정책(`refetchOnMount` 등)도 소비처 훅이 아니라 **팩토리에** 붙여 이름으로 드러낸다.
+- **한 경계에서 독립적인 조달이 둘 이상이면 `useSuspenseQueries` 로 묶는다.** 경계 안에서 **선언 순서는 병렬성을 만들지 못한다** — 첫 호출에서 던져지므로 뒤 쿼리는 그 뒤에 붙는다. "미리 조달한다"는 주석이 거짓말이 되는 자리.
+
+```tsx
+// ❌ 훅으로 감싸 조합을 막고, 나란히 선언해 워터폴을 만든다
+function useOrderDetail(id: string) { return useSuspenseQuery(orderQueries.detail(id)); }
+const order = useOrderDetail(id);
+const catalog = useSuspenseQuery(productQueries.list());  // ← order 가 끝난 뒤 시작
+// ✅ 팩토리로 노출 → 소비처가 병렬로 묶는다
+const [order, catalog] = useSuspenseQueries({
+  queries: [orderQueries.detail(id), productQueries.list()],
+});
+```
+
+- 얕은 포장 금지([03-composition](03-composition.md))와 근거가 다르다 — 저긴 "로직이 없어서" 지우는 것이고, 이건 **로직이 있어도** 조합 가능성을 깨서 금지다. 정책이 담겨 있다고 정당해지지 않는다.
+
 ## 4. 위에서 아래로 흐르는 코드 / JSX = UI
 
 - 트리 구조 활용: 상위에서 복잡도를 해소할수록 하위가 단순.
