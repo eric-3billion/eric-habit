@@ -83,6 +83,27 @@ declare function Guard(props: { can: Predicate<User>; children: ReactNode }): Re
 - reducer, 파서 결합, 미들웨어(`fn → fn`)처럼 **인자·반환이 같은 타입인** 자리면 이 형태로 닫는다.
 - (주의) 닫으려고 억지 타입을 만들지 말 것 — 자연히 같은 타입이 반복될 때만. 아니면 하는 일 없는 조합자 = 얕은 포장([03-composition](03-composition.md)).
 
+## 판정은 함수, `Record` 는 매핑 — 규칙을 데이터로 얼리지 마라
+
+- **판정·규칙을 배열/객체 테이블로 두지 않는다.** 테이블에 넣는 순간 모든 규칙이 같은 시그니처로 굳고(`{조건, 메시지}`), 케이스 추가·누락을 컴파일러가 못 잡는다.
+- 판정은 **태그드 유니온을 반환하는 단일책임 함수**로 쓴다. 표시값은 그 유니온을 받아 매핑한다.
+
+```ts
+// ❌ 규칙을 데이터로 얼림 — 케이스가 늘어도 컴파일러가 아무것도 못 잡는다
+const BLOCK_RULES = [
+  { test: (s: State) => s.balance <= 0, message: "잔액이 부족합니다" },
+  { test: (s: State) => s.overLimit,    message: "한도를 초과했습니다" },
+];
+// ✅ 판정은 유니온을 뱉는 함수, 매핑은 Record
+type BlockReason = "insufficient-balance" | "over-limit";
+const findBlockReason = (s: State): BlockReason | undefined =>
+  s.balance <= 0 ? "insufficient-balance" : s.overLimit ? "over-limit" : undefined;
+const BLOCK_MESSAGE: Record<BlockReason, string> = { … };   // 판정이 끝난 값의 매핑
+```
+
+- [01 §7](01-component-design.md) 의 "동일 union switch 중복은 `Record` 로" 는 **판정이 끝난 뒤**의 매핑에 대한 말이다. 판정 자체를 `Record`/배열로 옮기라는 뜻이 아니다.
+- 경계: 규칙이 **런타임에 바뀌거나 순서가 데이터로 관리돼야 하는** 정책 엔진이면 테이블이 맞다. 코드에 고정된 유한 규칙이면 함수다.
+
 ## 도메인 룰 = 이름 붙은 순수함수
 
 - 도메인 룰은 `entities/<x>/lib/`에 **이름 붙은 순수함수 + 룰 docstring**으로 추출. 인라인 비교/하드코딩 금지.

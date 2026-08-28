@@ -157,7 +157,7 @@ const [order, catalog] = useSuspenseQueries({
 ## 7. props · 태그드 유니온 · 주석
 
 - props는 `XxxProps` **인터페이스**로 선언(인라인 타입 금지). 단 **기존 파일 소급 수정 금지** — 한 파일 내 기존 패턴 존중.
-- 합타입 + 패턴매칭 + **exhaustive `never`** 체크. 동일 union switch 중복은 `Record`로.
+- 합타입 + 패턴매칭 + **exhaustive `never`** 체크. 동일 union switch 중복은 `Record`로 — 단 **판정이 끝난 뒤의 값 매핑**에만. 판정 자체를 테이블로 옮기지 않는다([04-functional-domain](04-functional-domain.md)).
 - 컴포넌트는 ReactNode 일관 반환(raw `"-"` 반환 금지).
 - 주석: **아키텍처 내레이션/소유권 주석 금지.** 코드로 안 보이는 제약만.
 - 네이밍은 의미를 드러내고([00-intent](00-intent.md)), 공유 styled/className은 스타일 기반 제너럴 이름.
