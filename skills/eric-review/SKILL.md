@@ -69,7 +69,7 @@ GitHub PR을 Eric의 코드 습관으로 리뷰한다. **습관 룰은 이 스�
      - **지금 코드** — 스냅샷에서 딴 실제 조각(추측 금지).
      - **무엇이 어떻게 깨지나** — 실패 시나리오나 "이 조건을 지워도 통과한다" 같은 구체적 귀결. 추상적 원칙 나열 금지.
      - **처방** — 붙여넣을 수 있는 코드. 타입/테스트가 잡아주게 되는지도 명시.
-     - **정전 매핑(해당할 때만)** — 이 문제가 정전 문헌에 *이름 붙은* 문제면 마지막에 한 줄로 연결: "같은 문제를 Refactoring 은 shotgun surgery, Clean Architecture 는 의존성 규칙 위반이라 부른다" 식. 범위: Clean Code · Clean Architecture · DDD(Evans) · Refactoring(Fowler) · A Philosophy of Software Design(Ousterhout).
+     - **정전 매핑(해당할 때만)** — 이 문제가 정전 문헌에 *이름 붙은* 문제면 마지막에 한 줄로 연결: "같은 문제를 Refactoring 은 shotgun surgery 라 부른다" 식. **한 문제에 한 용어** — 다른 문헌의 다른 개념을 별칭처럼 나열하지 않는다. 범위: Clean Code · Clean Architecture · DDD(Evans) · Refactoring(Fowler) · A Philosophy of Software Design(Ousterhout).
        - 구체 용어를 정확히 짚을 수 있을 때만. 애매하면 **생략** — 억지 매핑은 무인용보다 나쁘다.
        - 근거 대체 금지: 실패 시나리오·처방이 본체고 인용은 부록 한 줄. "책에서 그러니까"가 이유가 되면 안 된다(위 "추상적 원칙 나열 금지"의 뒷문 아님).
      - **반론 여지** — 트레이드오프거나 저자 판단 영역이면 솔직히 적는다. 후보끼리 수렴/무효화 관계면(예: A 를 받으면 D 가 무의미해짐) 그것도 밝힌다.
