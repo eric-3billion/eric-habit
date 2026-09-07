@@ -85,7 +85,7 @@ declare function Guard(props: { can: Predicate<User>; children: ReactNode }): Re
 
 ## 판정은 함수, `Record` 는 매핑 — 규칙을 데이터로 얼리지 마라
 
-- **판정·규칙을 배열/객체 테이블로 두지 않는다.** 테이블에 넣는 순간 모든 규칙이 같은 시그니처로 굳고(`{조건, 메시지}`), 케이스 추가·누락을 컴파일러가 못 잡는다.
+- **판정·규칙을 배열/객체 테이블로 두지 않는다.** 테이블에 넣는 순간 모든 규칙이 같은 시그니처로 굳고(`{조건, 메시지}`), 판정 결과가 타입으로 존재하지 않아, 그 결과를 소비하는 쪽의 케이스 누락을 컴파일러가 잡을 길이 없어진다.
 - 판정은 **태그드 유니온을 반환하는 단일책임 함수**로 쓴다. 표시값은 그 유니온을 받아 매핑한다.
 
 ```ts
@@ -98,9 +98,10 @@ const BLOCK_RULES = [
 type BlockReason = "insufficient-balance" | "over-limit";
 const findBlockReason = (s: State): BlockReason | undefined =>
   s.balance <= 0 ? "insufficient-balance" : s.overLimit ? "over-limit" : undefined;
-const BLOCK_MESSAGE: Record<BlockReason, string> = { … };   // 판정이 끝난 값의 매핑
+const BLOCK_MESSAGE: Record<BlockReason, string> = { … };   // 판정이 끝난 값의 매핑 — 유니온에 케이스가 늘면 여기서 컴파일 에러
 ```
 
+- **컴파일러가 잡는 건 소비처의 누락이다.** `BlockReason` 에 케이스가 늘면 `Record` 매핑과 exhaustive switch 가 컴파일 에러로 알려준다. 반면 판정 함수가 새 케이스를 아예 반환하지 않는 누락은 타입이 못 잡는다 — 그건 테스트 몫. 테이블 방식은 판정 결과가 타입으로 없어 앞의 검사조차 불가능하다는 게 진짜 차이다.
 - [01 §7](01-component-design.md) 의 "동일 union switch 중복은 `Record` 로" 는 **판정이 끝난 뒤**의 매핑에 대한 말이다. 판정 자체를 `Record`/배열로 옮기라는 뜻이 아니다.
 - 경계: 규칙이 **런타임에 바뀌거나 순서가 데이터로 관리돼야 하는** 정책 엔진이면 테이블이 맞다. 코드에 고정된 유한 규칙이면 함수다.
 

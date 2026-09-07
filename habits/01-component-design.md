@@ -82,16 +82,16 @@ function PostDialogBranch({ postId }) {
 
 ```tsx
 // ❌ 성공/로딩/에러가 한 컴포넌트에 뒤섞이고 ?. 가 전염됨
-function VariantForm({ onClose }: VariantFormProps) {
-  const { data: variant, isLoading, error } = useVariant();
+function VariantForm({ variantId, onClose }: VariantFormProps) {
+  const { data: variant, isLoading, error } = useQuery(variantQueries.detail(variantId));
   if (isLoading) return <FormSkeleton />;
   if (error) return <FormError />;
   return <Form variant={variant!} onClose={onClose} />;  // variant? 전염 → non-null 땜빵
 }
 
 // ✅ Suspense 안은 성공만. 로딩/에러는 정적 프로퍼티로 컴포넌트에 응집
-function VariantForm({ onClose }: VariantFormProps) {
-  const variant = useSuspenseVariant();          // 항상 존재 가정 → ?. 없음
+function VariantForm({ variantId, onClose }: VariantFormProps) {
+  const { data: variant } = useSuspenseQuery(variantQueries.detail(variantId)); // 항상 존재 가정 → ?. 없음
   return <Form variant={variant} onClose={onClose} />;
 }
 VariantForm.loading = () => <FormSkeleton />;
@@ -100,7 +100,7 @@ VariantForm.error = ({ resetError }: { resetError: () => void }) => <FormError o
 // 사용부 — 조립이 JSX에 드러남
 <ErrorBoundary fallback={({ resetError }) => <VariantForm.error resetError={resetError} />}>
   <Suspense fallback={<VariantForm.loading />}>
-    <VariantForm onClose={handleClose} />
+    <VariantForm variantId={variantId} onClose={handleClose} />
   </Suspense>
 </ErrorBoundary>
 ```
