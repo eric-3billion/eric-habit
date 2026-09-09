@@ -43,6 +43,21 @@ const { data } = useTableData(params);          // params 파생
 
 - 처방은 **변경 축별 모듈 + 노출은 의존 범위로**: 한 함수만 쓰는 값은 그 함수 옆 비공개 상수로, 여러 레이어(UI·검증·API)가 쓰면 도메인 정책으로 공개, 호출자마다 달라지는 값은 상수가 아니라 **함수 인자**로.
 - **이름의 구체성이 축 경계를 지킨다.** `INTEREST_RATE_MULTIPLIER` 같은 메커니즘 이름은 아무 이자 규칙이나 재사용하게 만들어 축을 오염시킨다 → `SIMPLE_INTEREST_WEIGHT`처럼 소유 규칙을 이름에 박으면, 새 규칙(복리)이 생길 때 재사용 대신 새 상수를 만들게 된다 ([00-intent](00-intent.md)).
+  - **반대 방향도 축 오류다 — 구체성은 실제 소유 범위와 일치해야 한다.** 도메인과 무관한 기계적 보정에 도메인 수식어를 붙이면 재사용이 막히고, 여러 케이스에 걸치는 값에 한 케이스 이름을 박으면 케이스가 늘 때 이름이 거짓이 된다. 위 문장만 보면 "구체적일수록 좋다"로 읽혀 이 방향을 못 잡는다.
+
+    ```ts
+    // ❌ 음수 보정은 가격과 무관한데 도메인 이름으로 좁힘 → 수량·할인에 재사용 못 함
+    const toPriceAmount = (s: string) => Math.max(0, Number(s));
+    // ✅ 규칙이 소유하는 범위만큼만 구체적으로
+    const clampNonNegative = (s: string) => Math.max(0, Number(s));
+
+    // ❌ 크기 제한은 모든 첨부에 걸리는데 한 케이스 이름 → 다음 파일 타입에서 거짓이 된다
+    interface UploadLimit { imageSize: number }
+    // ✅
+    interface UploadLimit { attachmentSize: number }
+    ```
+
+  - 판별 질문: **이 규칙·값을 실제로 소유하는 범위가 어디까지인가.** 그보다 넓게 지으면 제너럴 오염, 그보다 좁게 지으면 과도한 구체화.
 - **기계 검증과의 분업**: 타입·lint는 경계 **안의** 오용(참조·형태)을 잡지, 경계 자체("이 두 값이 같은 이유로 바뀌나")를 그어주지 못한다. 축은 사람이 긋고, 그어진 경계를 지키는 일(공개 API, import 규칙)을 기계에 맡긴다.
 - 승격은 rule of three: 규칙은 feature 로컬 도메인 모듈에 두고, 두 번째 소비처가 나타날 때 상위로 올린다 ([03-composition](03-composition.md)).
 
@@ -57,6 +72,24 @@ const { data } = useTableData(params);          // params 파생
   - 단 **계약을 고칠 수 있을 때** 얘기다. 외부 API 라 손댈 수 없으면 그때는 경계 흡수가 맞다 — 대신 어느 응답이 주인인지를 매퍼에 명시한다.
 - **서버 계약에 없는 사실을 클라가 재구성하지 않는다.** 표시 순서·집계 기준처럼 주인이 서버인 값은 조건만 보내고 결과를 그대로 렌더한다 — 클라가 정렬이나 라벨을 지어내면 값과 조용히 어긋난다.
 - 계약을 정했으면 그 사실을 타입/주석에 드러낸다(한 줄이라도 "이 순서는 서버가 정한다").
+
+## SSOT 의 형태 — 값 배열이 아니라 유니온 타입이 원본이다
+
+유한한 이름 집합(스텝·상태·탭)을 배열 상수로 선언하고 타입을 `(typeof STEPS)[number]` 로 파생하면 배열이 SSOT 가 되어 **케이스 누락을 컴파일러가 잡을 길이 없다** — 배열은 요소를 빠뜨려도 유효한 배열이다.
+
+- **유니온 타입을 원본으로 선언**하고, 배열·라벨·매핑은 그 유니온을 **소비**하게 한다. `Record<StepName, …>` 은 케이스가 늘면 컴파일 에러로 누락을 알려주고, 배열은 `satisfies readonly StepName[]` 로 묶여 오타·잉여 요소를 막는다.
+
+```ts
+// ❌ 배열이 원본 — 요소를 빠뜨려도 컴파일러는 모른다
+const STEPS = ["info", "files", "review"] as const;
+type StepName = (typeof STEPS)[number];
+// ✅ 유니온이 원본 — Record 소비처가 누락을 잡고, 배열은 유니온에 묶인다
+type StepName = "info" | "files" | "review";
+const STEPS = ["info", "files", "review"] as const satisfies readonly StepName[];
+const STEP_LABELS: Record<StepName, string> = { info: "…", files: "…", review: "…" };
+```
+
+- 순서가 데이터로 관리돼야 하면 배열이 필요한 게 맞다 — 그래도 원본은 유니온이고 배열은 `satisfies` 로 묶인 소비처다. ([04-functional-domain](04-functional-domain.md) 「판정은 함수, `Record` 는 매핑」과 같은 뿌리 — 컴파일러가 잡는 건 소비처의 누락이다.)
 
 ## SSOT — 하드코딩·임시처리는 한 곳에
 

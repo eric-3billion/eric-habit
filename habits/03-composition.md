@@ -79,6 +79,16 @@ function OrderForm() {
   - **기계적 접근**(`o?.name ?? ""`, 필드 하나 꺼내기) → 빼면 얕은 포장. 인라인으로 둔다.
   - **도메인 정의·판정·보정**(`p.kind === "analysis"`, 음수 보정 `Math.max(0, x)`) → 한 줄이어도 이름 붙은 순수함수로 뺀다. 소비처가 타입 내부 구조(`kind` 필드가 있다는 사실)를 알 필요 없이 **의도만** 받게 된다.
   - 판별 질문: **"소비처가 이 식을 읽으려면 도메인 규칙을 알아야 하나?"** 알아야 하면 그 규칙에 이름을 붙인다([04-functional-domain](04-functional-domain.md), [canonical-examples](canonical-examples.md) `isSubCategory`).
+  - **두 벌 중복은 그 자체로 추출 근거가 아니다.** 인라인 규칙 두 벌을 이름 붙은 함수로 뽑았는데 **부착 지점은 그대로 둘**이고 본문만 한 벌로 모였다면, 그건 추상화가 아니라 **이동**이다 — 소비처가 여전히 "여기 이 규칙을 붙여야 한다"를 안다. 정당성은 위 질문으로만 가르고, 이동만 하는 추출은 되돌린다.
+
+    ```ts
+    // ❌ 본문만 모이고 부착은 둘 — 소비처가 규칙의 존재와 부착 위치를 여전히 안다
+    const checkPostalCode = (v: string) => /^\d{5}$/.test(v);
+    addressSchema.refine(checkPostalCode);  billingSchema.refine(checkPostalCode);
+    // ✅ 규칙이 부착까지 소유 — 소비처는 조합만 한다 (기계적 검사면 그냥 인라인으로 둔다)
+    const postalCode = z.string().regex(/^\d{5}$/);
+    const addressSchema = z.object({ postalCode, … });  const billingSchema = z.object({ postalCode, … });
+    ```
 
 (cf. [00-intent](00-intent.md) — 존재 이유를 이름이 설명 못 하는 추상화 금지)
 
@@ -150,6 +160,8 @@ const d = useDraggableBox(...); // 소비처마다 <Draggable><Resizable>… 직
 ```
 
 → 단, 표본이 **하나뿐이면 아직 추출하지 마라(rule of three).** 두 번째 실사용이 나타날 때 공통 축이 드러난다 — 표본 1개로 그은 축은 대개 틀린다.
+
+→ 같은 이유로 **쓰는 곳이 없는 확장 지점을 미리 뚫지 않는다.** "나중에 쓸지도"·"테스트하기 편해서" 붙인 옵션 prop·파라미터는 표본 0개짜리 추상화다 — 소비처가 나타날 때 그 소비처가 요구하는 형태로 뚫는다.
 
 (cf. [00-intent](00-intent.md) — 닫힌 계약 = 예측가능; [02-structure-cohesion](02-structure-cohesion.md) — "변경의 소스" 위치가 축을 정한다; [05-types](05-types.md) — 필수 prop = cardinality를 타입으로 보장)
 

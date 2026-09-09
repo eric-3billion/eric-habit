@@ -104,6 +104,7 @@ const BLOCK_MESSAGE: Record<BlockReason, string> = { … };   // 판정이 끝�
 - **컴파일러가 잡는 건 소비처의 누락이다.** `BlockReason` 에 케이스가 늘면 `Record` 매핑과 exhaustive switch 가 컴파일 에러로 알려준다. 반면 판정 함수가 새 케이스를 아예 반환하지 않는 누락은 타입이 못 잡는다 — 그건 테스트 몫. 테이블 방식은 판정 결과가 타입으로 없어 앞의 검사조차 불가능하다는 게 진짜 차이다.
 - [01 §7](01-component-design.md) 의 "동일 union switch 중복은 `Record` 로" 는 **판정이 끝난 뒤**의 매핑에 대한 말이다. 판정 자체를 `Record`/배열로 옮기라는 뜻이 아니다.
 - 경계: 규칙이 **런타임에 바뀌거나 순서가 데이터로 관리돼야 하는** 정책 엔진이면 테이블이 맞다. 코드에 고정된 유한 규칙이면 함수다.
+- 유한한 이름 집합의 **원본도 배열이 아니라 유니온 타입**이다 — 배열이 원본이면 `Record` 가 잡아줄 누락이 없다([02-structure-cohesion](02-structure-cohesion.md) 「SSOT 의 형태」).
 
 ## 도메인 룰 = 이름 붙은 순수함수
 

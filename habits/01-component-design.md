@@ -160,6 +160,16 @@ const [order, catalog] = useSuspenseQueries({
 - 합타입 + 패턴매칭 + **exhaustive `never`** 체크. 동일 union switch 중복은 `Record`로 — 단 **판정이 끝난 뒤의 값 매핑**에만. 판정 자체를 테이블로 옮기지 않는다([04-functional-domain](04-functional-domain.md)).
 - 컴포넌트는 ReactNode 일관 반환(raw `"-"` 반환 금지).
 - 주석: **아키텍처 내레이션/소유권 주석 금지.** 코드로 안 보이는 제약만.
+  - **변경 이력 내레이션("기존엔 ~~였는데", before/after)도 금지.** 리팩터의 근거는 PR 본문에 쓰고 코드에 남기지 않는다 — 다음 독자에게 "기존"은 존재하지 않는 코드다.
+  - 리팩터가 끝나면 **이력 주석을 전수조사로 걷어내는 마무리 단계**를 둔다. 작업 중엔 붙이기 쉽고, 끝나면 아무도 안 지운다.
+
+    ```ts
+    // ❌ 다음 독자에겐 없는 과거를 설명한다
+    // 기존엔 useState 로 들고 마지막 스텝이 손으로 리셋했는데, 그건 폼 상태의 거울이었다
+    const isDraft = form.watch("status") === "draft";
+    // ✅ 지금 코드가 지금 사실을 말하면 주석이 필요 없다
+    const isDraft = form.watch("status") === "draft";
+    ```
 - 네이밍은 의미를 드러내고([00-intent](00-intent.md)), 공유 styled/className은 스타일 기반 제너럴 이름.
 
 → 연관: [03-composition](03-composition.md), [02-structure-cohesion](02-structure-cohesion.md).
