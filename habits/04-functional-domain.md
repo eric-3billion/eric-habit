@@ -108,7 +108,7 @@ const BLOCK_MESSAGE: Record<BlockReason, string> = { … };   // 판정이 끝�
 
 ## 도메인 룰 = 이름 붙은 순수함수
 
-- 도메인 룰은 `entities/<x>/lib/`에 **이름 붙은 순수함수 + 룰 docstring**으로 추출. 인라인 비교/하드코딩 금지.
+- 도메인 룰은 `entities/<x>/lib/`에 **이름 붙은 순수함수 + 룰 docstring**으로 추출. **도메인 룰의** 인라인 비교/하드코딩 금지 — 기계적 접근(`o?.name ?? ""`)은 인라인이 맞다([03-composition](03-composition.md) 한 줄 판별).
 - 함수 이름과 docstring만 봐도 룰이 드러나야 함([00-intent](00-intent.md)).
 - 정전 예시 → [canonical-examples](canonical-examples.md):
   - `isSubCategory(categoryId, rootId) => categoryId !== rootId`
