@@ -8,6 +8,6 @@
 - **mock이 쿼리 파라미터를 실제로 반영**해야 함 — 필터 파라미터를 받고도 안 쓰면 실제 분기를 가려 false confidence. 표본도 페이지네이션/정렬을 받칠 만큼 충분히.
 - **도메인 용어 리네임 시 fixture placeholder string은 건드리지 않는다.**
 - 분기·폴백(에러→retry 복구, N/A, 빈값 등) 커버리지 누락 주의.
-- fixture/헬퍼 중복 지양(여러 파일 복붙) → 공유([02-structure-cohesion](02-structure-cohesion.md)).
+- fixture/헬퍼 중복 지양(여러 파일 복붙) → 공유([02-structure-cohesion](02-structure-cohesion.md)). 단 공유는 **레이어 public API 안에서** — 다른 레이어의 mock-data 를 딥임포트하지 말고 소비 레이어 로컬 fixture 를 public 타입으로 세운다.
 
 → 연관: [02-structure-cohesion](02-structure-cohesion.md).

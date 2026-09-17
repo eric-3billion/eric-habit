@@ -24,7 +24,7 @@
 | 이름이 정확한데 "뭐하는 놈인지 모르겠다" | 수식어를 압축·축약함 | 분해하지 말고 **펼쳐서 개명**한다(아래 「이름의 형태」) |
 
 - **주석이 길어졌다는 것 자체가 신호다.** 내용이 정확해도 길면 그 자리의 코드가 안 읽힌다는 뜻 — 단 *설명* 주석에 한정된 얘기다. 무엇을 남기고 무엇을 금지하는지는 [01 §7](01-component-design.md).
-- 제너럴한 이름(`*Query`·`*Info`·`*Data`)은 축 경계를 무너뜨린다([02-structure-cohesion](02-structure-cohesion.md)). 반대로 **과하게 구체적인 이름도 축 오류**다 — 같은 곳에 양방향으로 적혀 있다.
+- 제너럴한 이름(`*Info`·`*Data`, 쿼리가 아닌 것에 붙은 `*Query`)은 축 경계를 무너뜨린다([02-structure-cohesion](02-structure-cohesion.md)). `orderQueries` 같은 `queryOptions` 팩토리는 실제 쿼리라 예외. 반대로 **과하게 구체적인 이름도 축 오류**다 — 같은 곳에 양방향으로 적혀 있다.
 - 한 자리를 고쳤으면 **같은 신호를 레포 전체에서 훑는다** — 한 군데서 끝나는 일이 아니다.
 
 ## 이름의 형태 — 동사·이웃·접미사·어휘가 정확성보다 먼저 읽힌다
@@ -43,7 +43,7 @@
 | `find*` | 없을 수 있다 → `T \| undefined` |
 | `list*` | 0개 이상, 빈 배열이 정상 |
 | `is*`·`has*`·`can*` | boolean 판정. 부수효과 없음 |
-| `to*`·`format*` | 순수 변환 — **판정을 숨기지 않는다**(아래 안티 예시 `formatScore`) |
+| `to*`·`format*` | 순수 변환 — **판정을 숨기지 않는다**(아래 안티 예시 `formatScore`). 경계 매퍼의 하위호환 폴백만 예외, 주석으로 드러낸다([05-types](05-types.md)) |
 | `parse*`·`validate*` | 실패가 **반환 타입에** 드러난다([04-functional-domain](04-functional-domain.md) `Result`) |
 | `create*`·`update*`·`delete*` | 쓰기 — 부수효과가 있다는 선언 |
 
@@ -67,7 +67,7 @@ findItem(id);  updateState(next);  const data = await load();  const result = ca
 findCartItem(id);  updateShippingAddress(next);  const invoice = await load();  const orderTotal = calcTotal(cartItems);
 ```
 
-- 접미사도 명사다 — `*Query`·`*Info`·`*Data`·`*Manager` 가 붙으면 앞이 아무리 구체적이어도 뒤가 뭉갠다(위 신호표 불릿, [02-structure-cohesion](02-structure-cohesion.md) 축 경계).
+- 접미사도 명사다 — `*Info`·`*Data`·`*Manager`, 쿼리가 아닌 것의 `*Query` 가 붙으면 앞이 아무리 구체적이어도 뒤가 뭉갠다(위 신호표 불릿, [02-structure-cohesion](02-structure-cohesion.md) 축 경계).
 - 단 좁히는 데도 한도가 있다 — 실제 소유 범위보다 좁게 지으면 반대 오류다([02-structure-cohesion](02-structure-cohesion.md) 「구체성은 소유 범위와 일치」).
 
 **뒤의 명사를 정직하게 쓰다가 `and` 가 나오면 이름 문제가 아니라 함수 문제다.** 그건 단일책임 위반의 증거이므로, 이름을 짧게 고쳐 덮지 말고(그렇게 하면 `resolve` 같은 넓은 동사로 빠진다) **쪼개고 재추상화한다**([01 §1](01-component-design.md)).
@@ -96,7 +96,7 @@ clearCoupons(cart.id);
 **이웃과 어긋나면 형제인지 안 읽힌다.** 한 모듈·인접 인터페이스에서 같은 개념을 가리키는 값은 **같은 어휘·같은 접미사 포맷**으로 쓴다 — 새 값을 도입할 때 이름을 지어내지 말고 **옆에 이미 있는 이름의 포맷을 따른다.**
 
 - **단위를 접미사에 박는다** — `Index`(0-based 위치) vs `Count`(개수). 이름에 없으면 둘을 섞은 산술이 조용히 통과한다(아래 「센티넬」).
-- **통일할 포맷은 취향이 아니라 소비 경계가 정한다.** 그 값을 받는 쪽이 index 로 받으면 index 다.
+- **통일할 포맷은 취향이 아니라 소비 경계가 정한다.** 그 값을 받는 쪽이 index 로 받으면 index 다. 이웃이 레거시 컨벤션이면 따르지 않고 소비 경계 기준으로 이웃까지 함께 개명한다([02-structure-cohesion](02-structure-cohesion.md) 선례가 레거시면 배제).
 
 ```ts
 // ❌ 같은 "스텝 위치"인데 어휘·단위가 다 다르다

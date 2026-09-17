@@ -58,7 +58,7 @@ function CartSection() {                            // 관심사: 장바구니
 ## 2. 분기는 상위로 끌어올리기 (시점이동)
 
 - 조건부 렌더링은 **최상위에서 결정**, 하위는 자기 케이스만.
-- **분기별로 다른 훅을 호출하면 무조건 분리.**
+- **분기별로 다른 훅을 호출하면 분리한다.** 단 상태가 스텝을 타고 흐르는 멀티스텝 폼은 분리 비용이 검증 비용으로 청구되므로 단일 유지가 맞다([05-types](05-types.md) 전환기 4번).
 - boolean 플래그를 여러 단으로 drilling 후 리프에서 if 체인 = 안티 → 상위에서 **태그드 유니온 view-state 1개**로 정규화.
 
 ```tsx
@@ -110,6 +110,7 @@ VariantForm.error = ({ resetError }: { resetError: () => void }) => <FormError o
 
 - **suspense 쿼리를 커스텀 훅으로 감싸지 않는다.** 감싸면 소비처가 여러 조달을 **한 번에 묶을 수 없어** 워터폴이 고착된다. 쿼리는 `queryOptions` 팩토리로 노출하고, 신선도 정책(`refetchOnMount` 등)도 소비처 훅이 아니라 **팩토리에** 붙여 이름으로 드러낸다.
 - **한 경계에서 독립적인 조달이 둘 이상이면 `useSuspenseQueries` 로 묶는다.** 경계 안에서 **선언 순서는 병렬성을 만들지 못한다** — 첫 호출에서 던져지므로 뒤 쿼리는 그 뒤에 붙는다. "미리 조달한다"는 주석이 거짓말이 되는 자리.
+- **단 묶으려고 조달 지점을 옮기지 않는다.** 이미 같은 경계에 있는 조달 얘기다 — 병렬화하려고 하위의 상태·관심사를 상위로 끌어올려야 하면 워터폴을 감수한다([03-composition](03-composition.md) 변경 전파 최소화). "위에서 트리거만 하고 값은 아래서 쓴다"는 우회도 같다.
 
 ```tsx
 // ❌ 훅으로 감싸 조합을 막고, 나란히 선언해 워터폴을 만든다
@@ -127,7 +128,8 @@ const [order, catalog] = useSuspenseQueries({
 ## 4. 위에서 아래로 흐르는 코드 / JSX = UI
 
 - 트리 구조 활용: 상위에서 복잡도를 해소할수록 하위가 단순.
-- **코드 구조가 화면 레이아웃과 1:1 매핑.** 단순 텍스트는 상수로 빼지 말고 JSX에 직접(UI 이정표).
+- 파일 안에서도 같다 — **진입점(호출하는 쪽)을 위에**, 그것이 쓰는 조각을 아래에. 상수·타입은 TDZ 때문에 의존성 순서([02-structure-cohesion](02-structure-cohesion.md)).
+- **코드 구조가 화면 레이아웃과 1:1 매핑.** 단순 텍스트는 상수로 빼지 말고 JSX에 직접(UI 이정표). 단 도메인 목록(통화·탭)에서 파생돼야 하는 반복 조각은 열거하지 말고 `map` 으로 자동 추종시키고, 반복 마크업은 슬롯으로 접는다([02-structure-cohesion](02-structure-cohesion.md) SSOT, [03-composition](03-composition.md) 얕은 포장 반례).
 
 ## 5. 예측 가능한 컴포넌트 (역할다움)
 
@@ -157,7 +159,7 @@ const [order, catalog] = useSuspenseQueries({
 
 ## 7. props · 태그드 유니온 · 주석
 
-- props는 `XxxProps` **인터페이스**로 선언(인라인 타입 금지). 단 **기존 파일 소급 수정 금지** — 한 파일 내 기존 패턴 존중.
+- props는 `XxxProps` **인터페이스**로 선언(인라인 타입 금지) — 판별 유니온 props(§2 view-state)는 `interface` 가 못 되니 `type`. 단 **기존 파일 소급 수정 금지** — 한 파일 내 기존 패턴 존중.
 - 합타입 + 패턴매칭 + **exhaustive `never`** 체크. 동일 union switch 중복은 `Record`로 — 단 **판정이 끝난 뒤의 값 매핑**에만. 판정 자체를 테이블로 옮기지 않는다([04-functional-domain](04-functional-domain.md)).
 - 컴포넌트는 ReactNode 일관 반환(raw `"-"` 반환 금지).
 - 주석: **코드로 안 보이는 제약**(호출 맥락 가정, 의도적 복제, 연동 지점)**만** — 이건 길어도 남긴다([canonical-examples](canonical-examples.md) `useProjectId`). 아키텍처 내레이션·소유권 주석 금지. 설명 주석이 길어지는 건 코드가 안 읽힌다는 신호다([00](00-intent.md) 신호표).
