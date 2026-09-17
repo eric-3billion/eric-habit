@@ -22,7 +22,7 @@ export function useProjectId(): string {
 ```
 
 무엇을 보여주나:
-- **의도 드러남([00-intent](00-intent.md))**: 이름 `useProjectId`가 반환을 telegraph. `= ""` 폴백이 **sentinel이 아니라 타입 좁히기**라는 걸 주석이 못박아 예측 가능.
+- **의도 드러남([00-intent](00-intent.md))**: 이름 `useProjectId`만으로 반환이 드러난다. `= ""` 폴백이 **sentinel이 아니라 타입 좁히기**라는 걸 주석이 못박아 예측 가능.
 - **주석 룰([01-component-design](01-component-design.md))**: 코드만 봐선 모를 것만 적혀 있다 — ① 라우트 마운트 보장 가정, ② 폴백의 진짜 의도(타입), ③ **의도적 복제** 결정 + 레이어 구조상 왜 공유/하향이 안 되는지, ④ "한쪽 바꾸면 다른 쪽도"라는 결합 제약. 자명한 내레이션은 한 줄도 없음.
 
 ## 2. 도메인 룰을 이름 붙은 순수함수로 — `is-sub-category`
@@ -75,4 +75,4 @@ export const isKeyBelongsToOrder = (
 
 ## 적용
 
-도메인 비교/키 생성/폴백 의미가 컴포넌트·포맷 함수에 인라인·하드코딩으로 흩어져 있으면, 위처럼 이름 붙은 순수함수 + 의도 드러나는 주석으로의 추출을 처방한다. → [04-functional-domain](04-functional-domain.md), [00-intent](00-intent.md)
+도메인 비교/키 생성/폴백 의미가 컴포넌트·포맷 함수에 인라인·하드코딩으로 흩어져 있으면, 위처럼 이름 붙은 순수함수 + 의도 드러나는 주석으로 추출한다. → [04-functional-domain](04-functional-domain.md), [00-intent](00-intent.md)

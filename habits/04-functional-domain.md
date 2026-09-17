@@ -79,17 +79,17 @@ declare function Guard(props: { can: Predicate<User>; children: ReactNode }): Re
 <Guard can={all(isAdmin, any(isOwner, hasFlag))}>…</Guard> // 3중 조합 — 시그니처 동일
 ```
 
-- **소비처가 한 타입만 받는 게 닫힘의 페이오프다**: 위 `Guard`는 조합 깊이와 무관하게 `Predicate<User>` 하나만 평가한다. 판정 로직은 원자·조합자에 모이고(SSOT) 소비처는 조합 결과를 받기만 한다([02-structure-cohesion](02-structure-cohesion.md)).
+- **소비처가 한 타입만 받는 게 닫힘이 주는 이득이다**: 위 `Guard`는 조합 깊이와 무관하게 `Predicate<User>` 하나만 평가한다. 판정 로직은 원자·조합자에 모이고(SSOT) 소비처는 조합 결과를 받기만 한다([02-structure-cohesion](02-structure-cohesion.md)).
 - reducer, 파서 결합, 미들웨어(`fn → fn`)처럼 **인자·반환이 같은 타입인** 자리면 이 형태로 닫는다.
 - (주의) 닫으려고 억지 타입을 만들지 말 것 — 자연히 같은 타입이 반복될 때만. 아니면 하는 일 없는 조합자 = 얕은 포장([03-composition](03-composition.md)).
 
-## 판정은 함수, `Record` 는 매핑 — 규칙을 데이터로 얼리지 마라
+## 판정은 함수, `Record` 는 매핑 — 규칙을 데이터로 박아두지 마라
 
 - **판정·규칙을 배열/객체 테이블로 두지 않는다.** 테이블에 넣는 순간 모든 규칙이 같은 시그니처로 굳고(`{조건, 메시지}`), 판정 결과가 타입으로 존재하지 않아, 그 결과를 소비하는 쪽의 케이스 누락을 컴파일러가 잡을 길이 없어진다.
 - 판정은 **태그드 유니온을 반환하는 단일책임 함수**로 쓴다. 표시값은 그 유니온을 받아 매핑한다.
 
 ```ts
-// ❌ 규칙을 데이터로 얼림 — 케이스가 늘어도 컴파일러가 아무것도 못 잡는다
+// ❌ 규칙을 데이터로 박아둠 — 케이스가 늘어도 컴파일러가 아무것도 못 잡는다
 const BLOCK_RULES = [
   { test: (s: State) => s.balance <= 0, message: "잔액이 부족합니다" },
   { test: (s: State) => s.overLimit,    message: "한도를 초과했습니다" },

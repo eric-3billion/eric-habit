@@ -19,11 +19,11 @@ const selection = useRowSelection(params);      // params 바뀌면 스스로 �
 const { data } = useTableData(params);          // params 파생
 ```
 
-### 진단 휴리스틱 (냄새)
+### 판별 신호 (코드 냄새)
 
 > `onXChange` 콜백을 자꾸 **위로 주입**하거나, 같은 정보를 여러 state로 **복제해 동기화**하고 있으면 → 변경의 소스가 엉뚱한 위치(아래)에 갇힌 신호다.
 
-처방은 하나: **비우는 "방법"(메커니즘)을 갈아끼우지 말고, "소스의 위치"를 위로 끌어올려라.** store·context·합성키 같은 exotic한 우회는 대개 본질을 더 더럽힌다. (실제 사례 전문 — 헛다리 6개 포함 → [cases/change-source-of-truth](cases/change-source-of-truth.md))
+할 일은 하나다: **비우는 "방법"(메커니즘)을 갈아끼우지 말고, "소스의 위치"를 위로 끌어올려라.** store·context·합성키 같은 exotic한 우회는 대개 본질을 더 더럽힌다. (실제 사례 전문 — 헛다리 6개 포함 → [cases/change-source-of-truth](cases/change-source-of-truth.md))
 
 → 연관: [00-intent](00-intent.md)(소스가 갇히면 의도가 안 드러남), [03-composition](03-composition.md)(중간 핸들러 금지 — 같은 뿌리), [01-component-design](01-component-design.md)(외부값→state 리셋은 effect가 아니라 key/렌더중보정).
 
@@ -41,7 +41,7 @@ const { data } = useTableData(params);          // params 파생
   export const RECOMMENDED_PRODUCTS_COUNT = 2;       // 화면 요구가 바뀔 때
   ```
 
-- 처방은 **변경 축별 모듈 + 노출은 의존 범위로**: 한 함수만 쓰는 값은 그 함수 옆 비공개 상수로, 여러 레이어(UI·검증·API)가 쓰면 도메인 정책으로 공개, 호출자마다 달라지는 값은 상수가 아니라 **함수 인자**로.
+- 해법은 **변경 축별 모듈 + 노출은 의존 범위로**: 한 함수만 쓰는 값은 그 함수 옆 비공개 상수로, 여러 레이어(UI·검증·API)가 쓰면 도메인 정책으로 공개, 호출자마다 달라지는 값은 상수가 아니라 **함수 인자**로.
 - **하드코딩·임시처리(temp/hack)·매직 값도 같은 룰** — 파일마다 흩지 말고 모으되, "한 곳"은 전역 상수 파일이 아니라 **그 값의 변경 축이 사는 모듈**이다. 트래킹은 모여야 하고, 축은 섞이면 안 된다.
 - **이름의 구체성이 축 경계를 지킨다.** `INTEREST_RATE_MULTIPLIER` 같은 메커니즘 이름은 아무 이자 규칙이나 재사용하게 만들어 축을 오염시킨다 → `SIMPLE_INTEREST_WEIGHT`처럼 소유 규칙을 이름에 박으면, 새 규칙(복리)이 생길 때 재사용 대신 새 상수를 만들게 된다 ([00-intent](00-intent.md)).
   - **반대 방향도 축 오류다 — 구체성은 실제 소유 범위와 일치해야 한다.** 도메인과 무관한 기계적 보정에 도메인 수식어를 붙이면 재사용이 막히고, 여러 케이스에 걸치는 값에 한 케이스 이름을 박으면 케이스가 늘 때 이름이 거짓이 된다. 위 문장만 보면 "구체적일수록 좋다"로 읽혀 이 방향을 못 잡는다.
@@ -62,7 +62,7 @@ const { data } = useTableData(params);          // params 파생
 - **기계 검증과의 분업**: 타입·lint는 경계 **안의** 오용(참조·형태)을 잡지, 경계 자체("이 두 값이 같은 이유로 바뀌나")를 그어주지 못한다. 축은 사람이 긋고, 그어진 경계를 지키는 일(공개 API, import 규칙)을 기계에 맡긴다.
 - 승격은 rule of three: 규칙은 feature 로컬 도메인 모듈에 두고, 두 번째 소비처가 나타날 때 상위로 올린다 ([03-composition](03-composition.md)).
 
-(실제 배경 사례 — 전역 config 세 상수의 축 진단, 개명의 효과 → [cases/ssot-change-axis](cases/ssot-change-axis.md))
+(실제 배경 사례 — 전역 config 세 상수의 축 판별, 개명의 효과 → [cases/ssot-change-axis](cases/ssot-change-axis.md))
 
 ## SSOT 는 API 응답 경계까지 — 같은 사실은 한 응답만 갖는다
 

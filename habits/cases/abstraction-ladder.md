@@ -112,7 +112,7 @@ function DialogShell({ children }) {
     const n = ref.current.querySelectorAll("[data-adjustable-dialog-handle]").length;
     if (n !== 1) console.error(`Header는 정확히 1개여야 함, 현재 ${n}개`);
   });
-  // 렌더 후 DOM 조회 = 파생상태를 손으로 확인하는 effect. 증상 땜빵.
+  // 렌더 후 DOM 조회 = 파생상태를 손으로 확인하는 effect. 겉만 막는 땜빵.
 }
 ```
 
