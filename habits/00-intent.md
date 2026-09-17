@@ -2,10 +2,8 @@
 
 가장 싫어하는 것: **의도가 안 드러나는 코드, 예측 불가능한 코드.**
 
-- 훅/함수/모듈 이름이 **반환값·동작을 이름만으로 정직하게 드러내야** 한다.
-  - 예: `const [user, setUser] = useCurrentUser()` — 이름만 봐도 반환·동작이 뻔히 읽힘.
+- 훅/함수/모듈 이름이 **반환값·동작·존재 이유를 이름만으로 정직하게 드러내야** 한다(아래 안티 예시). 예: `const [user, setUser] = useCurrentUser()`.
 - innocent한 이름 뒤에 **숨은 부수효과/surprise 금지** (principle of least astonishment).
-- **도메인 모듈·함수 단위로 의도를 표면화.** 이름이 존재 이유를 설명 못 하거나 다른 일을 숨기면 금지(아래 안티 예시).
 - **매직값·센티넬**(`-1`=N/A, `""`=unknown 등)은 네이밍 또는 주석으로 의미가 드러나게 — `useProjectId` 의 `= ""` 는 sentinel 이 아니라 타입 좁히기이고, 주석이 그걸 못박는다([canonical-examples](canonical-examples.md)). 단 이름을 붙이는 데서 끝이다 — 산술에 섞으면 거짓이 된다(아래 「이름이 거짓이 되는 두 자리」).
 
 ## 체크 질문
@@ -24,7 +22,7 @@
 | 이름이 정확한데 "뭐하는 놈인지 모르겠다" | 수식어를 압축·축약함 | 분해하지 말고 **펼쳐서 개명**한다(아래 「이름의 형태」) |
 
 - **주석이 길어졌다는 것 자체가 신호다.** 내용이 정확해도 길면 그 자리의 코드가 안 읽힌다는 뜻 — 단 *설명* 주석에 한정된 얘기다. 무엇을 남기고 무엇을 금지하는지는 [01 §7](01-component-design.md).
-- 제너럴한 이름(`*Info`·`*Data`, 쿼리가 아닌 것에 붙은 `*Query`)은 축 경계를 무너뜨린다([02-structure-cohesion](02-structure-cohesion.md)). `orderQueries` 같은 `queryOptions` 팩토리는 실제 쿼리라 예외. 반대로 **과하게 구체적인 이름도 축 오류**다 — 같은 곳에 양방향으로 적혀 있다.
+- 제너럴한 이름(`*Info`·`*Data`, 쿼리가 아닌 것에 붙은 `*Query`)은 축 경계를 무너뜨린다([02-structure-cohesion](02-structure-cohesion.md)). `orderQueries` 같은 `queryOptions` 팩토리는 실제 쿼리라 예외. 반대로 **과하게 구체적인 이름도 축 오류**다.
 - 한 자리를 고쳤으면 **같은 신호를 레포 전체에서 훑는다** — 한 군데서 끝나는 일이 아니다.
 
 ## 이름의 형태 — 동사·이웃·접미사·어휘가 정확성보다 먼저 읽힌다
@@ -35,7 +33,7 @@
 
 **동사가 애매하면 함수가 애매하다.** `resolve`·`handle`·`process`·`manage`·`apply`·`ensure` 같은 **넓은 동사는 쓰지 않는다** — 무엇을 하는지 아무것도 말하지 않으면서 이름이 정직해 보인다. 애매한 동사를 고르게 되는 건 대개 **그 함수가 두 일을 하거나 책임이 안 정해졌기** 때문이다.
 
-좁은 동사는 관례가 있어서 **반환·실패·부수효과까지** 예측된다. 동사를 고르는 게 곧 시그니처를 약속하는 것이다.
+좁은 동사는 관례가 있어서 **반환·실패·부수효과까지** 예측된다.
 
 | 동사 | 이름만 보고 예측되는 것 |
 |---|---|
@@ -58,7 +56,7 @@ createOrder(draft);   // Order
 confirmOrder(order);  // Result<ConfirmedOrder, ConfirmError>
 ```
 
-**명사도 좁혀야 한다 — 제너럴한 명사는 인지 강도를 올린다.** `data`·`item`·`value`·`state`·`info`·`result` 는 무엇이든 가리킬 수 있어서 아무것도 가리키지 않는다. 읽는 사람이 몸통을 열어야 그게 무엇인지 알게 되고, 그런 이름 하나마다 머리에 들고 다닐 것이 하나 늘어난다([01 §5](01-component-design.md) 가 props 에 대해 하는 말과 같다). 명사는 **도메인의 무엇**인지, 필요하면 **어떤 상황의 무엇**인지까지 좁혀 쓴다. **변수명도 같다.**
+**명사도 좁혀야 한다 — 제너럴한 명사는 인지 강도를 올린다.** `data`·`item`·`value`·`state`·`info`·`result` 는 무엇이든 가리킬 수 있어서 아무것도 가리키지 않는다. 읽는 사람이 몸통을 열어야 그게 무엇인지 알게 되고, 그런 이름 하나마다 머리에 들고 다닐 것이 하나 늘어난다([01 §5](01-component-design.md)). 명사는 **도메인의 무엇**인지, 필요하면 **어떤 상황의 무엇**인지까지 좁혀 쓴다. **변수명도 같다.**
 
 ```ts
 // ❌ 동사는 좁은데 명사가 제너럴 — 무엇을 찾고 무엇을 갱신하는지 몸통을 열어야 안다
@@ -67,7 +65,6 @@ findItem(id);  updateState(next);  const data = await load();  const result = ca
 findCartItem(id);  updateShippingAddress(next);  const invoice = await load();  const orderTotal = calcTotal(cartItems);
 ```
 
-- 접미사도 명사다 — `*Info`·`*Data`·`*Manager`, 쿼리가 아닌 것의 `*Query` 가 붙으면 앞이 아무리 구체적이어도 뒤가 뭉갠다(위 신호표 불릿, [02-structure-cohesion](02-structure-cohesion.md) 축 경계).
 - 단 좁히는 데도 한도가 있다 — 실제 소유 범위보다 좁게 지으면 반대 오류다([02-structure-cohesion](02-structure-cohesion.md) 「구체성은 소유 범위와 일치」).
 
 **뒤의 명사를 정직하게 쓰다가 `and` 가 나오면 이름 문제가 아니라 함수 문제다.** 그건 단일책임 위반의 증거이므로, 이름을 짧게 고쳐 덮지 말고(그렇게 하면 `resolve` 같은 넓은 동사로 빠진다) **쪼개고 재추상화한다**([01 §1](01-component-design.md)).
@@ -80,15 +77,14 @@ const cart = getCart(userId);
 clearCoupons(cart.id);
 ```
 
-- 단 **두 동작을 묶는 도메인 개념이 실제로 있으면 그 개념의 이름을 쓴다** — 그건 `and` 가 아니다. `checkout`·`publish` 는 여러 일을 하지만 도메인에 그 이름의 개념이 하나 있다. `and` 는 **묶을 개념이 없어서 나열한 것**이라는 신호다.
-- 반대로 개념 이름을 지어냈는데 설명할 때 "A 하고 B 한다"고 말하게 되면 그 개념은 없는 것이다 → 쪼갠다.
+- 단 **두 동작을 묶는 도메인 개념이 실제로 있으면 그 개념의 이름을 쓴다**(`checkout`·`publish`) — `and` 는 묶을 개념이 없어서 나열한 것이다. 판별: 설명할 때 "A 하고 B 한다"고 말하게 되면 그 개념은 없는 것이다 → 쪼갠다.
 
 ### 정확한데 안 읽히면 — 분해가 아니라 펼치기
 
 신호표 4행. 1~3행은 구조를 고치라는 뜻이지만, **이름이 이미 있고 정확한데 안 읽히는** 것은 경계 문제가 아니라 **어휘 문제**다 — 여기서 분해하면 엉뚱한 데를 고친다. 할 일은 개명이고, 방향은 펼치기다:
 
 - **주체 + 판정 기준을 다 쓴다** — `checkAffordableSelection`(형용사로 압축) → `checkSelectionWithinBudget`(무엇을 · 무슨 기준으로).
-- **길어져도 축약하지 않는다** — `hasMethodChoice` → `hasShippingMethodChoice`. 한 단어로 안 되면 여러 단어를 쓴다. "주석이 길면 신호"는 *주석* 얘기이지 이름을 짧게 하라는 뜻이 아니다.
+- **길어져도 축약하지 않는다** — `hasMethodChoice` → `hasShippingMethodChoice`. 한 단어로 안 되면 여러 단어를 쓴다 — 위 "주석이 길면 신호"는 이름을 짧게 하라는 뜻이 아니다.
 - **낯선 단어·전치사 꼬리를 쓰지 않는다** — `furthestStep`·`statusOf`·`completedUpTo` 대신 흔한 단어로.
 
 ### 형제 이름은 포맷을 공유한다 — 단위를 접미사에 박는다
@@ -108,7 +104,7 @@ filledStepCount    // 여기만 개수
 lastVisitedStepIndex / progressLimitStepIndex / valueLimitStepIndex
 ```
 
-**왜** — 형제로 안 보이면 `min()` 하나로 합쳐도 되는 값들을 각자 다른 것으로 취급한다. (값 *표현*의 일원화는 [05-types](05-types.md) 「도메인 규약 일관성」 — 이 절은 식별자 *포맷*이다.)
+**왜** — 형제로 안 보이면 `min()` 하나로 합쳐도 되는 값들을 각자 다른 것으로 취급한다. (값 *표현*의 일관성은 [05-types](05-types.md).)
 
 ### 접미사는 "어떤 종류·어느 위계"라는 주장이다
 
