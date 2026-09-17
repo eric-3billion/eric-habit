@@ -17,13 +17,17 @@
   const total = items.filter((it) => it.active).reduce((sum, it) => sum + it.price, 0);
   ```
 
-- **예외 throw 금지** → `Result`/`Option` + 에러 전파. (throw는 시그니처에 안 드러나는 숨은 분기)
+- **예상 가능한 실패는 throw 하지 않는다** → `Result`/`Option` + 에러 전파. (throw는 시그니처에 안 드러나는 숨은 분기)
+  - 갈림은 **"호출부가 이 실패를 정상 흐름으로 다뤄야 하나"** — 다뤄야 하면 `Result`, **Suspense/ErrorBoundary 경계가 다루면 throw**([01 §3](01-component-design.md)). [00-intent](00-intent.md) 동사 표의 `find*`(부재 → `undefined`) / `parse*`(Result) 가 이 갈림이다.
+  - (엣지) `Map.get` 처럼 컨테이너가 `| undefined` 를 강제하는데 도메인상 반드시 있는 값은 **한 곳에서 단언해 좁혀도 된다** — 실패 처리가 아니라 "여기 오면 버그"라는 선언. 마지막 수단이고, `get*` 의 존재 보장은 원칙적으로 조달·타입이 한다([05-types](05-types.md)).
 
   ```ts
-  // ❌ 성공 타입만 노출, 실패는 호출부가 예측 못 함
-  function parsePort(s: string): number { const n = Number(s); if (Number.isNaN(n)) throw Error(); return n; }
-  // ✅ 실패가 반환 타입에 드러남 → 호출부가 반드시 다룸
+  // ❌ 예상 가능한 실패를 throw — 호출부가 예측 못 함
+  function parsePort(s: string): number { … throw Error(); … }
+  // ✅ 실패가 반환 타입에 → 호출부가 반드시 다룬다
   function parsePort(s: string): Result<number, "NaN"> { … }
+  // (엣지) 좁히기용 단언 — 실패 처리가 아니다
+  const order = orders.get(id) ?? invariant(`order ${id} must exist`);
   ```
 
 - **합타입(Discriminated Union) + 패턴매칭 + exhaustive `never`**로 분기를 컴파일타임에 완전 처리. 케이스 추가 시 누락을 컴파일러가 잡아줌. 비지터/중첩 if 대체.
