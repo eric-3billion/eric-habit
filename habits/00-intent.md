@@ -31,7 +31,7 @@
 
 위 룰들은 **한 이름이 홀로** 정직한지를 본다. 그런데 정확해 보이는 이름도 **고른 동사·단어**나 **놓인 자리** 때문에 실패한다.
 
-### 함수 이름 = 좁은 동사 + 그 동사가 다루는 명사
+### 함수 이름 = 좁은 동사 + 좁은 명사
 
 **동사가 애매하면 함수가 애매하다.** `resolve`·`handle`·`process`·`manage`·`apply`·`ensure` 같은 **넓은 동사는 쓰지 않는다** — 무엇을 하는지 아무것도 말하지 않으면서 이름이 정직해 보인다. 애매한 동사를 고르게 되는 건 대개 **그 함수가 두 일을 하거나 책임이 안 정해졌기** 때문이다.
 
@@ -57,6 +57,18 @@ findOrder(id);        // Order | undefined
 createOrder(draft);   // Order
 confirmOrder(order);  // Result<ConfirmedOrder, ConfirmError>
 ```
+
+**명사도 좁혀야 한다 — 제너럴한 명사는 인지 강도를 올린다.** `data`·`item`·`value`·`state`·`info`·`result` 는 무엇이든 가리킬 수 있어서 아무것도 가리키지 않는다. 읽는 사람이 몸통을 열어야 그게 무엇인지 알게 되고, 그런 이름 하나마다 머리에 들고 다닐 것이 하나 늘어난다([01 §5](01-component-design.md) 가 props 에 대해 하는 말과 같다). 명사는 **도메인의 무엇**인지, 필요하면 **어떤 상황의 무엇**인지까지 좁혀 쓴다. **변수명도 같다.**
+
+```ts
+// ❌ 동사는 좁은데 명사가 제너럴 — 무엇을 찾고 무엇을 갱신하는지 몸통을 열어야 안다
+findItem(id);  updateState(next);  const data = await load();  const result = calc(items);
+// ✅ 도메인의 무엇인지, 어떤 상황의 무엇인지
+findCartItem(id);  updateShippingAddress(next);  const invoice = await load();  const orderTotal = calcTotal(cartItems);
+```
+
+- 접미사도 명사다 — `*Query`·`*Info`·`*Data`·`*Manager` 가 붙으면 앞이 아무리 구체적이어도 뒤가 뭉갠다(위 신호표 불릿, [02-structure-cohesion](02-structure-cohesion.md) 축 경계).
+- 단 좁히는 데도 한도가 있다 — 실제 소유 범위보다 좁게 지으면 반대 오류다([02-structure-cohesion](02-structure-cohesion.md) 「구체성은 소유 범위와 일치」).
 
 **뒤의 명사를 정직하게 쓰다가 `and` 가 나오면 이름 문제가 아니라 함수 문제다.** 그건 단일책임 위반의 증거이므로, 이름을 짧게 고쳐 덮지 말고(그렇게 하면 `resolve` 같은 넓은 동사로 빠진다) **쪼개고 재추상화한다**([01 §1](01-component-design.md)).
 
