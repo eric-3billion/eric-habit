@@ -156,7 +156,7 @@ const [order, catalog] = useSuspenseQueries({
 
 ## 7. props · 태그드 유니온 · 주석
 
-- props는 `XxxProps` **인터페이스**로 선언(인라인 타입 금지) — 판별 유니온 props(§2 view-state)는 `interface` 가 못 되니 `type`. 단 **기존 파일 소급 수정 금지** — 한 파일 내 기존 패턴 존중.
+- props는 `XxxProps` **인터페이스**로 선언 — 판별 유니온 props(§2 view-state)는 `interface` 가 못 되니 `type`. 인라인 타입은 **한 줄에 들어가는 것만** 허용(`({ resetError }: { resetError: () => void })`), 줄이 넘어가면 인터페이스로 뺀다. 단 **기존 파일 소급 수정 금지** — 한 파일 내 기존 패턴 존중.
 - 합타입 + 패턴매칭 + **exhaustive `never`** 체크. 동일 union switch 중복은 `Record`로 — 단 **판정이 끝난 뒤의 값 매핑**에만. 판정 자체를 테이블로 옮기지 않는다([04-functional-domain](04-functional-domain.md)).
 - 컴포넌트는 ReactNode 일관 반환(raw `"-"` 반환 금지).
 - 주석: **코드로 안 보이는 제약**(호출 맥락 가정, 의도적 복제, 연동 지점)**만** — 이건 길어도 남긴다([canonical-examples](canonical-examples.md) `useProjectId`). 아키텍처 내레이션·소유권 주석 금지. 설명 주석이 길어지는 건 코드가 안 읽힌다는 신호다([00](00-intent.md) 신호표).
