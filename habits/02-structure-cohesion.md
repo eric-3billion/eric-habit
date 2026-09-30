@@ -50,9 +50,9 @@ const { data } = useTableData(params);          // params 파생
 
     ```ts
     // ❌ 음수 보정은 가격과 무관한데 도메인 이름으로 좁힘 → 수량·할인에 재사용 못 함
-    const toPriceAmount = (s: string) => Math.max(0, Number(s));
+    const clampPriceAmount = (amount: number) => Math.max(0, amount);
     // ✅ 규칙이 소유하는 범위만큼만 구체적으로
-    const clampNonNegative = (s: string) => Math.max(0, Number(s));
+    const clampNonNegative = (amount: number) => Math.max(0, amount);
 
     // ❌ 크기 제한은 모든 첨부에 걸리는데 한 케이스 이름 → 다음 파일 타입에서 거짓이 된다
     interface UploadLimit { imageSize: number }
@@ -104,7 +104,7 @@ SSOT 는 "흩어진 걸 모아라"만이 아니라 **"만들기 전에 주인이
 ## 응집 · 선언 = 의존성 순서
 
 - **응집**: 한 맥락에 필요한 건 모아둔다 — 관련된 게 여기저기 흩어지는 것 금지.
-- 선언(테이블 컬럼 타입, 상수, 헬퍼 등)을 **의존성 순서대로**. 단 이건 TDZ 에 묶인 것(상수·타입·`const` 화살표)의 얘기다 — 호이스팅되는 `function`·컴포넌트는 **읽는 순서(진입점 먼저)** 로 둔다([01 §4](01-component-design.md)).
+- 선언(테이블 컬럼 타입, 상수, 헬퍼 등)을 **의존성 순서대로**. 단 이건 **TDZ 가 실제로 걸리는 것** — 모듈 최상위에서 실행 시점에 참조되는 상수·`const` 화살표, 그리고 타입 — 의 얘기다. 함수 몸통 안에서만 참조되는 상수(styled·className·헬퍼)는 실행 시점엔 이미 선언돼 있어 TDZ 에 안 걸리므로 쓰는 쪽보다 아래에 둬도 된다. 호이스팅되는 `function`·컴포넌트는 **읽는 순서(진입점 먼저)** 로 둔다([01 §4](01-component-design.md)).
 - **"의존성 역전"이 싫다 = 의존 방향·선언순서가 거꾸로인 것.**
   - 하위가 상위를 알거나, 쓰이는 것이 쓰는 것보다 늦게 선언되거나, 순환 의존.
   - ⚠️ SOLID DIP / IoC 컨테이너(Inversify 등) 얘기가 아님. 함수형 커링 DI는 오히려 권장([04-functional-domain](04-functional-domain.md)).

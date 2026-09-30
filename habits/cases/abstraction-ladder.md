@@ -130,7 +130,7 @@ function DialogShell({ children }) {
 // ✅ 필수 prop — title 없으면 타입 에러, 2개는 애초에 불가능
 <AdjustableDialog
   title="Edit Variant"       // 필수 → cardinality를 타입이 보장
-  onClose={close}            // 표준 닫기(X) 버튼을 컴포넌트가 렌더
+  onClose={handleClose}      // 표준 닫기(X) 버튼을 컴포넌트가 렌더
   headerActions={<CommentButton/>}  // 제목 오른쪽 추가 버튼만 선택 슬롯
 >
   {/* 본문 */}
@@ -216,7 +216,7 @@ function DialogShell({ children }) {
   storageKey="edit-variant-dialog"
   defaultState={{ position, size }}
   title="Edit Variant"
-  onClose={close}
+  onClose={handleClose}
   headerActions={optionalButton}   // 선택·복수 → 슬롯
 >
   {/* 본문 */}

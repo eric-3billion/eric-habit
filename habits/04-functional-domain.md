@@ -12,7 +12,9 @@
   let total = 0;
   for (const it of items) { if (it.active) total += it.price; }
   // ✅ 불변 + 선언적
-  const total = items.filter((it) => it.active).reduce((sum, it) => sum + it.price, 0);
+  const total = items
+    .filter((it) => it.active)
+    .reduce((sum, it) => sum + it.price, 0);
   ```
 
 - **중첩 삼항 금지** → 조기 반환(`if … return`)으로 편다. 삼항은 한 단까지만 식으로 쓴다.
@@ -57,11 +59,11 @@
 - **DI/팩토리는 커링/부분적용**으로 설정값·런타임 인자 분리(생성/사용 단계 분리). 함수형 DI는 권장 — OOP IoC 상용구만 배제.
 
   ```ts
-  // ✅ 설정(logger)은 생성 시, 런타임 인자(id)는 사용 시 — 두 단계 분리
-  const createGetUser = (logger: Logger) => (id: string) => { logger.info(id); return api.getUser(id); };
+  // ✅ 설정(baseUrl)은 생성 시, 런타임 인자(id)는 사용 시 — 두 단계 분리
+  const createGetUser = (baseUrl: string) => (id: string): Promise<User> => http.get(`${baseUrl}/users/${id}`);
   ```
 
-- **리턴 타입 명시**, 메서드 체이닝은 **수직 줄바꿈**.
+- **export 함수는 리턴 타입을 명시한다**(컴포넌트 제외 — 컴포넌트 반환은 `ReactNode` 로 일관), 메서드 체이닝은 **수직 줄바꿈**.
 
 ## 조합 닫힘 (closure of operation) — 인자·반환 타입이 같은 연산은 무한 조합된다
 

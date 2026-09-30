@@ -1,6 +1,6 @@
 # 06 · 테스트
 
-기본기(일반 testing-library 상식 — 짧게): 전역 짧은 텍스트 조회 금지 → `within`/행·열 헤더로 스코프, role/접근성 쿼리 우선, `data-testid` 결합 지양. feature가 깨지면 확실히 잡히는 단언.
+기본기(일반 testing-library 상식 — 짧게): 전역 짧은 텍스트 조회 금지 → `within`/행·열 헤더로 스코프, role/접근성 쿼리 우선, `data-testid` 금지. feature가 깨지면 확실히 잡히는 단언.
 
 ## 비자명한 것 (실제로 물렸던 것)
 

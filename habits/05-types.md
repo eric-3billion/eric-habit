@@ -8,7 +8,7 @@
 
 ## 타입 일관성
 
-- (기본 위생) `as` 캐스트 · non-null `!` · `any` 지양 — 일반 TS 상식, 별도 설명 생략.
+- (기본 위생) `as` 캐스트(`as const` 는 예외) · non-null `!` · `any` 금지 — 일반 TS 상식, 별도 설명 생략.
 - **lint 억제 주석으로 사유를 대는 회피는 그 위생 위반보다 더 나쁘다.** `biome-ignore`/`eslint-disable` 로 `!` 를 통과시키려는데 사유가 그럴듯하다면(예: "Suspense 경계 안이라 항상 존재"), 그건 **타입이 그 사실을 표현하지 못한다**는 뜻이다 — 억제하지 말고 값이 항상 존재하도록 **조달 구조를 고친다.**
 
   ```ts
@@ -38,7 +38,7 @@
   // ✅ 경계에서 한 번 흡수 → model은 필수 필드, 리프는 방어 안 함
   const toOrder = (dto: OrderDTO): Order => ({
     ...dto,
-    currency: dto.currency ?? "USD", // 하위호환: currency 없는 레거시 레코드는 USD로 정규화
+    currency: dto.currency ?? "USD", // 하위호환: currency 없는 레거시 레코드는 USD로 채운다
   });
   ```
 

@@ -60,7 +60,7 @@ export function calculateExpectedAmount(
   monthlyAmount: number,
   termMonths: number,
   annualRatePercent: number,
-) {
+): number {
   return monthlyAmount * termMonths *
     (1 + annualRatePercent / 100 * SIMPLE_INTEREST_WEIGHT);
 }

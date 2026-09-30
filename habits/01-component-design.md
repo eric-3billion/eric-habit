@@ -127,7 +127,7 @@ const [order, catalog] = useSuspenseQueries({
 ## 4. 위에서 아래로 흐르는 코드 / JSX = UI
 
 - 트리 구조 활용: 상위에서 복잡도를 해소할수록 하위가 단순.
-- 파일 안에서도 같다 — **진입점(호출하는 쪽)을 위에**, 그것이 쓰는 조각을 아래에. 상수·타입은 TDZ 때문에 의존성 순서([02-structure-cohesion](02-structure-cohesion.md)).
+- 파일 안에서도 같다 — **진입점(호출하는 쪽)을 위에**, 그것이 쓰는 조각을 아래에. 모듈 최상위에서 실행 시점에 참조되는 상수와 타입만 TDZ 때문에 의존성 순서다 — 함수 몸통 안에서만 쓰는 상수(styled·className)는 아래에 둬도 된다([02-structure-cohesion](02-structure-cohesion.md)).
 - **코드 구조가 화면 레이아웃과 1:1 매핑.** 단순 텍스트는 상수로 빼지 말고 JSX에 직접(UI 이정표). 단 도메인 목록(통화·탭)에서 파생돼야 하는 반복 조각은 열거하지 말고 `map` 으로 자동 추종시키고, 반복 마크업은 슬롯으로 접는다([02-structure-cohesion](02-structure-cohesion.md) SSOT, [03-composition](03-composition.md) 얕은 포장 반례).
 
 ## 5. 예측 가능한 컴포넌트 (역할다움)
@@ -157,12 +157,12 @@ const [order, catalog] = useSuspenseQueries({
 
 ## 7. props · 태그드 유니온 · 주석
 
-- props는 `XxxProps` **인터페이스**로 선언 — 판별 유니온 props(§2 view-state)는 `interface` 가 못 되니 `type`. 인라인 타입은 **한 줄에 들어가는 것만** 허용(`({ resetError }: { resetError: () => void })`), 줄이 넘어가면 인터페이스로 뺀다. 단 **기존 파일 소급 수정 금지** — 한 파일 내 기존 패턴 존중.
+- props는 `XxxProps` **인터페이스**로 선언 — 판별 유니온 props(§2 view-state)는 `interface` 가 못 되니 `type`. 인라인 타입은 **한 줄에 들어가는 것만** 허용(`({ resetError }: { resetError: () => void })`), 줄이 넘어가면 인터페이스로 뺀다. 단 **기존 코드는 소급 수정하지 않는다** — 새 코드만 새 룰을 따르고, 파일의 기존 패턴에 맞추지 않는다(lint 도입은 baseline·diff CI 로 — [lint/README](../lint/README.md)).
 - 합타입 + 패턴매칭 + **exhaustive `never`** 체크. 동일 union switch 중복은 `Record`로 — 단 **판정이 끝난 뒤의 값 매핑**에만. 판정 자체를 테이블로 옮기지 않는다([04-functional-domain](04-functional-domain.md)).
 - 컴포넌트는 ReactNode 일관 반환(raw `"-"` 반환 금지).
 - 주석: **코드로 안 보이는 제약**(호출 맥락 가정, 의도적 복제, 연동 지점)**만** — 이건 길어도 남긴다([canonical-examples](canonical-examples.md) `useProjectId`). 아키텍처 내레이션·소유권 주석 금지. 설명 주석이 길어지는 건 코드가 안 읽힌다는 신호다([00](00-intent.md) 신호표).
   - **변경 이력 내레이션("기존엔 ~~였는데", before/after)도 금지.** 리팩터의 근거는 PR 본문에 쓰고 코드에 남기지 않는다 — 다음 독자에게 "기존"은 존재하지 않는 코드다.
   - 리팩터가 끝나면 **이력 주석을 전수조사로 걷어내는 마무리 단계**를 둔다. 작업 중엔 붙이기 쉽고, 끝나면 아무도 안 지운다.
-- 공유 styled/className 은 스타일 기반 제너럴 이름.
+- 공유 styled/className 은 **스타일 기반 이름**(`FlexRow`) — 소유 범위가 스타일이라 도메인 이름을 붙이면 과도한 구체화다([02-structure-cohesion](02-structure-cohesion.md) 「구체성은 소유 범위와 일치」).
 
 → 연관: [03-composition](03-composition.md), [02-structure-cohesion](02-structure-cohesion.md).

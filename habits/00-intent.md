@@ -53,7 +53,8 @@
 | `clamp*` | 범위 안으로 보정한 값을 반환한다. 순수 |
 | `compare*` | 정렬 비교자 — `number`(음수·0·양수)를 반환한다. `toSorted(compareOrdersByDate)` |
 | `parse*`·`validate*` | 실패가 **반환 타입에** 드러난다 — `Result` 또는 `T \| undefined`([04-functional-domain](04-functional-domain.md)) |
-| `create*`·`update*`·`delete*` | 쓰기 — 부수효과가 있다는 선언. `create`·`delete` 는 엔티티 자체의 생성·소멸. 팩토리도 `create*` — 판별: **결과가 입력을 다른 모양으로 바꾼 것이면 `to*`**, 입력이 설정·의존성이고 결과가 새 것이면 `create*`(`createGetUser(logger)`) |
+| `create*`·`update*`·`delete*` | 쓰기 — 부수효과가 있다는 선언. `create`·`delete` 는 엔티티 자체의 생성·소멸(`createOrder(draft)`) |
+| `create*` (팩토리) | 설정·의존성을 받아 함수·스토어·클라이언트를 만든다. **순수** — 엔티티 생성과 달리 부수효과가 없다(`createGetUser(baseUrl)`, `createKeyStore`). 둘은 **만드는 것의 명사**로 갈린다 — 도메인 엔티티면 쓰기, 함수·스토어면 팩토리. 판별: **결과가 입력을 다른 모양으로 바꾼 것이면 `to*`**, 입력이 설정·의존성이고 결과가 새 것이면 `create*` |
 | `add*`·`remove*` | 컬렉션 멤버십 변경 — 엔티티는 이미 있고 넣거나 뺄 뿐이다(`removeCartItem` ≠ `deleteProduct`) |
 | `reset*` | 초기값으로 되돌리는 쓰기. 비우기도 `reset*` |
 | `set*` | 주어진 값으로 교체하는 쓰기 — `useState` 세터 규약 |

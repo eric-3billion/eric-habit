@@ -134,7 +134,7 @@ const d = useDraggableBox(...); // 소비처마다 <Draggable><Resizable>… 직
   <본문/>
 </AdjustableDialog>
 // ✅ 필수 prop — title 이 없으면 타입 에러. 헤더 마크업·닫기 버튼·드래그 연결을 컴포넌트가 소유
-<AdjustableDialog title="제목" onClose={close} headerActions={<코멘트버튼/>}>
+<AdjustableDialog title="제목" onClose={handleClose} headerActions={<코멘트버튼/>}>
   <본문/>
 </AdjustableDialog>
 ```

@@ -112,7 +112,7 @@ export function useRowSelection(viewToken: OverviewServerParams) {
     setPrevViewToken(viewToken);
     if (Object.keys(rowSelection).length > 0) setRowSelection(EMPTY_SELECTION);
   }
-  // ...selectedRowsOf(rows), reset...
+  // ...listSelectedRows(rows), reset...
 }
 ```
 
