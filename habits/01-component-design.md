@@ -30,12 +30,12 @@ function useCart() {
   const [items, setItems] = useState([]);     // 장바구니 상태
   const { data: coupons } = useCoupons();      // 쿠폰 조달
   const total = items.reduce(/* ... */);       // 합계 계산
-  const checkout = () => api.checkout(items);  // 결제 요청
+  const createPayment = () => api.createPayment(items);  // 결제 요청
   // 상태 / fetch / 계산 / 결제 — 하나만 바뀌어도 이 훅을 건드린다
 }
 // ✅ 책임별로 — 각 훅·함수는 한 가지 일만
 function useCartItems() {/* 장바구니 상태만 */}
-const calcTotal = (items: CartItem[]) => /* 합계 계산(순수함수) */;
+const calculateTotal = (items: CartItem[]) => /* 합계 계산(순수함수) */;
 function useCheckout() {/* 결제 요청만 */}
 ```
 
@@ -44,7 +44,7 @@ function useCheckout() {/* 결제 요청만 */}
 ```tsx
 function CartSection() {                            // 관심사: 장바구니
   const { items, add, remove } = useCartItems();    // 책임: 상태
-  const total = calcTotal(items);                   // 책임: 합계
+  const total = calculateTotal(items);              // 책임: 합계
   // ...
 }
 ```

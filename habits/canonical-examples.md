@@ -48,13 +48,13 @@ export function isSubCategory(categoryId: string, rootId: string): boolean {
 
 ```ts
 // (예시) 팀 공용 branded-key 유틸
-import { defineKeyStore, type InferKey } from "./key-store";
+import { createKeyStore, type InferKey } from "./key-store";
 
 /**
  * 주문 라인을 고유하게 식별하는 branded key 팩토리.
  * order id와 line sku 조합으로 키를 생성한다.
  */
-export const orderLineKeys = defineKeyStore("OrderLineKey", {
+export const orderLineKeys = createKeyStore("OrderLineKey", {
   line: (order: { id: string }, line: { sku: string }): string =>
     `${order.id}-${line.sku}`
 });

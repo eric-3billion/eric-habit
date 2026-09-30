@@ -26,13 +26,13 @@
 const [position, setPosition] = useState(defaultPosition);
 
 useLayoutEffect(() => {
-  const keepInViewport = () => {
+  const updateClampedPosition = () => {
     const { width, height } = nodeRef.current.getBoundingClientRect();
-    setPosition(prev => clampPositionToViewport(prev, { width, height }, viewport()));
+    setPosition(prev => clampPositionToViewport(prev, { width, height }, getViewport()));
   };
-  keepInViewport(); // 마운트 시 1회 보정 (지난 세션 위치가 화면 밖일 수 있음)
-  window.addEventListener("resize", keepInViewport);
-  return () => window.removeEventListener("resize", keepInViewport);
+  updateClampedPosition(); // 마운트 시 1회 보정 (지난 세션 위치가 화면 밖일 수 있음)
+  window.addEventListener("resize", updateClampedPosition);
+  return () => window.removeEventListener("resize", updateClampedPosition);
 }, []);
 ```
 

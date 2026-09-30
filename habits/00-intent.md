@@ -31,9 +31,11 @@
 
 ### 함수 이름 = 좁은 동사 + 좁은 명사
 
-**동사가 애매하면 함수가 애매하다.** `resolve`·`process`·`manage`·`apply`·`ensure` 같은 **넓은 동사는 쓰지 않는다** — 무엇을 하는지 아무것도 말하지 않으면서 이름이 정직해 보인다. (`handle*` 은 이벤트 핸들러 관례라 허용한다.) 애매한 동사를 고르게 되는 건 대개 **그 함수가 두 일을 하거나 책임이 안 정해졌기** 때문이다.
+**동사가 애매하면 함수가 애매하다.** 함수 이름의 동사는 **아래 표에 있는 것만 쓴다(화이트리스트).** 표의 동사는 관례가 있어서 **반환·실패·부수효과까지** 이름만으로 예측되고, 표에 없는 동사는 그 계약이 없어 예측할 수 없다. 애매한 동사를 고르게 되는 건 대개 **그 함수가 두 일을 하거나 책임이 안 정해졌기** 때문이다.
 
-좁은 동사는 관례가 있어서 **반환·실패·부수효과까지** 예측된다.
+- **금지 목록이 아니라 허용 목록인 이유**: 넓은 동사는 끝없이 새로 생겨서 금지 목록으로는 닫히지 않는다. 모르는 동사는 기본으로 막는다.
+- **새 동사가 필요하면 먼저 표에 올린다** — 도메인 동작(`confirm`·`checkout` 등)도 기본 금지다. 표에 올릴 때 그 동사의 계약(반환·부수효과)을 같이 적는다.
+- **예외: 조합자** — `all`·`any` 처럼 같은 타입을 받아 같은 타입을 돌려주는 조합 연산은 동사가 아니어도 된다([04-functional-domain](04-functional-domain.md) 「조합 닫힘」). 컴포넌트(PascalCase)는 대상이 아니다.
 
 | 동사 | 이름만 보고 예측되는 것 |
 |---|---|
@@ -42,48 +44,54 @@
 | `list*` | 0개 이상, 빈 배열이 정상 |
 | `is*`·`has*`·`can*` | boolean 판정. 부수효과 없음 |
 | `to*`·`format*` | 순수 변환 — **판정을 숨기지 않는다**(아래 안티 예시 `formatScore`). 경계 매퍼의 하위호환 폴백만 예외, 주석으로 드러낸다([05-types](05-types.md)) |
+| `calculate*` | 순수 계산 — 입력에서 값을 도출한다. 축약(`calc`) 없이 풀네임만 |
+| `clamp*` | 범위 안으로 보정한 값을 반환한다. 순수 |
 | `parse*`·`validate*` | 실패가 **반환 타입에** 드러난다([04-functional-domain](04-functional-domain.md) `Result`) |
-| `create*`·`update*`·`delete*` | 쓰기 — 부수효과가 있다는 선언 |
+| `create*`·`update*`·`delete*` | 쓰기 — 부수효과가 있다는 선언. 팩토리도 `create*` |
+| `reset*` | 초기값으로 되돌리는 쓰기. 비우기도 `reset*` |
+| `set*` | 주어진 값으로 교체하는 쓰기 — `useState` 세터 규약 |
+| `use*` | React 훅 |
+| `handle*` | 이벤트 핸들러 — `on*` prop 에 연결된다 |
 
 ```ts
-// ❌ 넓은 동사 — 조회인지 생성인지 확정인지, 실패하면 어떻게 되는지 아무것도 모른다
+// ❌ 표에 없는 동사 — 조회인지 생성인지 확정인지, 실패하면 어떻게 되는지 아무것도 모른다
 resolveOrder(id);
 manageProduct(product);
 processItems(items);
-// ✅ 좁은 동사 + 명사 — 시그니처를 이름이 약속한다
+// ✅ 표의 동사 + 명사 — 시그니처를 이름이 약속한다
 findOrder(id);        // Order | undefined
 createOrder(draft);   // Order
-confirmOrder(order);  // Result<ConfirmedOrder, ConfirmError>
+validateOrder(order); // Result<ValidOrder, OrderError>
 ```
 
 **명사도 좁혀야 한다 — 제너럴한 명사는 인지 강도를 올린다.** `data`·`item`·`value`·`state`·`info`·`result` 는 무엇이든 가리킬 수 있어서 아무것도 가리키지 않는다. 읽는 사람이 몸통을 열어야 그게 무엇인지 알게 되고, 그런 이름 하나마다 머리에 들고 다닐 것이 하나 늘어난다([01 §5](01-component-design.md)). 명사는 **도메인의 무엇**인지, 필요하면 **어떤 상황의 무엇**인지까지 좁혀 쓴다. **변수명도 같다.**
 
 ```ts
 // ❌ 동사는 좁은데 명사가 제너럴 — 무엇을 찾고 무엇을 갱신하는지 몸통을 열어야 안다
-findItem(id);  updateState(next);  const data = await load();  const result = calc(items);
+findItem(id);  updateState(next);  const data = await getData(id);  const result = calculate(items);
 // ✅ 도메인의 무엇인지, 어떤 상황의 무엇인지
-findCartItem(id);  updateShippingAddress(next);  const invoice = await load();  const orderTotal = calcTotal(cartItems);
+findCartItem(id);  updateShippingAddress(next);  const invoice = await getInvoice(id);  const orderTotal = calculateTotal(cartItems);
 ```
 
 - 단 좁히는 데도 한도가 있다 — 실제 소유 범위보다 좁게 지으면 반대 오류다([02-structure-cohesion](02-structure-cohesion.md) 「구체성은 소유 범위와 일치」).
 
-**뒤의 명사를 정직하게 쓰다가 `and` 가 나오면 이름 문제가 아니라 함수 문제다.** 그건 단일책임 위반의 증거이므로, 이름을 짧게 고쳐 덮지 말고(그렇게 하면 `resolve` 같은 넓은 동사로 빠진다) **쪼개고 재추상화한다**([01 §1](01-component-design.md)).
+**뒤의 명사를 정직하게 쓰다가 `and` 가 나오면 이름 문제가 아니라 함수 문제다.** 그건 단일책임 위반의 증거이므로, 이름을 짧게 고쳐 덮지 말고(그렇게 하면 `resolve` 같은 표에 없는 넓은 동사로 빠진다) **쪼개고 재추상화한다**([01 §1](01-component-design.md)).
 
 ```ts
 // ❌ and 가 붙었다 = 한 함수가 두 일을 한다
-function getCartAndClearCoupons(userId: string) { … }
+function getCartAndResetCoupons(userId: string) { … }
 // ✅ 쪼개고 호출부가 조합한다
 const cart = getCart(userId);
-clearCoupons(cart.id);
+resetCoupons(cart.id);
 ```
 
-- 단 **두 동작을 묶는 도메인 개념이 실제로 있으면 그 개념의 이름을 쓴다**(`checkout`·`publish`) — `and` 는 묶을 개념이 없어서 나열한 것이다. 판별: 설명할 때 "A 하고 B 한다"고 말하게 되면 그 개념은 없는 것이다 → 쪼갠다.
+- 단 **두 동작을 묶는 도메인 개념이 실제로 있으면 그 개념의 동사를 표에 올리고 쓴다** — `and` 는 묶을 개념이 없어서 나열한 것이다. 판별: 설명할 때 "A 하고 B 한다"고 말하게 되면 그 개념은 없는 것이다 → 쪼갠다.
 
 ### 정확한데 안 읽히면 — 분해가 아니라 펼치기
 
 신호표 4행. 1~3행은 구조를 고치라는 뜻이지만, **이름이 이미 있고 정확한데 안 읽히는** 것은 경계 문제가 아니라 **어휘 문제**다 — 여기서 분해하면 엉뚱한 데를 고친다. 할 일은 개명이고, 방향은 펼치기다:
 
-- **주체 + 판정 기준을 다 쓴다** — `checkAffordableSelection`(형용사로 압축) → `checkSelectionWithinBudget`(무엇을 · 무슨 기준으로).
+- **주체 + 판정 기준을 다 쓴다** — `isAffordableSelection`(형용사로 압축) → `isSelectionWithinBudget`(무엇을 · 무슨 기준으로).
 - **길어져도 축약하지 않는다** — `hasMethodChoice` → `hasShippingMethodChoice`. 한 단어로 안 되면 여러 단어를 쓴다 — 위 "주석이 길면 신호"는 이름을 짧게 하라는 뜻이 아니다.
 - **낯선 단어·전치사 꼬리를 쓰지 않는다** — `furthestStep`·`statusOf`·`completedUpTo` 대신 흔한 단어로.
 

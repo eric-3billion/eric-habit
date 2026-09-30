@@ -21,7 +21,7 @@
   // ❌ 중첩 삼항 — 조건이 늘수록 어느 분기가 어느 값인지 안 읽힌다
   const tier = score > 90 ? "gold" : score > 70 ? "silver" : "bronze";
   // ✅ 조기 반환 — 조건 하나에 값 하나가 한 줄씩
-  function classifyTier(score: number): Tier {
+  function calculateTier(score: number): Tier {
     if (score > 90) return "gold";
     if (score > 70) return "silver";
     return "bronze";
@@ -45,7 +45,7 @@
 
   ```ts
   // ✅ 케이스 빠뜨리면 default에서 컴파일 에러
-  function label(s: Status): string {
+  function formatStatusLabel(s: Status): string {
     switch (s.type) {
       case "loading": return "…";
       case "error":   return s.message;
@@ -58,7 +58,7 @@
 
   ```ts
   // ✅ 설정(logger)은 생성 시, 런타임 인자(id)는 사용 시 — 두 단계 분리
-  const makeGetUser = (logger: Logger) => (id: string) => { logger.info(id); return fetchUser(id); };
+  const createGetUser = (logger: Logger) => (id: string) => { logger.info(id); return api.getUser(id); };
   ```
 
 - **리턴 타입 명시**, 메서드 체이닝은 **수직 줄바꿈**.
@@ -129,6 +129,6 @@ const BLOCK_MESSAGE: Record<BlockReason, string> = { … };   // 판정이 끝�
 - 함수 이름과 docstring만 봐도 룰이 드러나야 함([00-intent](00-intent.md)).
 - 정전 예시 → [canonical-examples](canonical-examples.md):
   - `isSubCategory(categoryId, rootId) => categoryId !== rootId`
-  - `defineKeyStore` 브랜디드 키 팩토리 + 순수 판별
+  - `createKeyStore` 브랜디드 키 팩토리 + 순수 판별
 
 → 연관: [02-structure-cohesion](02-structure-cohesion.md)(도메인 룰 SSOT), [03-composition](03-composition.md)(조합 닫힘 vs 얕은 포장), [05-types](05-types.md)(합타입), [canonical-examples](canonical-examples.md)(실제 코드).

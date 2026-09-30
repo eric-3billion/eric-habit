@@ -80,8 +80,8 @@ function OrderForm() {
 
     ```ts
     // ❌ 본문만 모이고 부착은 둘 — 소비처가 규칙의 존재와 부착 위치를 여전히 안다
-    const checkPostalCode = (v: string) => /^\d{5}$/.test(v);
-    addressSchema.refine(checkPostalCode);  billingSchema.refine(checkPostalCode);
+    const isValidPostalCode = (v: string) => /^\d{5}$/.test(v);
+    addressSchema.refine(isValidPostalCode);  billingSchema.refine(isValidPostalCode);
     // ✅ 규칙이 부착까지 소유 — 소비처는 조합만 한다 (기계적 검사면 그냥 인라인으로 둔다)
     const postalCode = z.string().regex(/^\d{5}$/);
     const addressSchema = z.object({ postalCode, … });  const billingSchema = z.object({ postalCode, … });
