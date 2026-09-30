@@ -46,10 +46,13 @@
 | `to*`·`format*` | 순수 변환 — **판정을 숨기지 않는다**(아래 안티 예시 `formatScore`). 경계 매퍼의 하위호환 폴백만 예외, 주석으로 드러낸다([05-types](05-types.md)) |
 | `calculate*` | 순수 계산 — 입력에서 값을 도출한다. 축약(`calc`) 없이 풀네임만 |
 | `clamp*` | 범위 안으로 보정한 값을 반환한다. 순수 |
+| `compare*` | 정렬 비교자 — `number`(음수·0·양수)를 반환한다. `toSorted(compareOrdersByDate)` |
 | `parse*`·`validate*` | 실패가 **반환 타입에** 드러난다([04-functional-domain](04-functional-domain.md) `Result`) |
-| `create*`·`update*`·`delete*` | 쓰기 — 부수효과가 있다는 선언. 팩토리도 `create*` |
+| `create*`·`update*`·`delete*` | 쓰기 — 부수효과가 있다는 선언. `create`·`delete` 는 엔티티 자체의 생성·소멸. 팩토리도 `create*` |
+| `add*`·`remove*` | 컬렉션 멤버십 변경 — 엔티티는 이미 있고 넣거나 뺄 뿐이다(`removeCartItem` ≠ `deleteProduct`) |
 | `reset*` | 초기값으로 되돌리는 쓰기. 비우기도 `reset*` |
 | `set*` | 주어진 값으로 교체하는 쓰기 — `useState` 세터 규약 |
+| `subscribe*` | 외부 소스 구독 — **해제 함수를 반환**한다(`useSyncExternalStore` 규약, [01 §6](01-component-design.md)) |
 | `use*` | React 훅 |
 | `handle*` | 이벤트 핸들러 — `on*` prop 에 연결된다 |
 
