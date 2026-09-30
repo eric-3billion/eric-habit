@@ -16,7 +16,7 @@ habits/                       # SSOT — 관심사별 1파일 (단일 관심사)
   canonical-examples.md       # 실제 코드 예시(도메인 중립): 의도 드러내는 폴백·순수함수 도메인 룰·branded key
 skills/eric-review/           # PR 리뷰 스킬 — habits를 참조, 절차만 보유
   SKILL.md                    # 메인 루프가 직접 멀티렌즈 리뷰 (워크플로/서브에이전트 없음)
-lint/                         # habits 중 정적분석 가능한 룰의 ESLint 프리셋 (lint/README.md)
+lint/                         # habits 중 정적분석 가능한 룰의 oxlint 프리셋 (lint/README.md)
 install.sh                    # ~/.claude 로 심링크
 ```
 

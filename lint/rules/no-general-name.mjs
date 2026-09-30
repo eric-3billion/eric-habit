@@ -4,7 +4,7 @@ const GENERAL_SUFFIX = /(Info|Data)$/;
 /**
  * habits/00 「좁은 명사」 — 변수와 "선언된 함수"의 파라미터만 본다.
  * 인라인 콜백 인자(`cell: info => …`, `setState(state => …)`)는 라이브러리 어휘이고 스코프가 한 줄이라 제외한다.
- * 객체 키는 외부 계약이라 대상이 아니다.
+ * 객체 키는 외부 계약이라 대상이 아니다. 타입 이름(interface·type·class·enum)은 접미사 *Info·*Data 만 본다.
  */
 export default {
   meta: {
@@ -41,6 +41,9 @@ export default {
       }
     };
     const handleDeclaredFunction = (fnNode) => fnNode.params.forEach(handleBinding);
+    const handleTypeName = (node) => {
+      if (node.id && GENERAL_SUFFIX.test(node.id.name)) context.report({ node: node.id, messageId: "generalName", data: { name: node.id.name } });
+    };
     const isFunction = (node) => node?.type === "ArrowFunctionExpression" || node?.type === "FunctionExpression";
 
     return {
@@ -49,6 +52,10 @@ export default {
         if (isFunction(node.init)) handleDeclaredFunction(node.init);
       },
       FunctionDeclaration: handleDeclaredFunction,
+      TSInterfaceDeclaration: handleTypeName,
+      TSTypeAliasDeclaration: handleTypeName,
+      TSEnumDeclaration: handleTypeName,
+      ClassDeclaration: handleTypeName,
     };
   },
 };

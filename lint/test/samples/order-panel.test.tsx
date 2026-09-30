@@ -2,12 +2,12 @@
 declare const screen: { getByTestId: (id: string) => HTMLElement; getByRole: (role: string) => HTMLElement };
 
 export const heading = screen.getByRole("heading");
-export const panel = screen.getByTestId("order-panel"); /* expect: no-restricted-syntax */
-export const panelColor = getComputedStyle(heading).color; /* expect: no-restricted-syntax */
+export const panel = screen.getByTestId("order-panel"); /* expect: eric/restricted-syntax */
+export const panelColor = getComputedStyle(heading).color; /* expect: eric/restricted-syntax */
 export const setupPanel = (): HTMLElement => screen.getByRole("region");
 export const loadPanel = (): HTMLElement => screen.getByRole("region"); /* expect: eric/function-verb-whitelist */
 export const result = screen.getByRole("status");
-let pending = 0; /* expect: no-restricted-syntax */
+let pending = 0; /* expect: eric/restricted-syntax */
 export const pendingCount = pending;
 export function setup(): HTMLElement {
   return screen.getByRole("region");

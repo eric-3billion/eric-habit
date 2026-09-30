@@ -1,39 +1,42 @@
-# @eric/eslint-preset
+# @eric/oxlint-preset
 
-`habits/` 중 **정적분석으로 판정할 수 있는 룰**을 ESLint flat config 로 강제한다.
+`habits/` 중 **정적분석으로 판정할 수 있는 룰**을 [oxlint](https://oxc.rs/docs/guide/usage/linter) config 로 강제한다. 기성 룰은 oxlint 네이티브(Rust), habits 전용 룰은 JS 플러그인 `eric` 이 맡는다.
 
 - 룰의 "왜"는 `habits/` 에만 있다. 여기는 "무엇"을 기계로 옮긴 것이고, 모든 lint 메시지 끝에 근거 habit(예: `(habits/01 §3)`)이 붙어 있다.
 - 판단이 필요한 룰은 `eric-review` / `eric-refine` 몫이다 — 아래 「lint 로 안 되는 것」·「리뷰와의 분업」.
-- **검사 32개**, 전부 **타입 정보 없이 문법만으로** 판정한다. 파일 5,454개 레포 기준 전체 lint 약 12초.
+- **검사 32개**, 전부 **타입 정보 없이 문법만으로** 판정한다. 파일 5,454개 레포 기준 전체 lint 약 2초(같은 룰의 ESLint 버전은 12초).
 
 ## 사용
 
 ```js
-// eslint.config.mjs
-import { createEslintPreset } from "@eric/eslint-preset";
+// oxlint.config.mjs
+import { createOxlintConfig } from "@eric/oxlint-preset";
 
-export default [
-  ...createEslintPreset({
-    effectAllowedFiles: ["src/shared/lib/external-sync/**"],
-    publicApiPatterns: ["@entities/*/*", "@features/*/*"],
-  }),
-];
+export default createOxlintConfig({
+  effectAllowedFiles: ["src/shared/lib/external-sync/**"],
+  publicApiPatterns: ["@entities/*/**", "@features/*/**"],
+});
+```
+
+```bash
+oxlint -c oxlint.config.mjs src
 ```
 
 | 옵션 | 기본값 | 용도 |
 |---|---|---|
-| `files` | `["**/*.{ts,tsx}"]` | 대상 파일 |
 | `effectAllowedFiles` | `[]` | `useEffect` 를 허용할 위치(#8·#9 예외). 외부 동기화 전용 파일만 둔다 |
-| `publicApiPatterns` | `[]` | 딥임포트를 막을 경로 패턴(#18). 비우면 #18 이 꺼진다 |
+| `publicApiPatterns` | `[]` | 딥임포트를 막을 경로 패턴(#18). **끝을 `/**` 로** 쓴다 — oxlint 는 `@entities/*/*` 로 쓰면 3단 이상 경로를 못 잡는다. 비우면 #18 이 꺼진다 |
 | `testFiles` | 아래 「테스트 파일에서 달라지는 것」 | 테스트 override 대상 |
 | `resultTypeNames` | `["Result"]` | `parse*`/`validate*` 가 반환해야 하는 Result 타입 이름(#2) |
 
+- **oxlint 기본 카테고리(`correctness`)는 건드리지 않는다.** 이 프리셋은 habits 룰만 켠다. 카테고리를 끄거나 더하는 건 소비처 몫 — `{ ...createOxlintConfig(), categories: { … } }`.
+- **JS 설정 파일(`oxlint.config.mjs`)을 쓴다.** 옵션을 받는 팩토리라 JSON 으로는 못 쓴다. oxlint 에서 JS 설정은 아직 실험 기능이고 Node.js 로 실행해야 한다.
 - **예외는 config 에 모은다.** 인라인 억제 주석 대신 `effectAllowedFiles` 같은 파일 glob 한 곳에 둔다.
-- **기존 코드는 소급 수정하지 않는다(habits/01 §7).** 도입 시 `eslint --suppress-all` 로 현재 위반을 baseline(`eslint-suppressions.json`)에 박으면 새 코드만 강제되고, 고칠 때마다 `--prune-suppressions` 로 줄여간다. 또는 PR 에서 **추가된 줄의 위반만** 보여주는 diff CI 로 운영한다.
+- **기존 코드는 소급 수정하지 않는다(habits/01 §7).** oxlint 에는 ESLint 의 bulk suppressions 같은 baseline 기능이 없으므로, PR 에서 **추가된 줄의 위반만** 보여주는 diff CI 로 운영한다.
 
 ## 룰 ↔ habits
 
-심각도 표시가 없으면 **error**, (warn) 은 경고다. "구현" 은 코드 위치 — `index.mjs` 의 `RESTRICTED_SYNTAX`·`DISCOURAGED_SYNTAX` 는 셀렉터 목록, `rules/*.mjs` 는 커스텀 룰이다.
+심각도 표시가 없으면 **error**, (warn) 은 경고다. 룰 이름은 oxlint config 에 쓰는 이름 그대로다 — 접두사가 없으면 oxlint 네이티브 ESLint 룰, `typescript/` 는 oxlint 네이티브 TS 룰, `eric/` 은 이 프리셋의 JS 플러그인. "구현" 은 코드 위치 — `index.mjs` 의 `RESTRICTED_SYNTAX`(`eric/restricted-syntax`)·`DISCOURAGED_SYNTAX`(`eric/discouraged-syntax`) 는 셀렉터 목록, `rules/*.mjs` 는 커스텀 룰이다.
 
 ### 한눈에
 
@@ -42,35 +45,35 @@ export default [
 | 1 | 00 | 동사 표에 없는 함수 동사, 이름의 `And` | `eric/function-verb-whitelist` |
 | 2 | 00 | 동사가 약속한 반환과 다른 리턴 타입 | `eric/verb-return-contract` |
 | 3 | 00 | 제너럴 명사 변수·파라미터 | `eric/no-general-name` |
-| 4 | 00 | 타입 이름의 `*Info`·`*Data` | `naming-convention` |
+| 4 | 00 | 타입 이름의 `*Info`·`*Data` | `eric/no-general-name` |
 | 5 | 00 | 센티넬 상수의 산술 | `eric/no-sentinel-arithmetic` |
 | 6 | 00 | 멤버 하나뿐인 `*Config`·`*Options`·`*Context` (warn) | `eric/no-single-member-container` |
 | 7 | 01 §3 | `useQuery` 계열 import | `no-restricted-imports` |
 | 8 | 01 §6 | `useEffect`·`useLayoutEffect` import | `no-restricted-imports` |
-| 9 | 01 §6 | `React.useEffect` | 셀렉터 |
+| 9 | 01 §6 | `React.useEffect` | `eric/restricted-syntax` |
 | 10 | 01 §3 | 쿼리만 감싼 커스텀 훅 | `eric/no-thin-query-hook` |
-| 11 | 01 §3 | 쿼리 옵션 인라인 | 셀렉터 |
+| 11 | 01 §3 | 쿼리 옵션 인라인 | `eric/restricted-syntax` |
 | 12 | 01 §3 | 연속 `useSuspenseQuery`(워터폴) (warn) | `eric/discouraged-syntax` |
-| 13 | 01 §7 | 객체 타입을 `type` 으로 선언 | `consistent-type-definitions` |
+| 13 | 01 §7 | 객체 타입을 `type` 으로 선언 | `typescript/consistent-type-definitions` |
 | 14 | 01 §7 | 한 줄 넘는 props 인라인 타입 | `eric/props-inline-type-single-line` |
-| 15 | 01 §7 | raw `"-"` 반환 | 셀렉터 |
+| 15 | 01 §7 | raw `"-"` 반환 | `eric/restricted-syntax` |
 | 16 | 01 §7 | 변경 이력 주석 (warn) | `no-warning-comments` |
 | 17 | 02 | 선언 전 사용(TDZ) | `no-use-before-define` |
 | 18 | 02 | 슬라이스 딥임포트 | `no-restricted-imports` |
-| 19 | 02 | `(typeof X)[number]` | 셀렉터 |
+| 19 | 02 | `(typeof X)[number]` | `eric/restricted-syntax` |
 | 20 | 03 | `show*`/`hide*` boolean prop (warn) | `eric/discouraged-syntax` |
-| 21 | 04 | 명시적 루프 | 셀렉터 |
-| 22 | 04 | `let` | 셀렉터 |
+| 21 | 04 | 명시적 루프 | `eric/restricted-syntax` |
+| 22 | 04 | `let` | `eric/restricted-syntax` |
 | 23 | 04 | 파라미터 재할당 | `no-param-reassign` |
 | 24 | 04 | 중첩 삼항 | `no-nested-ternary` |
-| 25 | 04 | `parse*`/`validate*` 안의 `throw` | 셀렉터 |
+| 25 | 04 | `parse*`/`validate*` 안의 `throw` | `eric/restricted-syntax` |
 | 26 | 04 | 판정 테이블 (warn) | `eric/discouraged-syntax` |
 | 27 | 04 | 리턴 타입 없는 export 함수 | `eric/explicit-return-type` |
-| 28 | 05 | `as` | `consistent-type-assertions` |
-| 29 | 05 | `!` | `no-non-null-assertion` |
-| 30 | 05 | `any` | `no-explicit-any` |
-| 31 | 06 | src 의 `data-testid` | 셀렉터 |
-| 32 | 06 | 테스트의 `*ByTestId`·`getComputedStyle` | 셀렉터 |
+| 28 | 05 | `as` | `typescript/consistent-type-assertions` |
+| 29 | 05 | `!` | `typescript/no-non-null-assertion` |
+| 30 | 05 | `any` | `typescript/no-explicit-any` |
+| 31 | 06 | src 의 `data-testid` | `eric/restricted-syntax` |
+| 32 | 06 | 테스트의 `*ByTestId`·`getComputedStyle` | `eric/restricted-syntax` |
 
 ### 00 이름
 
@@ -140,11 +143,11 @@ orders.map((item) => item.id);                                       // ✅ 인�
 
 구현: `rules/no-general-name.mjs`
 
-#### 4. 타입 이름의 `*Info`·`*Data` — `naming-convention`
+#### 4. 타입 이름의 `*Info`·`*Data` — `eric/no-general-name`
 
 `interface OrderInfo`, `type UserData` 처럼 타입 이름이 `Info`·`Data` 로 끝나면 걸린다. 변수 쪽은 #3 이 잡는다.
 
-구현: `index.mjs` — `@typescript-eslint/naming-convention` 의 `typeLike` selector 설정
+구현: `rules/no-general-name.mjs` — #3 과 같은 룰이 interface·type·class·enum 이름의 접미사를 본다
 
 #### 5. 센티넬 산술 — `eric/no-sentinel-arithmetic`
 
@@ -156,7 +159,7 @@ return NO_FILLED_STEP + filledStepCount;   // ❌ "없음"이 오프셋이 된�
 if (index === NO_FILLED_STEP) …            // ✅
 ```
 
-구현: `rules/no-sentinel-arithmetic.mjs` — ESLint scope 분석으로 그 상수의 참조를 전부 추적한다.
+구현: `rules/no-sentinel-arithmetic.mjs` — scope 분석(`sourceCode.getDeclaredVariables`)으로 그 상수의 참조를 전부 추적한다.
 
 #### 6. 멤버 하나뿐인 그릇 이름 — `eric/no-single-member-container` (warn)
 
@@ -178,7 +181,7 @@ createOrderStepConfig(): { schema: ZodType }   // ⚠ → createOrderStepValidat
 
 `react` 에서 `useEffect`·`useLayoutEffect` 를 import 하면 걸린다. 파생은 렌더 중에, 외부 값은 `useSyncExternalStore` 로. **`effectAllowedFiles` 안의 파일만 예외**다. effect 안의 setState(거울 state)는 import 단계에서 이미 막히므로 따로 검사하지 않는다.
 
-#### 9. `React.useEffect` — 셀렉터
+#### 9. `React.useEffect` — `eric/restricted-syntax`
 
 import 를 우회하는 `React.useEffect(…)`·`React.useLayoutEffect(…)` 를 막는다. #8 과 같은 예외.
 
@@ -203,7 +206,7 @@ function useSelectableOrder(id: string) {                        // ✅ useState
 
 구현: `rules/no-thin-query-hook.mjs`
 
-#### 11. 쿼리 옵션 인라인 — 셀렉터
+#### 11. 쿼리 옵션 인라인 — `eric/restricted-syntax`
 
 `useSuspenseQuery({ queryKey, queryFn })`, `useSuspenseQueries({ queries: [{ … }] })` 처럼 옵션 객체를 직접 쓰면 걸린다. `orderQueries.detail(id)` 같은 `queryOptions` 팩토리를 넘기고, 신선도 정책(`refetchOnMount` 등)도 팩토리에 둔다. 이 룰이 있어서 팩토리가 항상 존재하고, #10 을 통과한 훅도 소비처가 우회해 묶을 수 있다.
 
@@ -215,7 +218,7 @@ function useSelectableOrder(id: string) {                        // ✅ useState
 
 구현: `index.mjs` `DISCOURAGED_SYNTAX`
 
-#### 13. 객체 타입은 `interface` — `consistent-type-definitions`
+#### 13. 객체 타입은 `interface` — `typescript/consistent-type-definitions`
 
 `type Props = { … }` 처럼 객체 리터럴을 `type` 으로 선언하면 걸린다. 판별 유니온(`type ViewState = { … } | { … }`)은 `interface` 로 못 쓰므로 걸리지 않는다.
 
@@ -233,7 +236,7 @@ function Header({ title, showSearch }: {          // ❌ → HeaderProps 로 뺀
 
 구현: `rules/props-inline-type-single-line.mjs`
 
-#### 15. raw `"-"` 반환 — 셀렉터
+#### 15. raw `"-"` 반환 — `eric/restricted-syntax`
 
 `return "-"` 를 막는다. 컴포넌트는 `ReactNode` 로 일관 반환한다.
 
@@ -251,9 +254,9 @@ function Header({ title, showSearch }: {          // ❌ → HeaderProps 로 뺀
 
 #### 18. 슬라이스 딥임포트 — `no-restricted-imports` (패턴)
 
-`publicApiPatterns` 로 넘긴 패턴(예: `@entities/*/*`)으로 import 하면 걸린다. 슬라이스는 public API(index)로만 가져온다.
+`publicApiPatterns` 로 넘긴 패턴(예: `@entities/*/**`)으로 import 하면 걸린다. 슬라이스는 public API(index)로만 가져온다.
 
-#### 19. 배열에서 유니온 파생 — 셀렉터
+#### 19. 배열에서 유니온 파생 — `eric/restricted-syntax`
 
 `type StepName = (typeof STEPS)[number]` 를 막는다. 유니온 타입이 원본이고 배열은 `satisfies readonly StepName[]` 로 묶는다 — 배열이 원본이면 요소를 빠뜨려도 아무도 모른다.
 
@@ -265,11 +268,11 @@ JSX 에 `showSearch`·`hideAvatar` 같은 prop 이 있으면 경고한다. 화�
 
 ### 04 함수형
 
-#### 21. 명시적 루프 — 셀렉터
+#### 21. 명시적 루프 — `eric/restricted-syntax`
 
 `for`·`for…of`·`for…in`·`while`·`do…while` 을 막는다. `map`/`filter`/`reduce`, 테스트는 `it.each`.
 
-#### 22. `let` — 셀렉터
+#### 22. `let` — `eric/restricted-syntax`
 
 재할당 대신 섀도잉·새 값 반환. 테스트는 `setup()` 팩토리, 지연 resolve 는 `Promise.withResolvers()`.
 
@@ -281,7 +284,7 @@ JSX 에 `showSearch`·`hideAvatar` 같은 prop 이 있으면 경고한다. 화�
 
 `a ? x : b ? y : z` 를 막는다. 조기 반환(`if … return`)으로 편다.
 
-#### 25. `parse*`/`validate*` 안의 `throw` — 셀렉터
+#### 25. `parse*`/`validate*` 안의 `throw` — `eric/restricted-syntax`
 
 이름이 `parse`·`validate` 로 시작하는 함수 안의 `throw` 를 막는다. 예상 가능한 실패는 `Result` 나 `T | undefined` 로 반환한다.
 
@@ -297,23 +300,23 @@ JSX 에 `showSearch`·`hideAvatar` 같은 prop 이 있으면 경고한다. 화�
 
 ### 05 타입
 
-#### 28. `as` — `consistent-type-assertions` (`assertionStyle: "never"`)
+#### 28. `as` — `typescript/consistent-type-assertions` (`assertionStyle: "never"`)
 
 `x as T`, `x as unknown as T` 를 막는다. `as const` 는 허용. 테스트 mock 은 `vi.mocked(x)`, 부분 fixture 는 fixture 팩토리로.
 
-#### 29. `!` — `no-non-null-assertion`
+#### 29. `!` — `typescript/no-non-null-assertion`
 
 존재 보장은 조달 구조(Suspense 경계)나 좁히기로 한다.
 
-#### 30. `any` — `no-explicit-any`
+#### 30. `any` — `typescript/no-explicit-any`
 
 ### 06 테스트
 
-#### 31. src 의 `data-testid` — 셀렉터 (테스트 외 파일)
+#### 31. src 의 `data-testid` — `eric/restricted-syntax` (테스트 외 파일)
 
 JSX 의 `data-testid` 속성을 막는다. 테스트는 role·접근성 쿼리로 찾는다.
 
-#### 32. `*ByTestId`·`getComputedStyle` — 셀렉터 (테스트 파일)
+#### 32. `*ByTestId`·`getComputedStyle` — `eric/restricted-syntax` (테스트 파일)
 
 `getByTestId` 계열은 role 쿼리 + `within` 스코프로. `getComputedStyle` 은 jsdom 이 styled 중첩 CSS 를 못 읽으니 `toHaveStyle` 로.
 
@@ -367,39 +370,40 @@ JSX 의 `data-testid` 속성을 막는다. 테스트는 role·접근성 쿼리�
 
 | 라이브러리 | 역할 |
 |---|---|
-| ESLint (9.24+ / 10) | 엔진. 기본 룰 `no-restricted-syntax`·`no-restricted-imports`·`no-nested-ternary`·`no-param-reassign`·`no-warning-comments` |
-| typescript-eslint | TS 파서, `consistent-type-assertions`·`no-non-null-assertion`·`no-explicit-any`·`consistent-type-definitions`·`no-use-before-define`·`naming-convention` |
+| oxlint (1.86+) | 엔진(Rust). 네이티브 룰 `no-restricted-imports`·`no-nested-ternary`·`no-param-reassign`·`no-use-before-define`·`no-warning-comments`, `typescript/consistent-type-assertions`·`no-non-null-assertion`·`no-explicit-any`·`consistent-type-definitions`. JS 플러그인(`jsPlugins`) 실행 |
 
 ### 파일
 
 ```
-index.mjs          createEslintPreset — config 배열을 조립한다
+index.mjs          createOxlintConfig — config 객체를 조립한다
                    FUNCTION_VERBS(동사 표) · RESTRICTED_SYNTAX(error 셀렉터) · DISCOURAGED_SYNTAX(warn 셀렉터)
-rules/             커스텀 플러그인 `eric` 의 룰 — 파일 하나 = 룰 하나
+plugin.mjs         JS 플러그인 `eric` — rules/ 를 룰 이름에 등록한다
+rules/             커스텀 룰 — 파일 하나 = 룰 하나
 test/
-  preset.test.mjs  fixture 를 lint 해 expect 주석과 대조
-  fixtures/        clean.tsx(0건이어야 함) · violations.tsx · order-panel.test.tsx · external-sync/
+  oxlint.config.mjs  테스트용 config — 프리셋 + 기본 카테고리 끔
+  preset.test.mjs    samples 를 oxlint CLI 로 lint 해 expect 주석과 대조
+  samples/           clean.tsx(0건이어야 함) · violations.tsx · order-panel.test.tsx · external-sync/
 ```
 
-`createEslintPreset` 이 돌려주는 config 는 순서대로 ① 전체 룰, ② `effectAllowedFiles` override(#8·#9 해제), ③ 테스트 override 다.
+`createOxlintConfig` 는 `jsPlugins`(플러그인 절대 경로)·`rules` 와 `overrides`(① `effectAllowedFiles` 에서 #8·#9 해제, ② 테스트 파일) 를 돌려준다.
 
 ### 룰을 구현하는 세 가지 방식
 
-1. **기성 룰에 옵션만 준다** — 예: `consistent-type-assertions: { assertionStyle: "never" }`.
-2. **AST 셀렉터로 금지한다** — `no-restricted-syntax` 에 esquery 셀렉터(CSS 셀렉터와 비슷한 문법)를 넘긴다. 새 룰을 짜지 않고 패턴만 적는다.
+1. **oxlint 네이티브 룰에 옵션만 준다** — 예: `typescript/consistent-type-assertions: { assertionStyle: "never" }`. Rust 로 돌아서 가장 빠르다.
+2. **AST 셀렉터로 금지한다** — oxlint 에는 `no-restricted-syntax` 가 없어서, esquery 셀렉터(CSS 셀렉터와 비슷한 문법) 목록을 받는 룰(`rules/syntax-selectors.mjs`)을 직접 두고 `eric/restricted-syntax`(error)·`eric/discouraged-syntax`(warn) 두 이름으로 등록했다. 새 룰을 짜지 않고 패턴만 적는다.
    ```js
    // (typeof STEPS)[number]
    "TSIndexedAccessType[objectType.type='TSTypeQuery'][indexType.type='TSNumberKeyword']"
    ```
-   `no-restricted-syntax` 는 룰 하나에 심각도가 하나라서, warn 으로 둘 셀렉터는 `eric/discouraged-syntax` 가 같은 형식으로 받는다.
-3. **커스텀 룰을 짠다** — `rules/*.mjs`. ESLint 룰은 `{ meta, create(context) }` 객체이고, `create` 가 "이 AST 노드를 만나면 이걸 실행해" 라는 visitor 맵을 돌려준다. 셀렉터로 표현이 안 될 때만 쓴다(구조분해 재귀, 몸통 모양 판정, scope 추적 등).
+3. **커스텀 룰을 짠다** — `rules/*.mjs`. ESLint 와 같은 `{ meta, create(context) }` 형식이고 oxlint 가 JS 플러그인으로 실행한다. `create` 가 "이 AST 노드를 만나면 이걸 실행해" 라는 visitor 맵을 돌려준다. 셀렉터로 표현이 안 될 때만 쓴다(구조분해 재귀, 몸통 모양 판정, scope 추적 등).
 
 ## 룰을 바꿀 때
 
 | 바꾸는 것 | 같이 바꿀 것 |
 |---|---|
 | 동사 표(habits/00) | `index.mjs` `FUNCTION_VERBS`, `rules/verb-return-contract.mjs` `CONTRACTS`, 이 README #1·#2 |
-| 룰 추가·완화·삭제 | 대응 habit 문구, fixture 의 `expect` 주석, 이 README 의 「한눈에」·상세·「리뷰와의 분업」 |
+| 룰 추가·완화·삭제 | 대응 habit 문구, `test/samples` 의 `expect` 주석, 이 README 의 「한눈에」·상세·「리뷰와의 분업」 |
+| 커스텀 룰 추가 | `rules/` 에 파일, `plugin.mjs` 에 등록, `index.mjs` 에서 켜기 |
 | 전체 원칙 | 루트 README 「강제 층 분업」 |
 
 ## 테스트
@@ -409,4 +413,7 @@ npm install
 npm test
 ```
 
-`test/fixtures/` 각 줄 끝의 `/* expect: 룰id */` 주석과 실제 보고를 **줄 단위로** 대조한다. 놓친 것(과소 보고)과 오탐(과대 보고)을 둘 다 잡는다. `clean.tsx` 는 habits 가 권장하는 형태를 모은 파일이라 보고가 0건이어야 한다. 새 룰을 추가하면 `violations.tsx` 에 걸리는 예시를, `clean.tsx` 에 통과해야 하는 예시를 함께 넣는다.
+`test/samples/` 각 줄 끝의 `/* expect: 룰id */` 주석과 oxlint 보고를 **줄 단위로** 대조한다. 놓친 것(과소 보고)과 오탐(과대 보고)을 둘 다 잡는다. `clean.tsx` 는 habits 가 권장하는 형태를 모은 파일이라 보고가 0건이어야 한다. 새 룰을 추가하면 `violations.tsx` 에 걸리는 예시를, `clean.tsx` 에 통과해야 하는 예시를 함께 넣는다.
+
+- 샘플 폴더 이름이 `fixtures/` 가 아닌 이유: 테스트 파일 glob(`**/fixtures/**`)에 걸려 테스트 override 가 적용된다.
+- `expect` 표식은 검사 대상 주석과 **다른 주석**으로 둔다 — oxlint 는 주석 안에 룰 이름(`no-warning-comments`)이 들어 있으면 그 주석을 건너뛴다.

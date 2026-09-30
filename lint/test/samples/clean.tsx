@@ -176,3 +176,10 @@ export function useSelectableOrder(orderId: string): { order: Order; isSelected:
   const [isSelected, setIsSelected] = useState(false);
   return { order, isSelected, setIsSelected };
 }
+
+// 함수 몸통 안에서만 쓰는 상수는 아래에 둬도 된다 (TDZ 에 안 걸림)
+export function OrderCaption({ caption }: { caption: string }) {
+  return <p className={CAPTION_CLASS_NAME}>{caption}</p>;
+}
+
+const CAPTION_CLASS_NAME = "text-sm";

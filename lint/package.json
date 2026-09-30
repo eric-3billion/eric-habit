@@ -1,9 +1,9 @@
 {
-  "name": "@eric/eslint-preset",
+  "name": "@eric/oxlint-preset",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "habits/ 의 정적분석 가능한 룰을 ESLint flat config 로 강제하는 프리셋",
+  "description": "habits/ 의 정적분석 가능한 룰을 oxlint config(네이티브 룰 + JS 플러그인)로 강제하는 프리셋",
   "exports": {
     ".": "./index.mjs"
   },
@@ -11,15 +11,9 @@
     "test": "node --test test/*.test.mjs"
   },
   "peerDependencies": {
-    "eslint": "^9.24.0 || ^10.0.0",
-    "typescript": ">=5.5 <6.1.0"
-  },
-  "dependencies": {
-    "typescript-eslint": "^8.71.0"
+    "oxlint": ">=1.86.0"
   },
   "devDependencies": {
-    "@types/react": "^19.3.0",
-    "eslint": "^10.11.0",
-    "typescript": "~6.0.3"
+    "oxlint": "^1.86.0"
   }
 }

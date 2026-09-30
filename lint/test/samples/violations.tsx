@@ -5,9 +5,9 @@ import React, { useEffect, useState, type ReactNode } from "react"; /* expect: n
 import { orderQueries, type Order } from "./domain";
 
 const STEPS = ["info", "files"] as const;
-type StepName = (typeof STEPS)[number]; /* expect: no-restricted-syntax */
+type StepName = (typeof STEPS)[number]; /* expect: eric/restricted-syntax */
 
-type OrderShape = { id: string }; /* expect: @typescript-eslint/consistent-type-definitions */
+type OrderShape = { id: string }; /* expect: typescript/consistent-type-definitions */
 
 interface OrderStepConfig { /* expect: eric/no-single-member-container */
   schema: string;
@@ -18,7 +18,7 @@ interface UploadLimit {
   maxCount?: number;
 }
 
-interface OrderInfo { /* expect: @typescript-eslint/naming-convention */
+interface OrderInfo { /* expect: eric/no-general-name */
   id: string;
   name: string;
 }
@@ -47,7 +47,7 @@ export function isOrderReady(order: Order): string { /* expect: eric/verb-return
 
 export function parsePort(raw: string): number { /* expect: eric/verb-return-contract */
   const port = Number(raw);
-  if (Number.isNaN(port)) throw new Error("NaN"); /* expect: no-restricted-syntax */
+  if (Number.isNaN(port)) throw new Error("NaN"); /* expect: eric/restricted-syntax */
   return port;
 }
 
@@ -56,8 +56,8 @@ export function calculateFilledStepIndex(filledStepCount: number): number {
 }
 
 export function calculateTotal(orders: Order[]): number {
-  let total = 0; /* expect: no-restricted-syntax */
-  for (const order of orders) total += order.total; /* expect: no-restricted-syntax */
+  let total = 0; /* expect: eric/restricted-syntax */
+  for (const order of orders) total += order.total; /* expect: eric/restricted-syntax */
   return total;
 }
 
@@ -66,15 +66,15 @@ export function calculateTier(score: number): string {
 }
 
 export function toOrderId(order: Order): string {
-  const shape = order as OrderShape; /* expect: @typescript-eslint/consistent-type-assertions */
+  const shape = order as OrderShape; /* expect: typescript/consistent-type-assertions */
   return shape.id;
 }
 
 export function toOrderTotal(order: Order | undefined): number {
-  return order!.total; /* expect: @typescript-eslint/no-non-null-assertion */
+  return order!.total; /* expect: typescript/no-non-null-assertion */
 }
 
-export function toUnknownOrder(raw: any): Order { /* expect: @typescript-eslint/no-explicit-any */
+export function toUnknownOrder(raw: any): Order { /* expect: typescript/no-explicit-any */
   return raw;
 }
 
@@ -91,7 +91,7 @@ export function useOrderDetail(id: string): Order { /* expect: eric/no-thin-quer
 }
 
 export function OrderPanel({ orderId }: { orderId: string }): ReactNode {
-  const order = useSuspenseQuery({ queryKey: ["order", orderId], queryFn: async () => orderId }); /* expect: no-restricted-syntax */
+  const order = useSuspenseQuery({ queryKey: ["order", orderId], queryFn: async () => orderId }); /* expect: eric/restricted-syntax */
   const catalog = useSuspenseQuery(orderQueries.list()); /* expect: eric/discouraged-syntax */
   const legacy = useQuery(orderQueries.list());
   const [width, setWidth] = useState(0);
@@ -99,10 +99,10 @@ export function OrderPanel({ orderId }: { orderId: string }): ReactNode {
   useEffect(() => {
     setMirror(orderId);
   }, [orderId]);
-  React.useLayoutEffect(() => setWidth(1), []); /* expect: no-restricted-syntax */
+  React.useLayoutEffect(() => setWidth(1), []); /* expect: eric/restricted-syntax */
 
   return (
-    <OrderHeader showSearch data-testid="order-panel" title={`${mirror}${width}${String(order.data)}${String(catalog.data)}${String(legacy.data)}`} /> /* expect: eric/discouraged-syntax, no-restricted-syntax */
+    <OrderHeader showSearch data-testid="order-panel" title={`${mirror}${width}${String(order.data)}${String(catalog.data)}${String(legacy.data)}`} /> /* expect: eric/discouraged-syntax, eric/restricted-syntax */
   );
 }
 
@@ -110,7 +110,7 @@ export function OrderHeader({ title }: { /* expect: eric/props-inline-type-singl
   title: string;
   showSearch: boolean;
 }): ReactNode {
-  if (title === "") return "-"; /* expect: no-restricted-syntax */
+  if (title === "") return "-"; /* expect: eric/restricted-syntax */
   return <h1>{title}</h1>;
 }
 
@@ -123,7 +123,7 @@ export function toStepLabel(step: StepName): string {
   }
 }
 
-// 기존엔 여기서 직접 계산했다 /* expect: no-warning-comments */
+/* 기존엔 여기서 직접 계산했다 */ /* expect: no-warning-comments */
 export const toDoubled = (value: number): number => value * 2; /* expect: eric/no-general-name */
 
 export function filterOrderIds(orders: Order[]): string { /* expect: eric/verb-return-contract */
@@ -145,3 +145,6 @@ export function toOrderLabel(order: Order) { /* expect: eric/explicit-return-typ
 }
 
 export const useOrderList = (): { data: Order[] } => useSuspenseQuery(orderQueries.list()); /* expect: eric/no-thin-query-hook */
+
+export const earlyRate = LATE_RATE * 2; /* expect: no-use-before-define */
+const LATE_RATE = 3;
