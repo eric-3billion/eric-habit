@@ -78,6 +78,11 @@ function PostDialogBranch({ postId }) {
 
 - Suspense는 "로딩 UI 도구"가 아니라 **성공 케이스만 신경쓰게 해주는 경계**. 경계 안은 "데이터가 항상 준비됨"으로 가정 → 옵셔널 체이닝(`?.`) 전염 차단.
 - `Component.loading` / `Component.error`를 **정적 프로퍼티로 붙여** 성공·로딩·에러 UI를 한 파일에 응집.
+- **조회는 `useSuspenseQuery` 가 기본이다. `useQuery` 는 조건부 조회가 꼭 필요할 때만** 쓴다 — `enabled`·`skipToken` 으로 조회를 끄고 켜야 하는 경우(검색어가 비었을 때, 선택값이 아직 없을 때). suspense 쿼리는 끌 수 없기 때문이다. 단 그 전에 suspense 로 풀 수 있는지 먼저 본다:
+  - 조건을 위에서 판정해 **쿼리를 쓰는 컴포넌트 자체를 조건부로 렌더**한다(§2 분기는 상위로).
+  - 앞 결과가 필요한 의존 쿼리는 한 컴포넌트 안에서 순서대로 부르면 된다 — suspense 는 원래 직렬로 조회한다.
+  - 쿼리 키가 바뀔 때 fallback 이 다시 뜨는 게 문제면 키를 바꾸는 업데이트를 `startTransition` 으로 감싼다.
+  - (TanStack Query 공식 문서 「Suspense」: suspense 쿼리는 `enabled`·`placeholderData` 를 지원하지 않는다)
 
 ```tsx
 // ❌ 성공/로딩/에러가 한 컴포넌트에 뒤섞이고 ?. 가 전염됨

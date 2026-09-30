@@ -1,5 +1,5 @@
 // 프리셋이 아무것도 보고하지 않아야 하는 코드 — habits 가 권장하는 형태를 모았다
-import { useSuspenseQueries, useSuspenseQuery } from "@tanstack/react-query";
+import { skipToken, useQuery, useSuspenseQueries, useSuspenseQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 
 import { orderQueries, type Order, type Result } from "./domain";
@@ -183,3 +183,14 @@ export function OrderCaption({ caption }: { caption: string }) {
 }
 
 const CAPTION_CLASS_NAME = "text-sm";
+
+// 조건부 조회 — suspense 쿼리는 끌 수 없어서 useQuery 를 쓴다
+export function useSearchedOrder(keyword: string): Order | undefined {
+  const { data: order } = useQuery({ ...orderQueries.detail(keyword), enabled: keyword !== "" });
+  return order;
+}
+
+export function useOptionalOrder(orderId: string | undefined): Order | undefined {
+  const { data: order } = useQuery({ queryKey: ["order", orderId], queryFn: orderId === undefined ? skipToken : async () => ({ id: orderId, total: 0, createdAt: 0 }) });
+  return order;
+}

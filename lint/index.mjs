@@ -29,12 +29,14 @@ const RESTRICTED_SYNTAX = [
     selector: "CallExpression[callee.name='useSuspenseQuery'] > ObjectExpression, CallExpression[callee.name='useSuspenseQueries'] Property[key.name='queries'] > ArrayExpression > ObjectExpression",
     message: "쿼리 옵션을 인라인으로 쓰지 않는다 — xxxQueries.detail() 팩토리를 넘기고 신선도 정책도 팩토리에 (habits/01 §3)",
   },
-  { selector: "TSIndexedAccessType[objectType.type='TSTypeQuery'][indexType.type='TSNumberKeyword']", message: "배열에서 유니온을 파생하지 않는다 — 유니온이 원본, 배열은 satisfies (habits/02)" },
+  {
+    selector: "CallExpression[callee.name='useQuery']:not(:has(Property[key.name='enabled'])):not(:has(Identifier[name='skipToken']))",
+    message: "useQuery 는 조건부 조회(enabled·skipToken)가 필요할 때만 쓴다 — 그 외에는 useSuspenseQuery (habits/01 §3)",
+  },
   {
     selector: ":matches(FunctionDeclaration[id.name=/^(parse|validate)[A-Z]/], VariableDeclarator[id.name=/^(parse|validate)[A-Z]/]) ThrowStatement",
     message: "parse*/validate* 는 throw 대신 Result 로 실패를 반환한다 (habits/04)",
   },
-  { selector: "ReturnStatement > Literal[value='-']", message: "raw '-' 를 반환하지 않는다 — ReactNode 로 일관 반환 (habits/01 §7)" },
 ];
 const REACT_MEMBER_EFFECT = { selector: "MemberExpression[object.name='React'][property.name=/^use(Layout)?Effect$/]", message: EFFECT_MESSAGE };
 const NO_TEST_ID_ATTRIBUTE = { selector: "JSXAttribute[name.name='data-testid']", message: "data-testid 결합 대신 role/접근성 쿼리로 찾는다 (habits/06)" };
@@ -49,10 +51,6 @@ const DISCOURAGED_SYNTAX = [
     message: "같은 경계의 useSuspenseQuery 연속 호출은 워터폴이다 — 독립 조달이면 useSuspenseQueries 로 묶는다. 의존 쿼리면 무시 (habits/01 §3)",
   },
   { selector: "JSXAttribute[name.name=/^(show|hide)[A-Z]/]", message: "show*/hide* boolean prop 대신 슬롯으로 화면을 JSX 에 드러낸다 (habits/03)" },
-  {
-    selector: "ArrayExpression > ObjectExpression > Property[key.name=/^(test|when|predicate|condition)$/][value.type=/FunctionExpression$/]",
-    message: "판정을 테이블로 박지 않는다 — 유니온을 반환하는 함수 + Record 매핑 (habits/04)",
-  },
 ];
 
 /**
@@ -61,13 +59,11 @@ const DISCOURAGED_SYNTAX = [
  *
  * @param {object} [options]
  * @param {string[]} [options.effectAllowedFiles] - useEffect 를 허용할 파일 glob. 예외는 인라인 억제가 아니라 여기 한 곳에만 둔다
- * @param {string[]} [options.publicApiPatterns] - 딥임포트를 막을 경로 패턴. oxlint 는 `@entities/*\/**` 처럼 끝을 `**` 로 써야 하위 경로까지 잡힌다
  * @param {string[]} [options.testFiles]
  * @param {string[]} [options.resultTypeNames] - parse·validate 함수가 반환해야 하는 Result 타입 이름
  */
 export function createOxlintConfig({
   effectAllowedFiles = [],
-  publicApiPatterns = [],
   testFiles = [
     "**/*.{test,spec}.{ts,tsx}",
     "**/{__tests__,__mocks__,fixtures,mocks}/**/*.{ts,tsx}",
@@ -79,10 +75,10 @@ export function createOxlintConfig({
     "error",
     {
       paths: [
-        { name: "@tanstack/react-query", importNames: ["useQuery", "useQueries", "useInfiniteQuery"], message: "useSuspenseQuery/useSuspenseQueries 를 쓴다 — 경계 안은 성공만 (habits/01 §3)" },
+        // useQuery 는 조건부 조회에만 허용하므로 import 가 아니라 호출(RESTRICTED_SYNTAX)에서 본다
+        { name: "@tanstack/react-query", importNames: ["useQueries", "useInfiniteQuery"], message: "useSuspenseQueries/useSuspenseInfiniteQuery 를 쓴다 — 경계 안은 성공만 (habits/01 §3)" },
         ...(allowEffect ? [] : [{ name: "react", importNames: ["useEffect", "useLayoutEffect"], message: EFFECT_MESSAGE }]),
       ],
-      ...(publicApiPatterns.length > 0 && { patterns: [{ group: publicApiPatterns, message: "슬라이스 내부로 딥임포트하지 않는다 — public API(index)로만 (habits/02, 06)" }] }),
     },
   ];
   const createRestrictedSyntax = ({ allowEffect, isTest }) => [
@@ -121,7 +117,6 @@ export function createOxlintConfig({
       "eric/no-general-name": "error",
       "eric/verb-return-contract": ["error", { resultTypeNames }],
       "eric/no-sentinel-arithmetic": "error",
-      "eric/no-single-member-container": "warn",
       "no-warning-comments": ["warn", { terms: ["기존엔", "기존에는", "원래는", "예전엔"], location: "anywhere" }],
 
       // ── 제한 import · 셀렉터 ─────────────────────────────

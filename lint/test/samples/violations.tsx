@@ -1,15 +1,15 @@
 // 각 줄 끝의 expect 주석 = 그 줄에서 나와야 하는 룰 id. 테스트가 과소·과대 보고를 둘 다 잡는다
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"; /* expect: no-restricted-imports */
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import React, { useEffect, useState, type ReactNode } from "react"; /* expect: no-restricted-imports */
 
 import { orderQueries, type Order } from "./domain";
 
 const STEPS = ["info", "files"] as const;
-type StepName = (typeof STEPS)[number]; /* expect: eric/restricted-syntax */
+type StepName = (typeof STEPS)[number];
 
 type OrderShape = { id: string }; /* expect: typescript/consistent-type-definitions */
 
-interface OrderStepConfig { /* expect: eric/no-single-member-container */
+interface OrderStepConfig {
   schema: string;
 }
 
@@ -80,7 +80,7 @@ export function toUnknownOrder(raw: any): Order { /* expect: typescript/no-expli
 
 export function toBlockMessage(balance: number): string | undefined {
   const rules = [
-    { test: (b: number) => b <= 0, message: "잔액 부족" }, /* expect: eric/discouraged-syntax */
+    { test: (b: number) => b <= 0, message: "잔액 부족" },
   ];
   return rules.find((rule) => rule.test(balance))?.message;
 }
@@ -93,7 +93,7 @@ export function useOrderDetail(id: string): Order { /* expect: eric/no-thin-quer
 export function OrderPanel({ orderId }: { orderId: string }): ReactNode {
   const order = useSuspenseQuery({ queryKey: ["order", orderId], queryFn: async () => orderId }); /* expect: eric/restricted-syntax */
   const catalog = useSuspenseQuery(orderQueries.list()); /* expect: eric/discouraged-syntax */
-  const legacy = useQuery(orderQueries.list());
+  const legacy = useQuery(orderQueries.list()); /* expect: eric/restricted-syntax */
   const [width, setWidth] = useState(0);
   const [mirror, setMirror] = useState(orderId);
   useEffect(() => {
@@ -110,7 +110,7 @@ export function OrderHeader({ title }: { /* expect: eric/props-inline-type-singl
   title: string;
   showSearch: boolean;
 }): ReactNode {
-  if (title === "") return "-"; /* expect: eric/restricted-syntax */
+  if (title === "") return "-";
   return <h1>{title}</h1>;
 }
 
