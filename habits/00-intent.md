@@ -31,6 +31,8 @@
 
 ### 함수 이름 = 좁은 동사 + 좁은 명사
 
+> 이 표는 lint 의 `FUNCTION_VERBS`·`CONTRACTS` 와 1:1 이다. 한쪽을 바꾸면 다른 쪽도 맞출 것 — 루트 README 「강제 층 분업」.
+
 **동사가 애매하면 함수가 애매하다.** 함수 이름의 동사는 **아래 표에 있는 것만 쓴다(화이트리스트).** 표의 동사는 관례가 있어서 **반환·실패·부수효과까지** 이름만으로 예측되고, 표에 없는 동사는 그 계약이 없어 예측할 수 없다. 애매한 동사를 고르게 되는 건 대개 **그 함수가 두 일을 하거나 책임이 안 정해졌기** 때문이다.
 
 - **금지 목록이 아니라 허용 목록인 이유**: 넓은 동사는 끝없이 새로 생겨서 금지 목록으로는 닫히지 않는다. 모르는 동사는 기본으로 막는다.
@@ -43,18 +45,26 @@
 | `find*` | 없을 수 있다 → `T \| undefined` |
 | `list*` | 0개 이상, 빈 배열이 정상 |
 | `is*`·`has*`·`can*` | boolean 판정. 부수효과 없음 |
-| `to*`·`format*` | 순수 변환 — **판정을 숨기지 않는다**(아래 안티 예시 `formatScore`). 경계 매퍼의 하위호환 폴백만 예외, 주석으로 드러낸다([05-types](05-types.md)) |
+| `to*`·`format*` | 다른 무엇으로의 순수 변환 — **판정을 숨기지 않는다**(아래 안티 예시 `formatScore`). 경계 매퍼의 하위호환 폴백만 예외, 주석으로 드러낸다([05-types](05-types.md)). map·convert·transform·build·extract 는 전부 `to*` — **결과 명사만** 쓰고(`toBnd(bndDto)`), 원본이 여럿이면 결과 명사를 원본 도메인으로 좁힌다(`toQualityConditions`, `From` 꼬리 금지) |
+| `normalize*` | 같은 타입을 표준형으로 되돌린다(`OrderDraft → OrderDraft`). 타입이 바뀌면 `to*` |
+| `filter*` | 입력 컬렉션의 부분집합(배열)을 반환한다. 순수 |
+| `group*` | 컬렉션을 묶음(배열의 배열·`Record`·`Map`)으로 반환한다(`Object.groupBy` 관례). 순수 |
 | `calculate*` | 순수 계산 — 입력에서 값을 도출한다. 축약(`calc`) 없이 풀네임만 |
 | `clamp*` | 범위 안으로 보정한 값을 반환한다. 순수 |
 | `compare*` | 정렬 비교자 — `number`(음수·0·양수)를 반환한다. `toSorted(compareOrdersByDate)` |
-| `parse*`·`validate*` | 실패가 **반환 타입에** 드러난다([04-functional-domain](04-functional-domain.md) `Result`) |
-| `create*`·`update*`·`delete*` | 쓰기 — 부수효과가 있다는 선언. `create`·`delete` 는 엔티티 자체의 생성·소멸. 팩토리도 `create*` |
+| `parse*`·`validate*` | 실패가 **반환 타입에** 드러난다 — `Result` 또는 `T \| undefined`([04-functional-domain](04-functional-domain.md)) |
+| `create*`·`update*`·`delete*` | 쓰기 — 부수효과가 있다는 선언. `create`·`delete` 는 엔티티 자체의 생성·소멸. 팩토리도 `create*` — 판별: **결과가 입력을 다른 모양으로 바꾼 것이면 `to*`**, 입력이 설정·의존성이고 결과가 새 것이면 `create*`(`createGetUser(logger)`) |
 | `add*`·`remove*` | 컬렉션 멤버십 변경 — 엔티티는 이미 있고 넣거나 뺄 뿐이다(`removeCartItem` ≠ `deleteProduct`) |
 | `reset*` | 초기값으로 되돌리는 쓰기. 비우기도 `reset*` |
 | `set*` | 주어진 값으로 교체하는 쓰기 — `useState` 세터 규약 |
+| `open*`·`close*` | UI 를 열고 닫는 쓰기 |
 | `subscribe*` | 외부 소스 구독 — **해제 함수를 반환**한다(`useSyncExternalStore` 규약, [01 §6](01-component-design.md)) |
 | `use*` | React 훅 |
-| `handle*` | 이벤트 핸들러 — `on*` prop 에 연결된다 |
+| `render*` | 렌더 조각(`ReactNode`)을 반환한다 — render prop·셀 렌더러 |
+| `handle*` | 이벤트 핸들러 — `on*` prop 에 넘긴다(`onClose={handleClose}`) |
+| `on*` | 선언한 이름이 그대로 prop 키가 될 때(`return { onKeyDown, onChange }`) |
+
+테스트 파일은 testing-library 어휘(`setup`·`mock`·`expect`·`query`)를 추가로 쓴다 — `find*`·`query*` 의 반환 계약도 testing-library 쪽을 따른다.
 
 ```ts
 // ❌ 표에 없는 동사 — 조회인지 생성인지 확정인지, 실패하면 어떻게 되는지 아무것도 모른다

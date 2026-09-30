@@ -106,12 +106,13 @@ VariantForm.error = ({ resetError }: { resetError: () => void }) => <FormError o
 
 ### 조달은 팩토리로 노출하고, 둘 이상이면 병렬로 묶는다
 
-- **suspense 쿼리를 커스텀 훅으로 감싸지 않는다.** 감싸면 소비처가 여러 조달을 **한 번에 묶을 수 없어** 워터폴이 고착된다. 쿼리는 `queryOptions` 팩토리로 노출하고, 신선도 정책(`refetchOnMount` 등)도 소비처 훅이 아니라 **팩토리에** 붙여 이름으로 드러낸다.
+- **쿼리는 `queryOptions` 팩토리로 노출한다 — 훅이 유일한 입구가 되면 안 된다.** 훅만 있으면 소비처가 여러 조달을 **한 번에 묶을 수 없어** 워터폴이 고착된다. 신선도 정책(`refetchOnMount` 등)도 소비처 훅이 아니라 **팩토리에** 붙여 이름으로 드러낸다.
+- **쿼리만 감싼 훅은 만들지 않는다.** 하는 일이 없으면 소비처가 팩토리를 직접 쓴다([03-composition](03-composition.md) 얕은 포장). **로직을 공유하는 훅**(다른 훅과 조합, 결과 가공)은 팩토리 위에 얹으면 된다 — 팩토리가 노출돼 있으니 묶어야 하는 소비처는 훅을 우회해 팩토리로 묶는다. (TkDodo 「Creating Query Abstractions」: 설정 공유는 `queryOptions`, 로직 공유는 그 위의 훅.)
 - **한 경계에서 독립적인 조달이 둘 이상이면 `useSuspenseQueries` 로 묶는다.** 경계 안에서 **선언 순서는 병렬성을 만들지 못한다** — 첫 호출에서 던져지므로 뒤 쿼리는 그 뒤에 붙는다. "미리 조달한다"는 주석이 거짓말이 되는 자리.
 - **단 묶으려고 조달 지점을 옮기지 않는다.** 이미 같은 경계에 있는 조달 얘기다 — 병렬화하려고 하위의 상태·관심사를 상위로 끌어올려야 하면 워터폴을 감수한다([03-composition](03-composition.md) 변경 전파 최소화). "위에서 트리거만 하고 값은 아래서 쓴다"는 우회도 같다.
 
 ```tsx
-// ❌ 훅으로 감싸 조합을 막고, 나란히 선언해 워터폴을 만든다
+// ❌ 쿼리만 감싼 훅으로 조합을 막고, 나란히 선언해 워터폴을 만든다
 function useOrderDetail(id: string) { return useSuspenseQuery(orderQueries.detail(id)); }
 const order = useOrderDetail(id);
 const catalog = useSuspenseQuery(productQueries.list());  // ← order 가 끝난 뒤 시작
@@ -121,7 +122,7 @@ const [order, catalog] = useSuspenseQueries({
 });
 ```
 
-- 얕은 포장 금지([03-composition](03-composition.md))와 근거가 다르다 — 저긴 "로직이 없어서" 지우는 것이고, 이건 **로직이 있어도** 조합 가능성을 깨서 금지다.
+- 쿼리를 쓰는 커스텀 훅 둘을 한 경계에서 나란히 부르는 것도 워터폴이다 — 독립 조달이면 팩토리로 `useSuspenseQueries` 에 묶는다.
 
 ## 4. 위에서 아래로 흐르는 코드 / JSX = UI
 

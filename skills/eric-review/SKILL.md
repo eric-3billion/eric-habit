@@ -49,6 +49,7 @@ GitHub PR을 Eric의 코드 습관으로 리뷰한다. **습관 룰은 이 스�
 
 4. **직접 멀티렌즈 리뷰** (메인 루프가 직접 — 워크플로/서브에이전트 X):
    - 먼저 해당 렌즈의 habit 파일(`~/code-style/habits/00~06`)을 Read 해 룰을 기준으로 삼는다.
+   - **lint 몫은 건너뛴다.** 대상 레포가 `@eric/eslint-preset` 을 쓰면 `~/code-style/lint/README.md` 「리뷰와의 분업」의 lint 칸(동사 목록·`as`·루프 등)은 diff CI 가 이미 보여주므로 코멘트 후보로 올리지 않고, 리뷰 칸(의미·경계·축)에 집중한다. 프리셋이 없는 레포면 전부 본다. lint 가 잡았어야 할 위반을 발견하면 코멘트가 아니라 **lint 커버리지 구멍**으로 보고 끝에 따로 적는다. 분업 표를 바꾸면 eric-refine 도 같은 기준인지 확인할 것.
    - `pr.diff` 를 Read 해 무엇이 어떻게 바뀌었는지 파악하고, 맥락이 필요한 파일은 `<DEST>/` 스냅샷 본문을 Read 한다.
    - 6렌즈(intent/component/functional/types/correctness/test)로 변경분을 훑어 발견을 모은다. 대상 성격에 맞춰 비중 조절(아래 강도 조절).
    - **근거는 오직 스냅샷 + `pr.diff`.** git/working tree/다른 경로 탐색 금지.
