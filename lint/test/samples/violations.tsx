@@ -42,8 +42,8 @@ export function findOrder(orders: Order[]): Order { /* expect: eric/verb-return-
   return orders[0] ?? { id: "", total: 0, createdAt: 0 };
 }
 
-export function getOrder(orders: Order[], id: string): Order | null { /* expect: eric/verb-return-contract */
-  return orders.find((order) => order.id === id) ?? null;
+export function getOrder(orders: Order[], id: string): Order | undefined { /* expect: eric/verb-return-contract */
+  return orders.find((order) => order.id === id);
 }
 
 // 없음은 null 로만 표현한다

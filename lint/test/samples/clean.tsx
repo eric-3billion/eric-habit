@@ -23,6 +23,11 @@ export function findOrder(orders: Order[], id: string): Order | null {
   return orders.find((order) => order.id === id) ?? null;
 }
 
+// get 은 꺼내기다. 없을 수 있으면 null 로 드러낸다
+export function getOrderNote(order: Order): string | null {
+  return order.id.length > 0 ? order.id : null;
+}
+
 export function getOrderTotal(order: Order): number {
   return order.total;
 }

@@ -61,7 +61,6 @@ const DISCOURAGED_SYNTAX = [
  * @param {string[]} [options.effectAllowedFiles] - useEffect 를 허용할 파일 glob. 예외는 인라인 억제가 아니라 여기 한 곳에만 둔다
  * @param {string[]} [options.testFiles]
  * @param {string[]} [options.resultTypeNames] - parse·validate 함수가 반환해야 하는 Result 타입 이름
- * @param {string[]} [options.apiHandlerFiles] - API 핸들러 파일 glob. 여기서는 get* 이 HTTP GET 이라 없음(null)을 반환해도 된다
  * @param {string[]} [options.andJoinedTerms] - 함수 이름에 And 가 들어가도 되는 도메인 용어(예: "TermsAndConditions"). 두 동작의 나열이 아니라 한 명사구일 때만 올린다
  */
 export function createOxlintConfig({
@@ -73,7 +72,6 @@ export function createOxlintConfig({
   ],
   resultTypeNames = ["Result"],
   andJoinedTerms = [],
-  apiHandlerFiles = [],
 } = {}) {
   const createRestrictedImports = ({ allowEffect }) => [
     "error",
@@ -129,12 +127,6 @@ export function createOxlintConfig({
       "eric/discouraged-syntax": ["warn", DISCOURAGED_SYNTAX],
     },
     overrides: [
-      ...(apiHandlerFiles.length > 0
-        ? [{
-            files: apiHandlerFiles,
-            rules: { "eric/verb-return-contract": ["error", { resultTypeNames, allowNullableGet: true }] },
-          }]
-        : []),
       ...(effectAllowedFiles.length > 0
         ? [{
             files: effectAllowedFiles,

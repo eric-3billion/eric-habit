@@ -6,8 +6,8 @@
 const CONTRACTS = [
   // 없음은 null 하나로 표현한다 (habits/00) — undefined 는 "아직 안 정함"과 섞이고 TanStack queryFn 이 받지 못한다
   { pattern: /^find([A-Z]|$)/, messageId: "findMustIncludeNull", isSatisfied: ({ returnType }) => isAbsentAsNull(returnType) },
-  // API 핸들러의 get 은 HTTP GET 이라 없음(404 등)이 정상 응답이다 — allowNullableGet 을 켠 파일에서만 null 을 허용한다
-  { pattern: /^get([A-Z]|$)/, messageId: "getMustNotIncludeAbsence", isSatisfied: ({ returnType, allowNullableGet }) => isTypeReferenceNamed(returnType, ["ReactNode"]) || !hasUnionMember(returnType, (t) => isUndefinedType(t) || (!allowNullableGet && isNullType(t))) },
+  // get 은 동작(꺼내기·만들기)을 말할 뿐 존재를 약속하지 않는다. 없을 수 있으면 null 로 드러내고, 없음을 undefined 로 표현하지 않는다
+  { pattern: /^get([A-Z]|$)/, messageId: "getMustNotReturnUndefined", isSatisfied: ({ returnType }) => !hasUnionMember(returnType, isUndefinedType) },
   { pattern: /^(is|has|can)([A-Z]|$)/, messageId: "predicateMustReturnBoolean", isSatisfied: ({ returnType }) => returnType.type === "TSBooleanKeyword" || returnType.type === "TSTypePredicate" },
   { pattern: /^compare([A-Z]|$)/, messageId: "compareMustReturnNumber", isSatisfied: ({ returnType }) => returnType.type === "TSNumberKeyword" },
   { pattern: /^subscribe([A-Z]|$)/, messageId: "subscribeMustReturnUnsubscribe", isSatisfied: ({ returnType }) => returnType.type === "TSFunctionType" },
@@ -21,10 +21,10 @@ export default {
   meta: {
     type: "problem",
     docs: { description: "함수 이름의 동사가 약속한 반환 타입을 적어둔 리턴 타입이 지키는지 검사 (habits/00 동사 표)" },
-    schema: [{ type: "object", properties: { resultTypeNames: { type: "array", items: { type: "string" } }, allowNullableGet: { type: "boolean" } }, additionalProperties: false }],
+    schema: [{ type: "object", properties: { resultTypeNames: { type: "array", items: { type: "string" } } }, additionalProperties: false }],
     messages: {
       findMustIncludeNull: "find* 는 없을 수 있다 — 없음은 null 로 반환한다(undefined 금지). 항상 있으면 get* (habits/00)",
-      getMustNotIncludeAbsence: "get* 는 반드시 있다 — null/undefined 를 반환하면 find*. API 핸들러는 allowNullableGet 으로 null 만 허용 (habits/00)",
+      getMustNotReturnUndefined: "get* 이 없음을 반환하면 null 로 드러낸다(undefined 금지) (habits/00)",
       predicateMustReturnBoolean: "is*/has*/can* 은 boolean 판정이다 (habits/00)",
       compareMustReturnNumber: "compare* 는 정렬 비교자 — number 를 반환한다 (habits/00)",
       subscribeMustReturnUnsubscribe: "subscribe* 는 해제 함수를 반환한다 (habits/00, 01 §6)",
@@ -35,7 +35,6 @@ export default {
   },
   create(context) {
     const resultTypeNames = context.options[0]?.resultTypeNames ?? ["Result"];
-    const allowNullableGet = context.options[0]?.allowNullableGet ?? false;
     const { sourceCode } = context;
 
     const handleFunction = (nameNode, fnNode) => {
@@ -44,7 +43,7 @@ export default {
       if (!contract || !annotation) return;
       const returnType = toAwaitedType(annotation);
       const firstParamType = fnNode.params[0]?.typeAnnotation?.typeAnnotation;
-      if (!contract.isSatisfied({ returnType, firstParamType, resultTypeNames, allowNullableGet, sourceCode })) {
+      if (!contract.isSatisfied({ returnType, firstParamType, resultTypeNames, sourceCode })) {
         context.report({ node: nameNode, messageId: contract.messageId });
       }
     };

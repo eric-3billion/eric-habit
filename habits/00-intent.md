@@ -41,8 +41,8 @@
 
 | 동사 | 이름만 보고 예측되는 것 |
 |---|---|
-| `get*` | 반드시 있다 — 존재는 조달·타입이 보장한다([05-types](05-types.md)). 없으면 버그. 부수효과 없음. **예외: API 핸들러의 `get*` 은 HTTP GET 이라 없음(404 등)을 `T \| null` 로 돌려줄 수 있다** |
-| `find*` | 없을 수 있다 → `T \| null`. **없음은 `null` 하나로만 표현한다** — `undefined` 는 "아직 안 정함"(옵셔널·미초기화)과 섞이고 TanStack `queryFn` 이 반환하지 못한다. `Array.find` 처럼 `undefined` 를 주는 API 는 `?? null` 로 받는다 |
+| `get*` | 꺼내거나 만든다(필드 접근·계산·HTTP GET). 부수효과 없음. 존재는 약속하지 않는다 — 없을 수 있으면 반환 타입이 `T \| null` 로 드러낸다(`strictNullChecks` 가 호출부 처리를 강제한다) |
+| `find*` | 컬렉션·저장소에서 **찾는다**. 못 찾을 수 있다 → `T \| null`. 찾는 게 아니라 꺼내기면 `get*` 이다(`findApiErrorStatus` ❌ → `getApiErrorStatus`). **없음은 `null` 하나로만 표현한다** — `undefined` 는 "아직 안 정함"(옵셔널·미초기화)과 섞이고 TanStack `queryFn` 이 반환하지 못한다. `Array.find` 처럼 `undefined` 를 주는 API 는 `?? null` 로 받는다 |
 | `list*` | 0개 이상, 빈 배열이 정상 |
 | `is*`·`has*`·`can*` | boolean 판정. 부수효과 없음 |
 | `to*`·`format*` | 다른 무엇으로의 순수 변환 — **판정을 숨기지 않는다**(아래 안티 예시 `formatScore`). 경계 매퍼의 하위호환 폴백만 예외, 주석으로 드러낸다([05-types](05-types.md)). map·convert·transform·build·extract 는 전부 `to*` — **결과 명사만** 쓰고(`toBnd(bndDto)`), 원본이 여럿이면 결과 명사를 원본 도메인으로 좁힌다(`toQualityConditions`, `From` 꼬리 금지) |

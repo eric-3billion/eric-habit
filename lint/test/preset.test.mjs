@@ -33,7 +33,7 @@ function listExpectedRuleIds(source) {
     .map(([line, ids]) => `${line}: ${ids.split(",").map((id) => id.trim()).sort().join(", ")}`);
 }
 
-const SAMPLE_FILES = ["clean.tsx", "violations.tsx", "order-panel.test.tsx", "external-sync/use-viewport-width.ts", "order-api.ts"];
+const SAMPLE_FILES = ["clean.tsx", "violations.tsx", "order-panel.test.tsx", "external-sync/use-viewport-width.ts"];
 
 SAMPLE_FILES.forEach((file) => {
   test(file, () => {
