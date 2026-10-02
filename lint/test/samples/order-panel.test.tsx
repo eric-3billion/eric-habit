@@ -3,7 +3,7 @@ declare const screen: { getByTestId: (id: string) => HTMLElement; getByRole: (ro
 
 export const heading = screen.getByRole("heading");
 export const panel = screen.getByTestId("order-panel"); /* expect: eric/restricted-syntax */
-export const panelColor = getComputedStyle(heading).color; /* expect: eric/restricted-syntax */
+export const panelColor = getComputedStyle(heading).color;
 export const setupPanel = (): HTMLElement => screen.getByRole("region");
 export const loadPanel = (): HTMLElement => screen.getByRole("region"); /* expect: eric/function-verb-whitelist */
 export const result = screen.getByRole("status");

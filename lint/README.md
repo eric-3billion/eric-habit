@@ -98,7 +98,7 @@ oxlint -c oxlint.config.mjs src
 | 24 | 05 | `!` non-null 단언 | `typescript/no-non-null-assertion` |
 | 25 | 05 | `any` | `typescript/no-explicit-any` |
 | 26 | 06 | 제품 코드의 `data-testid` 속성 | `eric/restricted-syntax` |
-| 27 | 06 | 테스트의 `getByTestId`·`getComputedStyle` | `eric/restricted-syntax` |
+| 27 | 06 | 테스트의 `getByTestId` | `eric/restricted-syntax` |
 | 28 | 00 | kebab-case 가 아닌 파일 이름 | `unicorn/filename-case` |
 | 29 | 00 | 일부러 넘기거나 반환하는 `undefined`(없음은 `null`) | `unicorn/no-useless-undefined` |
 | 30 | 01 §2 | 세 단을 넘는 블록 중첩 | `max-depth` |
@@ -453,13 +453,13 @@ const LATE_RATE = 3;
 
 **왜**: 테스트는 사용자가 보는 방식(버튼 이름, 역할)으로 요소를 찾아야 화면이 실제로 맞는지 검증된다. 테스트 전용 id 를 박으면 화면이 깨져도 테스트는 통과할 수 있다.
 
-#### 27. 테스트의 `getByTestId`·`getComputedStyle` — `eric/restricted-syntax`
+#### 27. 테스트의 `getByTestId` — `eric/restricted-syntax`
 
-**잡는 것**: 테스트 파일에서 `getByTestId` 계열과 `getComputedStyle` 을 쓰면 걸린다.
+**잡는 것**: 테스트 파일에서 `getByTestId` 계열을 쓰면 걸린다.
 
-**왜**
-- `getByTestId` 는 #26 과 같은 이유다. `getByRole` 같은 쿼리와, 범위를 좁히는 `within` 을 쓴다.
-- `getComputedStyle` 은 테스트 환경(jsdom)이 styled-components 의 중첩 CSS 를 계산하지 못해 틀린 값을 준다. `toHaveStyle` 매처를 쓴다.
+**왜**: #26 과 같은 이유다. `getByRole` 같은 쿼리와, 범위를 좁히는 `within` 을 쓴다.
+
+**괜찮은 경우**: `getComputedStyle` 은 막지 않는다. jest-dom `toHaveStyle` 도 내부에서 `getComputedStyle` 을 부르므로 jsdom 에서 정확도 차이가 없다. 스타일·레이아웃 단언은 실제 브라우저에서 도는 `*.browser.test.*` 에서 `getComputedStyle` 로 한다.
 
 ## 테스트 파일에서 달라지는 것
 
@@ -524,7 +524,7 @@ lint 는 "모양"만 볼 수 있다. 설계가 맞는지는 사람이 판단한�
 | 02 구조 | 선언 전 사용 | 다른 모듈의 내부 파일을 직접 import 하지 않았나(공개 입구로만), 유한한 이름 집합을 배열이 아니라 유니온 타입을 원본으로 뒀나 |
 | 04 함수형 | 루프·`let`·중첩 삼항·`parse*` 의 throw | 호출하는 쪽이 처리할 실패(`Result`)인지 경계가 처리할 실패(throw)인지, 유니온 분기에서 빠진 경우를 `never` 로 막았나, 판정 규칙을 배열로 박지 않았나 |
 | 05 타입 | `as`·`!`·`any` | lint 끄는 주석으로 피하지 않았나, 옵셔널이 땜빵이 아닌가, 옛 데이터 형식 처리를 데이터가 들어오는 한 곳에서 했나 |
-| 06 테스트 | `*ByTestId`·`getComputedStyle`·제품 코드의 `data-testid` | mock 이 파라미터를 실제로 반영하나, 분기·예외 경로를 다 테스트했나 |
+| 06 테스트 | `*ByTestId`·제품 코드의 `data-testid` | mock 이 파라미터를 실제로 반영하나, 분기·예외 경로를 다 테스트했나 |
 
 ## 구현
 

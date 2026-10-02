@@ -45,7 +45,6 @@ const RESTRICTED_SYNTAX = [
 const REACT_MEMBER_EFFECT = { selector: "MemberExpression[object.name='React'][property.name=/^use(Layout)?Effect$/]", message: EFFECT_MESSAGE };
 const NO_TEST_ID_ATTRIBUTE = { selector: "JSXAttribute[name.name='data-testid']", message: "data-testid 결합 대신 role/접근성 쿼리로 찾는다 (habits/06)" };
 const TEST_RESTRICTED_SYNTAX = [
-  { selector: "CallExpression[callee.name='getComputedStyle'], CallExpression[callee.property.name='getComputedStyle']", message: "jsdom 은 styled 중첩 CSS 를 못 읽는다 → toHaveStyle (habits/06)" },
   { selector: "CallExpression[callee.name=/ByTestId$/], CallExpression[callee.property.name=/ByTestId$/]", message: "*ByTestId 대신 role/접근성 쿼리 + within 스코프 (habits/06)" },
 ];
 
