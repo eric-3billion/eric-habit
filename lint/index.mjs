@@ -49,26 +49,6 @@ const TEST_RESTRICTED_SYNTAX = [
   { selector: "CallExpression[callee.name=/ByTestId$/], CallExpression[callee.property.name=/ByTestId$/]", message: "*ByTestId 대신 role/접근성 쿼리 + within 스코프 (habits/06)" },
 ];
 
-// 타입 정보를 읽는 룰. oxlint-tsgolint 와 tsconfig 가 있어야 하고, 없으면 oxlint 가 실행 자체를 실패한다
-const TYPE_AWARE_RULES = {
-  // 숫자·문자열의 암묵적 truthy 판정(if (count))을 막는다. 객체의 존재 확인(if (user))은 관용이라 허용한다 (habits/05)
-  "typescript/strict-boolean-expressions": ["error", { allowString: false, allowNumber: false, allowNullableObject: true }],
-  // Suspense 경계 안처럼 항상 있는 값에 붙은 ?.·?? 를 잡는다 (habits/01 §3)
-  "typescript/no-unnecessary-condition": "error",
-  // 빠뜨린 케이스를 default 로 덮지 않는다 (habits/04 합타입)
-  "typescript/switch-exhaustiveness-check": "error",
-  // handle* 가 부수효과를 조립하는 자리다. 빠뜨린 await 와 onClick 에 넘긴 Promise 를 잡는다 (habits/00 handle*)
-  "typescript/no-floating-promises": "error",
-  "typescript/no-misused-promises": "error",
-  // 리턴 타입을 적지 않은 함수까지 반환 일관성을 본다. verb-return-contract 는 적어둔 리턴 타입만 본다 (habits/00 동사 표)
-  "typescript/consistent-return": "error",
-  // 0·"" 을 없음으로 오인하지 않는다. 없음은 null 이고 ?? 로 받는다 (habits/00)
-  "typescript/prefer-nullish-coalescing": "error",
-  "typescript/prefer-optional-chain": "error",
-  // catch 로 받은 값은 Error 라는 보장이 없다 (habits/05)
-  "typescript/use-unknown-in-catch-callback-variable": "error",
-};
-
 // habits/06 — 테스트 파일에만 켠다
 const TEST_RULES = {
   // 분기가 있으면 일부 경로의 단언이 돌지 않아도 테스트가 통과한다
@@ -116,7 +96,6 @@ const DISCOURAGED_SYNTAX = [
  * @param {string[]} [options.testFiles]
  * @param {string[]} [options.resultTypeNames] - parse·validate 함수가 반환해야 하는 Result 타입 이름
  * @param {string[]} [options.andJoinedTerms] - 함수 이름에 And 가 들어가도 되는 도메인 용어(예: "TermsAndConditions"). 두 동작의 나열이 아니라 한 명사구일 때만 올린다
- * @param {boolean} [options.typeAware] - false 면 TYPE_AWARE_RULES 를 뺀다. 변경 파일만 임시 디렉터리에 풀어 검사하는 diff 검사기처럼 tsconfig·node_modules 가 없는 곳에서 쓴다
  * @param {{ files: string[], verbs: string[] }} [options.serverCommands] - 서버의 도메인 명령 엔드포인트(approve·request 등)를 부르는 API 파일과, 그 파일에서만 더 허용할 동사.
  *   이 이름의 주인은 서버 계약이라 표의 동사로 바꾸면 명령이 CRUD 로 뭉개진다. 화면 코드는 use*·handle* 뒤에 도메인 동사를 붙이므로 열 필요가 없다
  */
@@ -130,7 +109,6 @@ export function createOxlintConfig({
   resultTypeNames = ["Result"],
   andJoinedTerms = [],
   serverCommands = { files: [], verbs: [] },
-  typeAware = true,
 } = {}) {
   const createRestrictedImports = ({ allowEffect }) => [
     "error",
@@ -153,11 +131,9 @@ export function createOxlintConfig({
 
   return {
     // plugins 를 적으면 oxlint 기본 묶음(typescript·unicorn·oxc)을 덮으므로 기본 묶음에 react 만 더한다
-    plugins: ["typescript", "unicorn", "oxc", "react", "import", "vitest"],
+    plugins: ["typescript", "unicorn", "oxc", "react", "vitest"],
     jsPlugins: [PLUGIN_PATH, TESTING_LIBRARY_PLUGIN_PATH, TANSTACK_QUERY_PLUGIN_PATH],
-    options: { typeAware },
     rules: {
-      ...(typeAware ? TYPE_AWARE_RULES : {}),
       // ── habits/05 타입 위생 ─────────────────────────────
       "typescript/consistent-type-assertions": ["error", { assertionStyle: "never" }],
       "typescript/no-non-null-assertion": "error",
@@ -211,8 +187,6 @@ export function createOxlintConfig({
       "unicorn/consistent-function-scoping": "error",
 
       // ── habits/02 구조 · 선언 순서 ───────────────────────
-      // 하위가 상위를 알거나 순환하면 선언 순서와 의존 방향이 거꾸로 된다 (habits/02)
-      "import/no-cycle": "error",
       // variables: false — 함수 몸통 안에서 아래 선언을 참조하는 건 TDZ 에 안 걸리므로 허용(styled·className 을 파일 아래에 두는 배치)
       "no-use-before-define": ["error", { functions: false, classes: true, variables: false, typedefs: true, ignoreTypeReferences: false }],
 

@@ -130,9 +130,8 @@ export function OrderHeader({ title }: { /* expect: eric/props-inline-type-singl
   return <h1>{title}</h1>;
 }
 
-// default 가 빠진 케이스를 숨긴다
 export function toStepLabel(step: StepName): string {
-  switch (step) { /* expect: typescript/switch-exhaustiveness-check */
+  switch (step) {
     case "info":
       return "정보";
     default:
@@ -153,7 +152,7 @@ export function normalizeOrderId(order: Order): string { /* expect: eric/verb-re
 
 export function listOrderIds(orders: Order[]): string[] {
   const [first] = orders;
-  const { id: result } = first ?? { id: "" }; /* expect: eric/no-general-name, typescript/no-unnecessary-condition */
+  const { id: result } = first ?? { id: "" }; /* expect: eric/no-general-name */
   return orders.map((item) => item.id).concat(result);
 }
 
@@ -165,26 +164,6 @@ export const useOrderList = (): { data: Order[] } => useSuspenseQuery(orderQueri
 
 export const earlyRate = LATE_RATE * 2; /* expect: no-use-before-define */
 const LATE_RATE = 3;
-
-export function isOrderListEmpty(orderCount: number): boolean {
-  if (orderCount) return false; /* expect: typescript/strict-boolean-expressions */
-  return true;
-}
-
-export async function createOrderDraft(id: string): Promise<string> {
-  return id;
-}
-
-export function handleSaveClick(id: string): void {
-  createOrderDraft(id); /* expect: typescript/no-floating-promises */
-}
-
-export function subscribeOrderSave(onSave: () => void): () => void {
-  onSave();
-  return () => {};
-}
-
-export const unsubscribeOrderSave = subscribeOrderSave(async () => createOrderDraft("")); /* expect: typescript/no-misused-promises */
 
 export function calculateOrderTotal(orders: Order[]): number {
   orders.forEach((order) => order.id); /* expect: unicorn/no-array-for-each */
@@ -243,14 +222,6 @@ export function listReversedOrderIds(orderIds: string[]): string[] {
   return orderIds.reverse(); /* expect: unicorn/no-array-reverse */
 }
 
-export function getOrderPrefix(id: string) { /* expect: eric/explicit-return-type */
-  if (id === "") return;
-  return id.slice(0, 2); /* expect: typescript/consistent-return */
-}
-
-export function formatOrderName(name: string | null): string {
-  return name || "이름 없음"; /* expect: typescript/prefer-nullish-coalescing, typescript/strict-boolean-expressions */
-}
 
 // @ts-ignore /* expect: typescript/ban-ts-comment */
 export const ignoredOrderId: string = 1;
@@ -285,12 +256,6 @@ export function OrderIdProvider({ id, children }: { id: string; children: ReactN
   return <OrderIdContext.Provider value={{ id }}>{children}</OrderIdContext.Provider>; /* expect: react/jsx-no-constructed-context-values */
 }
 
-export function createOrderLogger(order: Promise<Order>): Promise<string> {
-  return order
-    .then((resolvedOrder) => resolvedOrder.id)
-    .catch((error) => String(error)); /* expect: typescript/use-unknown-in-catch-callback-variable */
-}
-
 export function handleOrderDebug(order: Order): void {
   console.log(order.id); /* expect: no-console */
   console.error(order.id);
@@ -298,10 +263,6 @@ export function handleOrderDebug(order: Order): void {
 
 export function groupOrdersById(orders: Order[]): Record<string, Order> {
   return orders.reduce((orderById, order) => ({ ...orderById, [order.id]: order }), {}); /* expect: oxc/no-accumulating-spread */
-}
-
-export function findOrderCreatedAt(order: Order | null): number | null {
-  return order && order.createdAt; /* expect: typescript/prefer-optional-chain */
 }
 
 export const createOrderTotalQuery = (orderId: string) => /* expect: eric/explicit-return-type */
