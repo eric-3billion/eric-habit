@@ -27,6 +27,11 @@ export function getOrderTotal(order: Order): number {
   return order.total;
 }
 
+// And 가 든 도메인 용어는 andJoinedTerms 에 올려 허용한다
+export function hasOrderTermsAndConditions(order: Order): boolean {
+  return order.id.length > 0;
+}
+
 export function isExpensiveOrder(order: Order): boolean {
   return order.total > 100;
 }

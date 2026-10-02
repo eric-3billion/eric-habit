@@ -100,9 +100,9 @@ oxlint -c oxlint.config.mjs src
 
 #### 1. 함수 이름은 정해진 동사로 시작 — `eric/function-verb-whitelist`
 
-**잡는 것**: 함수를 **만드는 자리**의 이름이 허용된 동사로 시작하지 않으면 걸린다. 이름에 `And` 가 들어가도 걸린다.
+**잡는 것**: 함수를 **만드는 자리**의 이름이 허용된 동사로 시작하지 않으면 걸린다. 이름에 `And` 가 들어가도 걸린다. 단 `TermsAndConditions` 처럼 `And` 가 든 도메인 용어는 `createOxlintConfig({ andJoinedTerms })` 에 올리면 통과한다.
 
-**왜**: 동사마다 "이 함수는 이런 걸 돌려준다"는 약속이 있다(`find` 는 없을 수 있음, `get` 은 반드시 있음 등). 목록 밖의 동사(`resolve`·`process`·`manage`)는 그 약속이 없어서 이름만 보고 동작을 예측할 수 없다. `And` 는 함수 하나가 일을 두 개 한다는 신호다.
+**왜**: 동사마다 "이 함수는 이런 걸 돌려준다"는 약속이 있다(`find` 는 없을 수 있음, `get` 은 반드시 있음 등). 목록 밖의 동사(`resolve`·`process`·`manage`)는 그 약속이 없어서 이름만 보고 동작을 예측할 수 없다. `And` 는 함수 하나가 일을 두 개 한다는 신호다. `And` 뒤가 동사인지는 동사 목록으로 가릴 수 없어서(`sort`·`advance` 처럼 목록 밖의 동사가 끝없다) 전부 막고, 도메인 용어만 예외로 연다.
 
 **허용 동사** (`index.mjs` 의 `FUNCTION_VERBS`)
 
@@ -121,6 +121,8 @@ oxlint -c oxlint.config.mjs src
 ```ts
 function resolveOrder(id) {}            // ❌ resolve 는 목록에 없다
 function getCartAndResetCoupons() {}    // ❌ And — 두 함수로 쪼갠다
+function filterAndSortOrders() {}       // ❌ sort 가 목록에 없어도 And 는 두 동작이다
+function findPendingTermsAndConditions() {} // ✅ andJoinedTerms 에 "TermsAndConditions" 를 올린 경우
 const mapBndDtoToBnd = (dto) => …       // ❌ map 대신 to
 function toBnd(bndDto: BndDto): Bnd {}  // ✅
 ```
@@ -482,7 +484,7 @@ lint 는 "모양"만 볼 수 있다. 설계가 맞는지는 사람이 판단한�
 
 | habit | lint 가 잡는 것 | 리뷰가 잡는 것 |
 |---|---|---|
-| 00 동사 | 목록에 있는 동사인가, `And`, 적어둔 리턴 타입이 동사 약속과 맞는가 | `to*` 와 `create*` 중 맞는 쪽인가(입력을 변환하는지, 설정을 받아 새로 만드는지), `get*`·`to*` 가 몰래 부수효과를 내지 않는가, `format*` 이 판정을 숨기지 않는가, `set*`/`update*`·`delete*`/`remove*` 중 맞는 쪽인가, `on*` 이 정말 prop 이름으로 쓰이는가 |
+| 00 동사 | 목록에 있는 동사인가, `And`(도메인 용어 예외 제외), 적어둔 리턴 타입이 동사 약속과 맞는가 | `to*` 와 `create*` 중 맞는 쪽인가(입력을 변환하는지, 설정을 받아 새로 만드는지), `get*`·`to*` 가 몰래 부수효과를 내지 않는가, `format*` 이 판정을 숨기지 않는가, `set*`/`update*`·`delete*`/`remove*` 중 맞는 쪽인가, `on*` 이 정말 prop 이름으로 쓰이는가 |
 | 00 명사 | `data`·`item`·`value`·`state`·`info`·`result`, `*Info`·`*Data` | 명사가 무엇인지 충분히 좁혀졌나, 이 제품의 말로 읽히나 |
 | 00 특수값·그릇 이름 | "없음" 상수의 계산 | 특수값의 의미가 드러났나, 내용이 하나뿐인데 `*Config`·`*Options` 같은 그릇 이름을 쓰지 않았나 |
 | 01 §3 데이터 조회 | 조건부 조회가 아닌 `useQuery`, 쿼리만 감싼 훅, 설정 직접 적기, 연달아 부르기(warn) | 조회 위치가 맞나, 쿼리를 쓰는 커스텀 훅 둘을 나란히 불러 순서대로 기다리게 되지 않았나, 병렬로 부르려고 상태를 위로 끌어올리지 않았나 |

@@ -14,23 +14,26 @@ export default {
       properties: {
         verbs: { type: "array", items: { type: "string" } },
         exemptNames: { type: "array", items: { type: "string" } },
+        andJoinedTerms: { type: "array", items: { type: "string" } },
       },
       required: ["verbs"],
       additionalProperties: false,
     }],
     messages: {
       verbNotListed: "'{{name}}' — 동사가 habits/00 동사 표에 없다. 표의 동사로 개명하거나, 새 동사면 계약과 함께 표에 먼저 올린다",
-      andJoined: "'{{name}}' — 이름에 And 가 붙었다 = 한 함수가 두 일을 한다. 쪼개고 호출부가 조합한다 (habits/00)",
+      andJoined: "'{{name}}' — 이름에 And 가 붙었다 = 한 함수가 두 일을 한다. 쪼개고 호출부가 조합한다. And 가 든 도메인 용어면 andJoinedTerms 에 올린다 (habits/00)",
     },
   },
   create(context) {
-    const { verbs, exemptNames = [] } = context.options[0];
+    const { verbs, exemptNames = [], andJoinedTerms = [] } = context.options[0];
     const listedVerb = new RegExp(`^(${verbs.join("|")})[A-Z]`);
+    // And 뒤가 동사인지는 동사 표로 가릴 수 없다(표 밖의 동사가 끝없다). 그래서 And 는 모두 막고, And 가 든 도메인 용어만 이름에서 지운 뒤 검사한다.
+    const hasAndJoined = (name) => AND_JOINED.test(andJoinedTerms.reduce((rest, term) => rest.replaceAll(term, ""), name));
 
     const handleFunctionName = (nameNode) => {
       const { name } = nameNode;
       if (PASCAL_CASE.test(name) || exemptNames.includes(name)) return;
-      if (AND_JOINED.test(name)) {
+      if (hasAndJoined(name)) {
         context.report({ node: nameNode, messageId: "andJoined", data: { name } });
         return;
       }

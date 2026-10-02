@@ -33,6 +33,11 @@ export function getCartAndResetCoupons(id: string): string { /* expect: eric/fun
   return id;
 }
 
+// And 뒤가 동사 표에 없는 동사(sort)여도 두 동작의 나열이다
+export function filterAndSortOrders(orders: Order[]): Order[] { /* expect: eric/function-verb-whitelist */
+  return orders;
+}
+
 export function findOrder(orders: Order[]): Order { /* expect: eric/verb-return-contract */
   return orders[0] ?? { id: "", total: 0, createdAt: 0 };
 }

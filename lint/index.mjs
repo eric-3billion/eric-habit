@@ -61,6 +61,7 @@ const DISCOURAGED_SYNTAX = [
  * @param {string[]} [options.effectAllowedFiles] - useEffect 를 허용할 파일 glob. 예외는 인라인 억제가 아니라 여기 한 곳에만 둔다
  * @param {string[]} [options.testFiles]
  * @param {string[]} [options.resultTypeNames] - parse·validate 함수가 반환해야 하는 Result 타입 이름
+ * @param {string[]} [options.andJoinedTerms] - 함수 이름에 And 가 들어가도 되는 도메인 용어(예: "TermsAndConditions"). 두 동작의 나열이 아니라 한 명사구일 때만 올린다
  */
 export function createOxlintConfig({
   effectAllowedFiles = [],
@@ -70,6 +71,7 @@ export function createOxlintConfig({
     "**/*{fixture,fixtures,mock,mocks,test-helper,test-helpers,test-utils}.{ts,tsx}",
   ],
   resultTypeNames = ["Result"],
+  andJoinedTerms = [],
 } = {}) {
   const createRestrictedImports = ({ allowEffect }) => [
     "error",
@@ -113,7 +115,7 @@ export function createOxlintConfig({
       "no-use-before-define": ["error", { functions: false, classes: true, variables: false, typedefs: true, ignoreTypeReferences: false }],
 
       // ── habits/00 이름 ──────────────────────────────────
-      "eric/function-verb-whitelist": ["error", { verbs: FUNCTION_VERBS, exemptNames: VERB_EXEMPT_NAMES }],
+      "eric/function-verb-whitelist": ["error", { verbs: FUNCTION_VERBS, exemptNames: VERB_EXEMPT_NAMES, andJoinedTerms }],
       "eric/no-general-name": "error",
       "eric/verb-return-contract": ["error", { resultTypeNames }],
       "eric/no-sentinel-arithmetic": "error",
@@ -138,7 +140,7 @@ export function createOxlintConfig({
         files: testFiles,
         rules: {
           "eric/restricted-syntax": createRestrictedSyntax({ allowEffect: false, isTest: true }),
-          "eric/function-verb-whitelist": ["error", { verbs: [...FUNCTION_VERBS, ...TEST_FUNCTION_VERBS], exemptNames: [...VERB_EXEMPT_NAMES, ...TEST_EXEMPT_NAMES] }],
+          "eric/function-verb-whitelist": ["error", { verbs: [...FUNCTION_VERBS, ...TEST_FUNCTION_VERBS], exemptNames: [...VERB_EXEMPT_NAMES, ...TEST_EXEMPT_NAMES], andJoinedTerms }],
           // AAA 패턴의 result(= actual)·renderHook 의 result 는 테스트 관용구라 끈다. 나머지 위생 룰은 테스트에도 그대로
           "eric/no-general-name": "off",
           // testing-library 어휘(find* = 비동기·없으면 throw, query* = 없으면 null)가 동사 표의 반환 계약과 다르다
