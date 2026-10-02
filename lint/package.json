@@ -11,9 +11,15 @@
     "test": "node --test test/*.test.mjs"
   },
   "peerDependencies": {
-    "oxlint": ">=1.86.0"
+    "oxlint": ">=1.86.0",
+    "oxlint-tsgolint": ">=7.0.2003",
+    "eslint-plugin-testing-library": ">=7.16.2",
+    "@tanstack/eslint-plugin-query": ">=5.104.0"
   },
   "devDependencies": {
-    "oxlint": "^1.86.0"
+    "@tanstack/eslint-plugin-query": "^5.104.0",
+    "eslint-plugin-testing-library": "^7.16.2",
+    "oxlint": "^1.86.0",
+    "oxlint-tsgolint": "^7.0.2003"
   }
 }

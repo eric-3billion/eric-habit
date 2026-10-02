@@ -1,6 +1,6 @@
 // 각 줄 끝의 expect 주석 = 그 줄에서 나와야 하는 룰 id. 테스트가 과소·과대 보고를 둘 다 잡는다
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import React, { useEffect, useState, type ReactNode } from "react"; /* expect: no-restricted-imports */
+import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import React, { Children, cloneElement, createContext, useEffect, useState, type ReactNode } from "react"; /* expect: no-restricted-imports */
 
 import { orderQueries, type Order } from "./domain";
 
@@ -26,6 +26,11 @@ interface OrderInfo { /* expect: eric/no-general-name */
 const NO_FILLED_STEP = -1;
 
 export function resolveOrder(id: string): string { /* expect: eric/function-verb-whitelist */
+  return id;
+}
+
+// 서버 명령 동사(approve)는 serverCommands.files 밖에서는 열리지 않는다
+export function approveOrder(id: string): string { /* expect: eric/function-verb-whitelist */
   return id;
 }
 
@@ -101,7 +106,8 @@ export function useOrderDetail(id: string): Order { /* expect: eric/no-thin-quer
 }
 
 export function OrderPanel({ orderId }: { orderId: string }): ReactNode {
-  const order = useSuspenseQuery({ queryKey: ["order", orderId], queryFn: async () => orderId }); /* expect: eric/restricted-syntax */
+  const order = useSuspenseQuery({ queryKey: ["order", orderId], queryFn: async () => orderId }); /* expect: @tanstack/query/prefer-query-options */
+  const freshOrder = useSuspenseQuery({ ...orderQueries.detail(orderId), staleTime: 0 }); /* expect: eric/discouraged-syntax, eric/restricted-syntax */
   const catalog = useSuspenseQuery(orderQueries.list()); /* expect: eric/discouraged-syntax */
   const legacy = useQuery(orderQueries.list()); /* expect: eric/restricted-syntax */
   const [width, setWidth] = useState(0);
@@ -124,8 +130,9 @@ export function OrderHeader({ title }: { /* expect: eric/props-inline-type-singl
   return <h1>{title}</h1>;
 }
 
+// default 가 빠진 케이스를 숨긴다
 export function toStepLabel(step: StepName): string {
-  switch (step) {
+  switch (step) { /* expect: typescript/switch-exhaustiveness-check */
     case "info":
       return "정보";
     default:
@@ -146,7 +153,7 @@ export function normalizeOrderId(order: Order): string { /* expect: eric/verb-re
 
 export function listOrderIds(orders: Order[]): string[] {
   const [first] = orders;
-  const { id: result } = first ?? { id: "" }; /* expect: eric/no-general-name */
+  const { id: result } = first ?? { id: "" }; /* expect: eric/no-general-name, typescript/no-unnecessary-condition */
   return orders.map((item) => item.id).concat(result);
 }
 
@@ -158,3 +165,144 @@ export const useOrderList = (): { data: Order[] } => useSuspenseQuery(orderQueri
 
 export const earlyRate = LATE_RATE * 2; /* expect: no-use-before-define */
 const LATE_RATE = 3;
+
+export function isOrderListEmpty(orderCount: number): boolean {
+  if (orderCount) return false; /* expect: typescript/strict-boolean-expressions */
+  return true;
+}
+
+export async function createOrderDraft(id: string): Promise<string> {
+  return id;
+}
+
+export function handleSaveClick(id: string): void {
+  createOrderDraft(id); /* expect: typescript/no-floating-promises */
+}
+
+export function subscribeOrderSave(onSave: () => void): () => void {
+  onSave();
+  return () => {};
+}
+
+export const unsubscribeOrderSave = subscribeOrderSave(async () => createOrderDraft("")); /* expect: typescript/no-misused-promises */
+
+export function calculateOrderTotal(orders: Order[]): number {
+  orders.forEach((order) => order.id); /* expect: unicorn/no-array-for-each */
+  return orders.length;
+}
+
+export function setOrderFallback(onChange: (next: string | undefined) => void): void {
+  onChange(undefined); /* expect: unicorn/no-useless-undefined */
+}
+
+export function formatOrderStatus(isPaid: boolean): string {
+  return !isPaid ? "미결제" : "결제"; /* expect: unicorn/no-negated-condition */
+}
+
+// consistent-function-scoping 은 바깥 함수 줄에 보고된다
+export function OrderList({ orders }: { orders: Order[] }): ReactNode { /* expect: unicorn/consistent-function-scoping */
+  const toOrderLabel = (order: Order): string => order.id;
+  return <ul>{orders.map((order) => <li key={order.id}>{toOrderLabel(order)}</li>)}</ul>;
+}
+
+export function calculateOrderDepth(orders: Order[], id: string): number {
+  if (orders.length > 0) {
+    if (id !== "") {
+      if (orders[0]?.id === id) {
+        if (id.length > 1) return 4; /* expect: max-depth */
+      }
+    }
+  }
+  return 0;
+}
+
+export function createOrderLine(id: string, sku: string, qty: number, price: number, note: string): string { /* expect: max-params */
+  return [id, sku, qty, price, note].join("-");
+}
+
+export const OrderBadge = ({ id }: { id: string }): ReactNode => <span>{id}</span>; /* expect: react/function-component-definition */
+
+export function OrderToggle(): ReactNode {
+  const [open, setVisible] = useState(false); /* expect: react/hook-use-state */
+  return <button type="button" onClick={() => setVisible(!open)}>{String(open)}</button>;
+}
+
+// 바깥 스코프를 안 쓰는 중첩 컴포넌트는 consistent-function-scoping 도 같이 잡는다
+export function OrderTable({ orders }: { orders: Order[] }): ReactNode { /* expect: unicorn/consistent-function-scoping */
+  function OrderCell({ id }: { id: string }): ReactNode { /* expect: react/no-unstable-nested-components */
+    return <td>{id}</td>;
+  }
+  return <tr>{orders.map((order) => <OrderCell key={order.id} id={order.id} />)}</tr>;
+}
+
+export function listSortedOrderIds(orderIds: string[]): string[] {
+  return orderIds.sort(); /* expect: unicorn/no-array-sort */
+}
+
+export function listReversedOrderIds(orderIds: string[]): string[] {
+  return orderIds.reverse(); /* expect: unicorn/no-array-reverse */
+}
+
+export function getOrderPrefix(id: string) { /* expect: eric/explicit-return-type */
+  if (id === "") return;
+  return id.slice(0, 2); /* expect: typescript/consistent-return */
+}
+
+export function formatOrderName(name: string | null): string {
+  return name || "이름 없음"; /* expect: typescript/prefer-nullish-coalescing, typescript/strict-boolean-expressions */
+}
+
+// @ts-ignore /* expect: typescript/ban-ts-comment */
+export const ignoredOrderId: string = 1;
+
+/* eslint-disable */ /* expect: unicorn/no-abusive-eslint-disable */
+export const disabledOrderId = "";
+/* eslint-enable */
+
+export interface OrderById { [orderId: string]: Order } /* expect: typescript/consistent-indexed-object-style */
+
+export function removeOrderById(orderById: Record<string, Order>, orderId: string): Record<string, Order> {
+  const nextOrderById = { ...orderById };
+  delete nextOrderById[orderId]; /* expect: typescript/no-dynamic-delete */
+  return nextOrderById;
+}
+
+export function OrderSlot({ children }: { children: JSX.Element }): ReactNode {
+  return cloneElement(children, { id: "order" }); /* expect: react/no-clone-element */
+}
+
+export function OrderItems({ children }: { children: ReactNode }): ReactNode {
+  return <ul>{Children.map(children, (child) => <li>{child}</li>)}</ul>; /* expect: react/no-react-children */
+}
+
+export function OrderTags({ tags = [] }: { tags?: string[] }): ReactNode { /* expect: react/no-object-type-as-default-prop */
+  return <span>{tags.join(",")}</span>;
+}
+
+const OrderIdContext = createContext({ id: "" });
+
+export function OrderIdProvider({ id, children }: { id: string; children: ReactNode }): ReactNode {
+  return <OrderIdContext.Provider value={{ id }}>{children}</OrderIdContext.Provider>; /* expect: react/jsx-no-constructed-context-values */
+}
+
+export function createOrderLogger(order: Promise<Order>): Promise<string> {
+  return order
+    .then((resolvedOrder) => resolvedOrder.id)
+    .catch((error) => String(error)); /* expect: typescript/use-unknown-in-catch-callback-variable */
+}
+
+export function handleOrderDebug(order: Order): void {
+  console.log(order.id); /* expect: no-console */
+  console.error(order.id);
+}
+
+export function groupOrdersById(orders: Order[]): Record<string, Order> {
+  return orders.reduce((orderById, order) => ({ ...orderById, [order.id]: order }), {}); /* expect: oxc/no-accumulating-spread */
+}
+
+export function findOrderCreatedAt(order: Order | null): number | null {
+  return order && order.createdAt; /* expect: typescript/prefer-optional-chain */
+}
+
+export const createOrderTotalQuery = (orderId: string) => /* expect: eric/explicit-return-type */
+  queryOptions({ queryKey: ["order-total"], queryFn: async () => orderId }); /* expect: @tanstack/query/exhaustive-deps */

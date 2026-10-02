@@ -37,6 +37,8 @@
 
 - **금지 목록이 아니라 허용 목록인 이유**: 넓은 동사는 끝없이 새로 생겨서 금지 목록으로는 닫히지 않는다. 모르는 동사는 기본으로 막는다.
 - **새 동사가 필요하면 먼저 표에 올린다** — 도메인 동작(`confirm`·`checkout` 등)도 기본 금지다. 표에 올릴 때 그 동사의 계약(반환·부수효과)을 같이 적는다.
+  - **예외: 서버 명령을 부르는 API 함수.** 서버가 도메인 명령 엔드포인트(승인·반려·분석 요청)를 따로 두면, 그 엔드포인트를 부르는 API 함수는 서버의 동사를 그대로 쓴다(`approveAccessRequest`, `requestAnalysis`). 표의 동사로 바꾸면 `updateAccessRequest(id, { status: "APPROVED" })` 처럼 명령이 상태 변경으로 뭉개진다. 이름의 주인이 서버 계약이라([02-structure-cohesion](02-structure-cohesion.md) 「SSOT 는 API 응답 경계까지」) 동사 목록은 프로젝트가 lint config 의 `serverCommands` 에 API 파일 경로와 함께 올린다. 계약은 하나다: 서버에 그 명령을 보내는 쓰기. `post`·`patch` 같은 전송 동사는 명령이 아니므로 여기서도 쓰지 않는다.
+  - 화면 코드에는 이 예외가 필요 없다. 도메인 동사는 훅(`useApproveRequest`)과 핸들러(`handleApproveClick`) 이름 뒤에 붙는다.
 - **예외: 조합자** — `all`·`any` 처럼 같은 타입을 받아 같은 타입을 돌려주는 조합 연산은 동사가 아니어도 된다([04-functional-domain](04-functional-domain.md) 「조합 닫힘」). 컴포넌트(PascalCase)는 대상이 아니다.
 
 | 동사 | 이름만 보고 예측되는 것 |
@@ -62,7 +64,7 @@
 | `subscribe*` | 외부 소스 구독 — **해제 함수를 반환**한다(`useSyncExternalStore` 규약, [01 §6](01-component-design.md)) |
 | `use*` | React 훅 |
 | `render*` | 렌더 조각(`ReactNode`)을 반환한다 — render prop·셀 렌더러 |
-| `handle*` | 이벤트 핸들러 — `on*` prop 에 넘긴다(`onClose={handleClose}`) |
+| `handle*` | 이벤트 핸들러 — `on*` prop 에 넘긴다(`onClose={handleClose}`). 뒤에는 효과가 아니라 **이벤트**를 쓴다(`handleRowClick` ⭕ `handleNavigate` ❌). 표에 동사가 없는 외부 부수효과(이동·클립보드·다운로드·트래킹·focus)를 **조립하는 자리**다 — `navigateToX` 같은 함수를 따로 선언하지 않고 핸들러에서 호출한다. 판정·변환은 표의 동사로 빼고 핸들러에는 호출 순서만 남긴다 |
 | `on*` | 선언한 이름이 그대로 prop 키가 될 때(`return { onKeyDown, onChange }`) |
 
 테스트 파일은 testing-library 어휘(`setup`·`mock`·`expect`·`query`)를 추가로 쓴다 — `find*`·`query*` 의 반환 계약도 testing-library 쪽을 따른다.

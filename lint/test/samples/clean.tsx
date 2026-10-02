@@ -1,5 +1,5 @@
 // 프리셋이 아무것도 보고하지 않아야 하는 코드 — habits 가 권장하는 형태를 모았다
-import { skipToken, useQuery, useSuspenseQueries, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, skipToken, useQuery, useSuspenseQueries, useSuspenseQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 
 import { orderQueries, type Order, type Result } from "./domain";
@@ -136,7 +136,9 @@ export function OrderSelection({ orderId }: { orderId: string }): ReactNode {
   return <button type="button" onClick={() => setSelectedIds([orderId])}>{selectedIds.length}</button>;
 }
 
-export const OrderForm = ({ orderId }: { orderId: string }): ReactNode => <form>{orderId}</form>;
+export function OrderForm({ orderId }: { orderId: string }): ReactNode {
+  return <form>{orderId}</form>;
+}
 OrderForm.loading = (): ReactNode => <p>로딩</p>;
 OrderForm.error = ({ resetError }: { resetError: () => void }): ReactNode => <button type="button" onClick={resetError}>재시도</button>;
 
@@ -200,7 +202,8 @@ export function useSearchedOrder(keyword: string): Order | undefined {
   return order;
 }
 
+// useQuery 를 조건부 조회로 판정하려면 skipToken 이 호출하는 자리에 보여야 한다
 export function useOptionalOrder(orderId: string | undefined): Order | undefined {
-  const { data: order } = useQuery({ queryKey: ["order", orderId], queryFn: orderId === undefined ? skipToken : async () => ({ id: orderId, total: 0, createdAt: 0 }) });
+  const { data: order } = useQuery(queryOptions({ queryKey: ["order", orderId], queryFn: orderId === undefined ? skipToken : async () => ({ id: orderId, total: 0, createdAt: 0 }) }));
   return order;
 }

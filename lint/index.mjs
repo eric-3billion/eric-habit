@@ -1,6 +1,9 @@
 import { fileURLToPath } from "node:url";
 
 const PLUGIN_PATH = fileURLToPath(new URL("./plugin.mjs", import.meta.url));
+// 소비처 config 파일 위치와 무관하게 이 프리셋 기준으로 찾는다. 소비처가 peerDependency 로 설치해야 한다
+const TESTING_LIBRARY_PLUGIN_PATH = fileURLToPath(import.meta.resolve("eslint-plugin-testing-library"));
+const TANSTACK_QUERY_PLUGIN_PATH = fileURLToPath(import.meta.resolve("@tanstack/eslint-plugin-query"));
 
 /** habits/00 동사 표 = 화이트리스트. 표를 바꾸면 여기와 rules/verb-return-contract 의 CONTRACTS 를 같이 맞출 것. */
 export const FUNCTION_VERBS = [
@@ -26,8 +29,9 @@ const RESTRICTED_SYNTAX = [
   { selector: "ForStatement, ForInStatement, ForOfStatement, WhileStatement, DoWhileStatement", message: "명시적 루프 금지 → map/filter/reduce (habits/04)" },
   { selector: "VariableDeclaration[kind='let']", message: "재할당 대신 섀도잉·새 값 반환 (habits/04)" },
   {
-    selector: "CallExpression[callee.name='useSuspenseQuery'] > ObjectExpression, CallExpression[callee.name='useSuspenseQueries'] Property[key.name='queries'] > ArrayExpression > ObjectExpression",
-    message: "쿼리 옵션을 인라인으로 쓰지 않는다 — xxxQueries.detail() 팩토리를 넘기고 신선도 정책도 팩토리에 (habits/01 §3)",
+    // 옵션을 통째로 인라인에 쓰는 경우는 @tanstack/query/prefer-query-options 가 잡는다. 여기서는 팩토리를 펼친 뒤 덧붙이는 경우만 본다
+    selector: "CallExpression[callee.name='useSuspenseQuery'] > ObjectExpression:has(> SpreadElement), CallExpression[callee.name='useSuspenseQueries'] Property[key.name='queries'] > ArrayExpression > ObjectExpression:has(> SpreadElement)",
+    message: "팩토리를 펼친 뒤 옵션을 덧붙이지 않는다 — 신선도 정책도 xxxQueries.detail() 팩토리에 둔다 (habits/01 §3)",
   },
   {
     selector: "CallExpression[callee.name='useQuery']:not(:has(Property[key.name='enabled'])):not(:has(Identifier[name='skipToken']))",
@@ -44,6 +48,56 @@ const TEST_RESTRICTED_SYNTAX = [
   { selector: "CallExpression[callee.name='getComputedStyle'], CallExpression[callee.property.name='getComputedStyle']", message: "jsdom 은 styled 중첩 CSS 를 못 읽는다 → toHaveStyle (habits/06)" },
   { selector: "CallExpression[callee.name=/ByTestId$/], CallExpression[callee.property.name=/ByTestId$/]", message: "*ByTestId 대신 role/접근성 쿼리 + within 스코프 (habits/06)" },
 ];
+
+// 타입 정보를 읽는 룰. oxlint-tsgolint 와 tsconfig 가 있어야 하고, 없으면 oxlint 가 실행 자체를 실패한다
+const TYPE_AWARE_RULES = {
+  // 숫자·문자열의 암묵적 truthy 판정(if (count))을 막는다. 객체의 존재 확인(if (user))은 관용이라 허용한다 (habits/05)
+  "typescript/strict-boolean-expressions": ["error", { allowString: false, allowNumber: false, allowNullableObject: true }],
+  // Suspense 경계 안처럼 항상 있는 값에 붙은 ?.·?? 를 잡는다 (habits/01 §3)
+  "typescript/no-unnecessary-condition": "error",
+  // 빠뜨린 케이스를 default 로 덮지 않는다 (habits/04 합타입)
+  "typescript/switch-exhaustiveness-check": "error",
+  // handle* 가 부수효과를 조립하는 자리다. 빠뜨린 await 와 onClick 에 넘긴 Promise 를 잡는다 (habits/00 handle*)
+  "typescript/no-floating-promises": "error",
+  "typescript/no-misused-promises": "error",
+  // 리턴 타입을 적지 않은 함수까지 반환 일관성을 본다. verb-return-contract 는 적어둔 리턴 타입만 본다 (habits/00 동사 표)
+  "typescript/consistent-return": "error",
+  // 0·"" 을 없음으로 오인하지 않는다. 없음은 null 이고 ?? 로 받는다 (habits/00)
+  "typescript/prefer-nullish-coalescing": "error",
+  "typescript/prefer-optional-chain": "error",
+  // catch 로 받은 값은 Error 라는 보장이 없다 (habits/05)
+  "typescript/use-unknown-in-catch-callback-variable": "error",
+};
+
+// habits/06 — 테스트 파일에만 켠다
+const TEST_RULES = {
+  // 분기가 있으면 일부 경로의 단언이 돌지 않아도 테스트가 통과한다
+  "vitest/no-conditional-expect": "error",
+  "vitest/no-conditional-in-test": "error",
+  "vitest/expect-expect": "error",
+  "vitest/no-standalone-expect": "error",
+  "vitest/valid-expect": "error",
+  "vitest/no-identical-title": "error",
+  "vitest/no-commented-out-tests": "error",
+  // toThrow() 만 쓰면 아무 에러나 통과한다
+  "vitest/require-to-throw-message": "error",
+  // DOM 구조 대신 role·접근성 쿼리로 찾는다
+  "testing-library/no-node-access": "error",
+  "testing-library/no-container": "error",
+  "testing-library/prefer-screen-queries": "error",
+  "testing-library/prefer-presence-queries": "error",
+  "testing-library/prefer-find-by": "error",
+  // fireEvent 는 실제 사용자 이벤트 순서를 재현하지 않는다
+  "testing-library/prefer-user-event": "error",
+  "testing-library/await-async-queries": "error",
+  "testing-library/await-async-utils": "error",
+  "testing-library/no-await-sync-queries": "error",
+  "testing-library/no-wait-for-multiple-assertions": "error",
+  "testing-library/no-wait-for-side-effects": "error",
+  "testing-library/no-unnecessary-act": "error",
+  "testing-library/no-manual-cleanup": "error",
+  "testing-library/no-debugging-utils": "error",
+};
 
 const DISCOURAGED_SYNTAX = [
   {
@@ -62,6 +116,9 @@ const DISCOURAGED_SYNTAX = [
  * @param {string[]} [options.testFiles]
  * @param {string[]} [options.resultTypeNames] - parse·validate 함수가 반환해야 하는 Result 타입 이름
  * @param {string[]} [options.andJoinedTerms] - 함수 이름에 And 가 들어가도 되는 도메인 용어(예: "TermsAndConditions"). 두 동작의 나열이 아니라 한 명사구일 때만 올린다
+ * @param {boolean} [options.typeAware] - false 면 TYPE_AWARE_RULES 를 뺀다. 변경 파일만 임시 디렉터리에 풀어 검사하는 diff 검사기처럼 tsconfig·node_modules 가 없는 곳에서 쓴다
+ * @param {{ files: string[], verbs: string[] }} [options.serverCommands] - 서버의 도메인 명령 엔드포인트(approve·request 등)를 부르는 API 파일과, 그 파일에서만 더 허용할 동사.
+ *   이 이름의 주인은 서버 계약이라 표의 동사로 바꾸면 명령이 CRUD 로 뭉개진다. 화면 코드는 use*·handle* 뒤에 도메인 동사를 붙이므로 열 필요가 없다
  */
 export function createOxlintConfig({
   effectAllowedFiles = [],
@@ -72,6 +129,8 @@ export function createOxlintConfig({
   ],
   resultTypeNames = ["Result"],
   andJoinedTerms = [],
+  serverCommands = { files: [], verbs: [] },
+  typeAware = true,
 } = {}) {
   const createRestrictedImports = ({ allowEffect }) => [
     "error",
@@ -93,32 +152,80 @@ export function createOxlintConfig({
   ];
 
   return {
-    jsPlugins: [PLUGIN_PATH],
+    // plugins 를 적으면 oxlint 기본 묶음(typescript·unicorn·oxc)을 덮으므로 기본 묶음에 react 만 더한다
+    plugins: ["typescript", "unicorn", "oxc", "react", "import", "vitest"],
+    jsPlugins: [PLUGIN_PATH, TESTING_LIBRARY_PLUGIN_PATH, TANSTACK_QUERY_PLUGIN_PATH],
+    options: { typeAware },
     rules: {
+      ...(typeAware ? TYPE_AWARE_RULES : {}),
       // ── habits/05 타입 위생 ─────────────────────────────
       "typescript/consistent-type-assertions": ["error", { assertionStyle: "never" }],
       "typescript/no-non-null-assertion": "error",
       "typescript/no-explicit-any": "error",
+      // 억제 주석으로 사유를 대는 회피는 위생 위반보다 나쁘다. 예외는 설정 파일 한 곳에만 둔다 (habits/05)
+      "typescript/ban-ts-comment": ["error", { "ts-expect-error": true, "ts-ignore": true, "ts-nocheck": true }],
+      "unicorn/no-abusive-eslint-disable": "error",
+      // 없음은 null 하나로 표현한다 (habits/00) — undefined 를 일부러 넘기거나 반환하지 않는다
+      "unicorn/no-useless-undefined": "error",
 
       // ── habits/04 함수형 · 합타입 ────────────────────────
       "eric/explicit-return-type": "error",
       "no-param-reassign": ["error", { props: true }],
       "no-nested-ternary": "error",
+      // 유한한 키의 매핑은 Record 로 쓴다 (habits/04 판정은 함수, Record 는 매핑)
+      "typescript/consistent-indexed-object-style": ["error", "record"],
+      "typescript/no-dynamic-delete": "error",
+      "unicorn/no-array-for-each": "error",
+      // 원본을 바꾸는 sort()·reverse() 대신 toSorted()·toReversed()
+      // reduce 안에서 누적값을 매번 펼치면 O(n²) 이다
+      "oxc/no-accumulating-spread": "error",
+      "unicorn/no-array-sort": "error",
+      "unicorn/no-array-reverse": "error",
 
       // ── habits/01 컴포넌트 설계 ──────────────────────────
       "typescript/consistent-type-definitions": ["error", "interface"],
       "eric/props-inline-type-single-line": "error",
       "eric/no-thin-query-hook": "error",
+      // queryFn 이 쓰는 값이 queryKey 에 빠지면 다른 조건의 결과를 캐시에서 돌려준다 (habits/01 §3)
+      "@tanstack/query/exhaustive-deps": "error",
+      "@tanstack/query/prefer-query-options": "error",
+      "@tanstack/query/no-rest-destructuring": "error",
+      "@tanstack/query/stable-query-client": "error",
+      "@tanstack/query/no-unstable-deps": "error",
+      "@tanstack/query/infinite-query-property-order": "error",
+      "@tanstack/query/mutation-property-order": "error",
+      "react/function-component-definition": ["error", { namedComponents: "function-declaration", unnamedComponents: "arrow-function" }],
+      // 렌더할 때마다 새 컴포넌트가 되어 리마운트된다. ErrorBoundary fallback 같은 render prop 은 슬롯이라 허용한다 (habits/03)
+      "react/no-unstable-nested-components": ["error", { allowAsProps: true }],
+      // children 을 뜯어 고치지 말고 슬롯·컴파운드로 조합한다 (habits/03)
+      "react/no-clone-element": "error",
+      "react/no-react-children": "error",
+      // 렌더마다 새 참조가 되어 memo·deps·context 소비처가 매번 바뀐 것으로 본다
+      "react/no-object-type-as-default-prop": "error",
+      "react/jsx-no-constructed-context-values": "error",
+      // 분기는 조기 반환으로 편다 — 중첩이 깊으면 분기를 상위로 끌어올리거나 쪼갤 신호
+      "max-depth": ["error", 3],
+      "max-params": ["error", 4],
+      "unicorn/no-negated-condition": "error",
+      // 바깥 스코프를 쓰지 않는 함수는 모듈 최상위로 뺀다(렌더마다 새로 만들지 않고, 순수함을 위치로 드러낸다)
+      "unicorn/consistent-function-scoping": "error",
 
       // ── habits/02 구조 · 선언 순서 ───────────────────────
+      // 하위가 상위를 알거나 순환하면 선언 순서와 의존 방향이 거꾸로 된다 (habits/02)
+      "import/no-cycle": "error",
       // variables: false — 함수 몸통 안에서 아래 선언을 참조하는 건 TDZ 에 안 걸리므로 허용(styled·className 을 파일 아래에 두는 배치)
       "no-use-before-define": ["error", { functions: false, classes: true, variables: false, typedefs: true, ignoreTypeReferences: false }],
 
       // ── habits/00 이름 ──────────────────────────────────
+      "unicorn/filename-case": ["error", { case: "kebabCase" }],
+      // const [user, setUser] 처럼 값과 세터 이름이 짝을 이룬다 (habits/00)
+      "react/hook-use-state": "error",
       "eric/function-verb-whitelist": ["error", { verbs: FUNCTION_VERBS, exemptNames: VERB_EXEMPT_NAMES, andJoinedTerms }],
       "eric/no-general-name": "error",
       "eric/verb-return-contract": ["error", { resultTypeNames }],
       "eric/no-sentinel-arithmetic": "error",
+      // 운영 콘솔에 디버그 출력과 민감 데이터가 남지 않게 한다. 의도한 경고·오류 보고만 허용한다
+      "no-console": ["error", { allow: ["warn", "error"] }],
       "no-warning-comments": ["warn", { terms: ["기존엔", "기존에는", "원래는", "예전엔"], location: "anywhere" }],
 
       // ── 제한 import · 셀렉터 ─────────────────────────────
@@ -136,11 +243,22 @@ export function createOxlintConfig({
             },
           }]
         : []),
+      ...(serverCommands.files.length > 0
+        ? [{
+            files: serverCommands.files,
+            rules: {
+              "eric/function-verb-whitelist": ["error", { verbs: [...FUNCTION_VERBS, ...serverCommands.verbs], exemptNames: VERB_EXEMPT_NAMES, andJoinedTerms }],
+            },
+          }]
+        : []),
       {
         files: testFiles,
         rules: {
+          ...TEST_RULES,
           "eric/restricted-syntax": createRestrictedSyntax({ allowEffect: false, isTest: true }),
           "eric/function-verb-whitelist": ["error", { verbs: [...FUNCTION_VERBS, ...TEST_FUNCTION_VERBS], exemptNames: [...VERB_EXEMPT_NAMES, ...TEST_EXEMPT_NAMES], andJoinedTerms }],
+          // 잘못된 타입이 거부되는지 확인하는 테스트에서는 @ts-expect-error 가 단언 역할을 한다. 왜 틀린지 설명을 붙이게 한다
+          "typescript/ban-ts-comment": ["error", { "ts-expect-error": "allow-with-description", "ts-ignore": true, "ts-nocheck": true }],
           // AAA 패턴의 result(= actual)·renderHook 의 result 는 테스트 관용구라 끈다. 나머지 위생 룰은 테스트에도 그대로
           "eric/no-general-name": "off",
           // testing-library 어휘(find* = 비동기·없으면 throw, query* = 없으면 null)가 동사 표의 반환 계약과 다르다

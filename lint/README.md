@@ -47,11 +47,17 @@ oxlint -c oxlint.config.mjs src
 | `effectAllowedFiles` | `[]` | `useEffect` 를 **써도 되는 파일**의 경로 패턴. 이 프리셋은 `useEffect` 를 막는데(#7), 브라우저 이벤트 구독처럼 정말 필요한 코드는 전용 폴더에 모아두고 여기에 적는다 |
 | `testFiles` | 아래 「테스트 파일에서 달라지는 것」 | 테스트 파일로 취급할 경로 패턴. 여기 해당하는 파일은 룰이 일부 달라진다 |
 | `resultTypeNames` | `["Result"]` | 실패를 담는 결과 타입의 이름(#2). 팀에서 `Result` 대신 `Either` 같은 이름을 쓰면 여기에 넣는다 |
+| `andJoinedTerms` | `[]` | 이름에 `And` 가 들어가도 되는 도메인 용어(#1). 예: `"TermsAndConditions"` |
+| `typeAware` | `true` | `false` 면 타입 정보를 읽는 룰(#29·#33·#36·#38·#39·#40·#47·#56)을 뺀다. 변경된 파일만 임시 폴더에 풀어 검사하는 diff 검사기처럼 `tsconfig.json`·`node_modules` 가 없는 곳에서 쓴다. 켠 채로 그런 곳에서 돌리면 oxlint 가 tsgolint 를 못 찾아 실행 자체가 실패한다 |
+| `serverCommands` | `{ files: [], verbs: [] }` | 서버의 도메인 명령 엔드포인트를 부르는 API 파일 경로와, 그 파일에서만 더 허용할 동사(#1). 예: `{ files: ["**/api/**"], verbs: ["approve", "request"] }` |
 
 ### 알아둘 것
 
 - **oxlint 가 기본으로 켜는 룰(`correctness` 분류)은 그대로 둔다.** 이 프리셋은 habits 룰만 추가한다. 기본 룰을 끄거나 더 켜고 싶으면 `{ ...createOxlintConfig(), categories: { … } }` 처럼 덮어쓴다.
+- **타입 정보를 쓰는 룰이 있다.** `typescript/switch-exhaustiveness-check` 같은 룰은 TypeScript 타입을 읽어야 해서 `options.typeAware` 를 켠다. 소비처에 `oxlint-tsgolint` 를 설치해야 하고, 검사할 파일이 `tsconfig.json` 에 포함돼 있어야 한다. 타입을 못 읽으면 `any` 로 보고 오탐한다.
+- **`useQuery` 조건부 판정(#6)은 호출 자리만 본다.** `skipToken` 을 팩토리 안에 넣으면 조건부 조회인지 보이지 않아 경고가 난다. 조건은 호출하는 자리에 둔다(`useQuery({ ...orderQueries.detail(id), enabled })`).
 - **설정 파일은 `.mjs`(JavaScript)여야 한다.** 옵션을 받아 설정을 만드는 함수라서 JSON 파일로는 쓸 수 없다. oxlint 에서 JS 설정 파일은 아직 실험 기능이고, Node.js 로 실행해야 동작한다.
+- **룰 이름 없는 한 줄 억제는 못 잡는다.** #46 은 `/* oxlint-disable */` 블록만 잡고 `// oxlint-disable-next-line`(룰 이름 없음)은 놓친다. 리뷰에서 본다.
 - **예외는 설정 파일에만 둔다.** 코드에 `// oxlint-disable` 같은 주석을 달아 룰을 끄지 말고, `effectAllowedFiles` 같은 옵션에 경로를 적어 한 곳에서 관리한다.
 - **기존 코드는 고치라고 하지 않는다.** oxlint 에는 baseline 기능이 없어서, 도입하면 기존 코드의 위반이 한꺼번에 쏟아진다. 그래서 **diff CI** 로 PR 에서 새로 추가된 줄의 경고만 보여주고, CI 를 실패시키지 않는 방식으로 운영한다(habits/01 §7).
 
@@ -77,7 +83,7 @@ oxlint -c oxlint.config.mjs src
 | 7 | 01 §6 | `useEffect`·`useLayoutEffect` import | `no-restricted-imports` |
 | 8 | 01 §6 | `React.useEffect(…)` 로 우회하기 | `eric/restricted-syntax` |
 | 9 | 01 §3 | 쿼리 하나만 감싸고 하는 일이 없는 커스텀 훅 | `eric/no-thin-query-hook` |
-| 10 | 01 §3 | 쿼리 설정을 호출하는 자리에 직접 적기 | `eric/restricted-syntax` |
+| 10 | 01 §3 | 쿼리 팩토리를 펼친 뒤 옵션을 덧붙이기(통째로 인라인은 #57) | `eric/restricted-syntax` |
 | 11 | 01 §3 | 쿼리를 연달아 불러 순서대로 기다리게 만들기 (warn) | `eric/discouraged-syntax` |
 | 12 | 01 §7 | 객체 모양 타입을 `type` 으로 선언 | `typescript/consistent-type-definitions` |
 | 13 | 01 §7 | 여러 줄짜리 props 타입을 파라미터에 직접 적기 | `eric/props-inline-type-single-line` |
@@ -95,6 +101,38 @@ oxlint -c oxlint.config.mjs src
 | 25 | 05 | `any` | `typescript/no-explicit-any` |
 | 26 | 06 | 제품 코드의 `data-testid` 속성 | `eric/restricted-syntax` |
 | 27 | 06 | 테스트의 `getByTestId`·`getComputedStyle` | `eric/restricted-syntax` |
+| 28 | 00 | kebab-case 가 아닌 파일 이름 | `unicorn/filename-case` |
+| 29 | 00 `handle*` | `await` 를 빠뜨린 Promise, `void` 자리에 넘긴 async 함수 | `typescript/no-floating-promises`, `typescript/no-misused-promises` |
+| 30 | 00 | 일부러 넘기거나 반환하는 `undefined`(없음은 `null`) | `unicorn/no-useless-undefined` |
+| 31 | 01 §2 | 세 단을 넘는 블록 중첩 | `max-depth` |
+| 32 | 01 §1 | 다섯 개 이상의 파라미터 | `max-params` |
+| 33 | 01 §3 | 항상 있는 값에 붙은 `?.`·`??`, 항상 같은 결과인 조건 | `typescript/no-unnecessary-condition` |
+| 34 | 00 | `if (!x) … else …`, `!x ? a : b` 처럼 부정으로 시작하는 양갈래 분기 | `unicorn/no-negated-condition` |
+| 35 | 02 | 바깥 스코프를 안 쓰는데 함수 안에 선언한 함수 | `unicorn/consistent-function-scoping` |
+| 36 | 04 | 빠뜨린 케이스를 `default` 로 덮은 `switch` | `typescript/switch-exhaustiveness-check` |
+| 37 | 04 | `forEach` | `unicorn/no-array-for-each` |
+| 38 | 05 | 숫자·문자열을 그대로 조건에 쓰기(`if (count)`) | `typescript/strict-boolean-expressions` |
+| 39 | 00 | 어떤 경로는 값을 돌려주고 어떤 경로는 안 돌려주는 함수 | `typescript/consistent-return` |
+| 40 | 00 | 없음을 `\|\|` 로 받기(0·`""` 도 없음으로 취급된다) | `typescript/prefer-nullish-coalescing` |
+| 41 | 00 | `const [open, setVisible]` 처럼 짝이 안 맞는 `useState` 이름 | `react/hook-use-state` |
+| 42 | 01 §7 | 화살표 함수로 선언한 이름 있는 컴포넌트 | `react/function-component-definition` |
+| 43 | 03 | 컴포넌트 안에서 선언한 컴포넌트(렌더마다 리마운트) | `react/no-unstable-nested-components` |
+| 44 | 04 | 원본을 바꾸는 `sort()`·`reverse()` | `unicorn/no-array-sort`, `unicorn/no-array-reverse` |
+| 45 | 05 | `@ts-ignore`·`@ts-expect-error`·`@ts-nocheck` (테스트는 설명이 붙은 `@ts-expect-error` 허용) | `typescript/ban-ts-comment` |
+| 46 | 05 | 룰 이름 없이 통째로 끄는 `/* oxlint-disable */` | `unicorn/no-abusive-eslint-disable` |
+| 47 | 05 | `catch` 콜백 인자를 `unknown` 이 아닌 타입으로 받기 | `typescript/use-unknown-in-catch-callback-variable` |
+| 48 | 04 | `{ [key: string]: V }` 인덱스 시그니처(→ `Record`) | `typescript/consistent-indexed-object-style` |
+| 49 | 04 | `delete obj[key]` | `typescript/no-dynamic-delete` |
+| 50 | 03 | `cloneElement`·`Children.map` 으로 children 고치기 | `react/no-clone-element`, `react/no-react-children` |
+| 51 | 03 | `= []`·`= {}` 같은 객체 기본값 prop | `react/no-object-type-as-default-prop` |
+| 52 | 03 | 렌더마다 새로 만드는 context value | `react/jsx-no-constructed-context-values` |
+| 53 | - | `console.warn`·`console.error` 가 아닌 `console.*` | `no-console` |
+| 54 | 02 | 모듈 순환 의존 | `import/no-cycle` |
+| 55 | 04 | `reduce` 안에서 누적값을 매번 펼치기(O(n²)) | `oxc/no-accumulating-spread` |
+| 56 | 01 §3 | `a && a.b` (→ `a?.b`) | `typescript/prefer-optional-chain` |
+| 57 | 01 §3 | `queryKey` 에 빠진 `queryFn` 의존값, 인라인 쿼리 옵션, 결과 객체 rest 구조분해 등 | `@tanstack/query/*` 7개 |
+| 58 | 06 | 테스트 안의 분기·단언 없는 테스트·메시지 없는 `toThrow()` 등 | `vitest/*` 8개 |
+| 59 | 06 | DOM 구조 접근, `render` 결과 쿼리, `fireEvent`, 비동기 쿼리 미대기 등 | `testing-library/*` 14개 |
 
 ### 00 이름
 
@@ -132,6 +170,7 @@ function toBnd(bndDto: BndDto): Bnd {}  // ✅
 - 컴포넌트(대문자로 시작하는 이름)
 - `all`·`any` 처럼 함수를 조합하는 함수(habits/04 「조합 닫힘」)
 - 테스트 파일에서는 `setup`·`mock`·`expect`·`query` 동사와 단독 `setup()`·`wrapper` 도 허용
+- 서버의 도메인 명령 엔드포인트를 부르는 API 파일에서는 `createOxlintConfig({ serverCommands: { files, verbs } })` 에 올린 동사도 허용. `approveAccessRequest` 를 `updateAccessRequest` 로 바꾸면 서버가 따로 둔 "승인" 명령이 CRUD 로 뭉개지기 때문이다. 이 이름의 주인은 서버 계약이라 동사 목록은 소비처가 정한다. 화면 코드는 `useApproveRequest`·`handleApproveClick` 처럼 `use`·`handle` 뒤에 도메인 동사를 붙이면 되므로 열지 않는다. `post`·`patch` 같은 전송 동사는 API 파일에서도 막힌다
 
 코드: `rules/function-verb-whitelist.mjs`
 
@@ -502,7 +541,7 @@ lint 는 "모양"만 볼 수 있다. 설계가 맞는지는 사람이 판단한�
 
 ### 의존성
 
-oxlint(1.86 이상) 하나만 쓴다. oxlint 가 네이티브 룰을 돌리고, 이 프리셋의 JS 플러그인(`eric`)도 불러서 같이 실행한다.
+oxlint(1.86 이상)와 타입 정보를 읽는 `oxlint-tsgolint`(7.0.2003 이상)를 쓰고, ESLint 플러그인 `eslint-plugin-testing-library`·`@tanstack/eslint-plugin-query` 를 oxlint jsPlugins 로 불러온다. 두 플러그인은 소비처가 peerDependency 로 설치한다(둘 다 `eslint` 를, Query 플러그인은 `typescript` 도 peer 로 요구한다). oxlint 가 네이티브 룰을 돌리고, 이 프리셋의 JS 플러그인(`eric`)도 불러서 같이 실행한다.
 
 ### 파일
 

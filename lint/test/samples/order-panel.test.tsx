@@ -14,3 +14,9 @@ export function setup(): HTMLElement {
 }
 export const queryPanel = (): HTMLElement | null => document.querySelector("section");
 export const findPanel = async (): Promise<HTMLElement> => screen.getByRole("region");
+
+// 테스트에서는 설명이 붙은 @ts-expect-error 만 허용한다
+// @ts-expect-error 숫자 id 는 거부돼야 한다
+export const rejectedPanelId: string = 1;
+/* expect: typescript/ban-ts-comment */ // @ts-expect-error
+export const undescribedPanelId: string = 2;
