@@ -19,8 +19,8 @@ const SIMPLE_INTEREST_WEIGHT = 0.5;
 export const all = <T,>(...predicates: Predicate<T>[]): Predicate<T> => (x) => predicates.every((p) => p(x));
 export const any = <T,>(...predicates: Predicate<T>[]): Predicate<T> => (x) => predicates.some((p) => p(x));
 
-export function findOrder(orders: Order[], id: string): Order | undefined {
-  return orders.find((order) => order.id === id);
+export function findOrder(orders: Order[], id: string): Order | null {
+  return orders.find((order) => order.id === id) ?? null;
 }
 
 export function getOrderTotal(order: Order): number {
@@ -139,8 +139,8 @@ export function getStatusBadge(status: Status): ReactNode {
   return status.type === "error" ? <span>{status.message}</span> : null;
 }
 
-export function parseOrderId(raw: string): string | undefined {
-  return raw.startsWith("order-") ? raw : undefined;
+export function parseOrderId(raw: string): string | null {
+  return raw.startsWith("order-") ? raw : null;
 }
 
 export function filterExpensiveOrders(orders: Order[]): Order[] {

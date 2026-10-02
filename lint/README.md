@@ -69,7 +69,7 @@ oxlint -c oxlint.config.mjs src
 | # | habit | 잡는 것 | 룰 |
 |---|---|---|---|
 | 1 | 00 | 동사 목록에 없는 동사로 시작하는 함수 이름, 이름 속 `And` | `eric/function-verb-whitelist` |
-| 2 | 00 | 동사가 약속한 것과 다른 리턴 타입(예: `get*` 인데 `undefined` 반환) | `eric/verb-return-contract` |
+| 2 | 00 | 동사가 약속한 것과 다른 리턴 타입(예: `get*` 인데 `null` 반환, 없음을 `undefined` 로 반환) | `eric/verb-return-contract` |
 | 3 | 00 | `data`·`item`·`value` 같은 두루뭉술한 변수·파라미터 이름 | `eric/no-general-name` |
 | 4 | 00 | `OrderInfo`·`UserData` 처럼 `Info`·`Data` 로 끝나는 타입 이름 | `eric/no-general-name` |
 | 5 | 00 | "없음"을 뜻하는 `-1` 상수를 계산에 섞기 | `eric/no-sentinel-arithmetic` |
@@ -139,30 +139,32 @@ function toBnd(bndDto: BndDto): Bnd {}  // ✅
 
 **잡는 것**: 함수에 **적어둔 리턴 타입**이 동사의 약속과 다르면 걸린다.
 
-**왜**: 이름은 `get` 인데 `undefined` 를 돌려주면, 호출하는 쪽은 이름을 믿고 없는 경우를 처리하지 않다가 버그가 난다. #1 은 "목록에 있는 동사인가"만 보고, 이 룰은 "그 동사의 약속을 지키는가"를 본다.
+**왜**: 이름은 `get` 인데 `null` 을 돌려주면, 호출하는 쪽은 이름을 믿고 없는 경우를 처리하지 않다가 버그가 난다. #1 은 "목록에 있는 동사인가"만 보고, 이 룰은 "그 동사의 약속을 지키는가"를 본다.
 
 | 동사 | 리턴 타입이 이래야 한다 |
 |---|---|
-| `find*` | `undefined` 가 포함된다 (없을 수 있다) |
-| `get*` | `undefined`·`null` 이 없다 (반드시 있다). 단 `ReactNode` 는 원래 `null` 을 포함하는 타입이라 예외 |
+| `find*` | `null` 이 포함되고 `undefined` 는 없다 (없을 수 있다. 없음은 `null` 하나로 표현한다) |
+| `get*` | `undefined`·`null` 이 없다 (반드시 있다). 단 `ReactNode` 는 원래 `null` 을 포함하는 타입이라 예외. `apiHandlerFiles` 로 지정한 API 핸들러에서는 `null` 만 허용한다(HTTP GET 의 404) |
 | `is*`·`has*`·`can*` | `boolean`, 또는 `x is Order` 같은 타입 가드 |
 | `compare*` | `number` (정렬 함수에 넘기는 비교 함수) |
 | `subscribe*` | 함수 (구독을 해제하는 함수를 돌려준다) |
-| `parse*`·`validate*` | `Result` 또는 `T \| undefined` (실패할 수 있다는 게 타입에 드러난다) |
+| `parse*`·`validate*` | `Result` 또는 `T \| null` (실패할 수 있다는 게 타입에 드러난다. `undefined` 는 쓰지 않는다) |
 | `filter*` | 배열 |
 | `normalize*` | 첫 파라미터와 같은 타입 |
 
 ```ts
-function getOrder(id): Order | undefined   // ❌ 없을 수 있으면 find 로
+function getOrder(id): Order | null        // ❌ 없을 수 있으면 find 로
+function findOrder(id): Order | undefined  // ❌ 없음은 null 로
 function isReady(o): string                // ❌ is 는 boolean
 function parsePort(s): number              // ❌ 실패하면 어떻게 되는지 타입에 없다
-function parsePort(s): number | undefined  // ✅
+function parsePort(s): number | null       // ✅
 ```
 
 **알아둘 것**
 - `Promise<Order>` 는 `Order` 로 보고 검사한다.
 - **리턴 타입을 안 적은 함수는 검사하지 않는다.** 타입을 계산하지 않고 적힌 글자만 보기 때문이다. 대신 export 함수는 #22 가 리턴 타입을 적게 만든다.
-- `type Maybe<T> = T | undefined` 처럼 별명을 붙인 타입은 안을 풀어보지 못한다. `Maybe<Order>` 를 돌려주는 `find*` 는 "`undefined` 가 없다"로 잘못 걸린다.
+- `type Maybe<T> = T | null` 처럼 별명을 붙인 타입은 안을 풀어보지 못한다. `Maybe<Order>` 를 돌려주는 `find*` 는 "`null` 이 없다"로 잘못 걸린다.
+- API 핸들러 파일은 `createOxlintConfig({ apiHandlerFiles })` 로 지정한다. 그 파일에서만 `get*` 이 `T | null` 을 반환해도 통과한다.
 - **테스트 파일에서는 꺼진다.** 테스트 라이브러리(testing-library)에서는 `findBy*` 가 "기다렸다가 찾고 없으면 에러", `queryBy*` 가 "없으면 `null`" 이라 뜻이 다르기 때문이다.
 
 코드: `rules/verb-return-contract.mjs` 의 `CONTRACTS`
@@ -384,7 +386,7 @@ const LATE_RATE = 3;
 
 **잡는 것**: 이름이 `parse`·`validate` 로 시작하는 함수 안에서 `throw` 하면 걸린다.
 
-**왜**: 입력이 잘못될 수 있다는 건 예상 가능한 실패다. `throw` 하면 호출하는 쪽이 시그니처만 보고는 실패 가능성을 모른다. `Result` 나 `T | undefined` 로 돌려주면 호출하는 쪽이 반드시 처리하게 된다.
+**왜**: 입력이 잘못될 수 있다는 건 예상 가능한 실패다. `throw` 하면 호출하는 쪽이 시그니처만 보고는 실패 가능성을 모른다. `Result` 나 `T | null` 로 돌려주면 호출하는 쪽이 반드시 처리하게 된다.
 
 #### 22. export 함수의 리턴 타입 — `eric/explicit-return-type`
 

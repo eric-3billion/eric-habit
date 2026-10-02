@@ -41,8 +41,8 @@
 
 | 동사 | 이름만 보고 예측되는 것 |
 |---|---|
-| `get*` | 반드시 있다 — 존재는 조달·타입이 보장한다([05-types](05-types.md)). 없으면 버그. 부수효과 없음 |
-| `find*` | 없을 수 있다 → `T \| undefined` |
+| `get*` | 반드시 있다 — 존재는 조달·타입이 보장한다([05-types](05-types.md)). 없으면 버그. 부수효과 없음. **예외: API 핸들러의 `get*` 은 HTTP GET 이라 없음(404 등)을 `T \| null` 로 돌려줄 수 있다** |
+| `find*` | 없을 수 있다 → `T \| null`. **없음은 `null` 하나로만 표현한다** — `undefined` 는 "아직 안 정함"(옵셔널·미초기화)과 섞이고 TanStack `queryFn` 이 반환하지 못한다. `Array.find` 처럼 `undefined` 를 주는 API 는 `?? null` 로 받는다 |
 | `list*` | 0개 이상, 빈 배열이 정상 |
 | `is*`·`has*`·`can*` | boolean 판정. 부수효과 없음 |
 | `to*`·`format*` | 다른 무엇으로의 순수 변환 — **판정을 숨기지 않는다**(아래 안티 예시 `formatScore`). 경계 매퍼의 하위호환 폴백만 예외, 주석으로 드러낸다([05-types](05-types.md)). map·convert·transform·build·extract 는 전부 `to*` — **결과 명사만** 쓰고(`toBnd(bndDto)`), 원본이 여럿이면 결과 명사를 원본 도메인으로 좁힌다(`toQualityConditions`, `From` 꼬리 금지) |
@@ -52,7 +52,7 @@
 | `calculate*` | 순수 계산 — 입력에서 값을 도출한다. 축약(`calc`) 없이 풀네임만 |
 | `clamp*` | 범위 안으로 보정한 값을 반환한다. 순수 |
 | `compare*` | 정렬 비교자 — `number`(음수·0·양수)를 반환한다. `toSorted(compareOrdersByDate)` |
-| `parse*`·`validate*` | 실패가 **반환 타입에** 드러난다 — `Result` 또는 `T \| undefined`([04-functional-domain](04-functional-domain.md)) |
+| `parse*`·`validate*` | 실패가 **반환 타입에** 드러난다 — `Result` 또는 `T \| null`([04-functional-domain](04-functional-domain.md)) |
 | `create*`·`update*`·`delete*` | 쓰기 — 부수효과가 있다는 선언. `create`·`delete` 는 엔티티 자체의 생성·소멸(`createOrder(draft)`) |
 | `create*` (팩토리) | 설정·의존성을 받아 함수·스토어·클라이언트를 만든다. **순수** — 엔티티 생성과 달리 부수효과가 없다(`createGetUser(baseUrl)`, `createKeyStore`). 둘은 **만드는 것의 명사**로 갈린다 — 도메인 엔티티면 쓰기, 함수·스토어면 팩토리. 판별: **결과가 입력을 다른 모양으로 바꾼 것이면 `to*`**, 입력이 설정·의존성이고 결과가 새 것이면 `create*` |
 | `add*`·`remove*` | 컬렉션 멤버십 변경 — 엔티티는 이미 있고 넣거나 뺄 뿐이다(`removeCartItem` ≠ `deleteProduct`) |
@@ -73,7 +73,7 @@ resolveOrder(id);
 manageProduct(product);
 processItems(items);
 // ✅ 표의 동사 + 명사 — 시그니처를 이름이 약속한다
-findOrder(id);        // Order | undefined
+findOrder(id);        // Order | null
 createOrder(draft);   // Order
 validateOrder(order); // Result<ValidOrder, OrderError>
 ```
