@@ -29,8 +29,8 @@ export function resolveOrder(id: string): string { /* expect: eric/function-verb
   return id;
 }
 
-// 서버 명령 동사(approve)는 serverCommands.files 밖에서는 열리지 않는다
-export function approveOrder(id: string): string { /* expect: eric/function-verb-whitelist */
+// 표에도 domainVerbs 에도 없는 동사 — 등록하면 풀린다
+export function confirmOrder(id: string): string { /* expect: eric/function-verb-whitelist */
   return id;
 }
 

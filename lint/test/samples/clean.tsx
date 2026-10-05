@@ -28,6 +28,11 @@ export function getOrderNote(order: Order): string | null {
   return order.id.length > 0 ? order.id : null;
 }
 
+// config 의 domainVerbs 에 등록한 인앱 도메인 동사 — 이름 단독으로도 쓴다
+export function signOut(): null {
+  return null;
+}
+
 export function getOrderTotal(order: Order): number {
   return order.total;
 }

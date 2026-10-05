@@ -41,7 +41,7 @@ install.sh                    # ~/.claude 로 심링크
 | 바꾼 것 | 같이 바꿀 것 |
 |---|---|
 | lint 가 강제하는 habit 문구 | `lint/` 설정·커스텀 룰·`test/fixtures`, `lint/README` 표 |
-| 00 동사 표 | `lint/index.mjs` `FUNCTION_VERBS`, `lint/rules/verb-return-contract.mjs` `CONTRACTS`, fixtures |
+| 00 동사 표·등록 불가 동사 표 | 목록은 lint 가 habits/00 에서 직접 읽는다(`lint/habit-lists.mjs`). 반환 계약을 바꿨을 때만 `lint/rules/verb-return-contract.mjs` `CONTRACTS` |
 | 새 habit 추가 | 정적분석으로 판정 가능한지 먼저 본다 → 가능하면 lint 룰 추가 + `lint/README` 「룰 ↔ habits」, 아니면 「lint 로 안 되는 것」에 한 줄 |
 | lint 룰 추가·완화·삭제 | 대응 habit 문구(완화 사유가 룰의 경계면 habit 에도), `lint/README` 두 표 — 리뷰가 다시 봐야 하는 항목이 생기면 「lint 로 안 되는 것」으로 옮긴다 |
 | 리뷰에서 lint 가 잡았어야 할 위반을 발견 | lint 커버리지 구멍 — lint 개선 후보로 보고한다 |

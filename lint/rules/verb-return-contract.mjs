@@ -1,7 +1,7 @@
 /**
  * habits/00 동사 표의 "이름이 약속한 반환"을 **적어둔 리턴 타입(문법)** 으로 검사한다.
  * 타입 checker 를 쓰지 않는다 — 리턴 타입이 없으면 검사하지 않고, export 함수의 리턴 타입은 explicit-return-type 이 강제한다.
- * 별칭(`type Maybe<T> = T | undefined`)은 풀지 못한다. 동사 표를 바꾸면 index.mjs 의 FUNCTION_VERBS 와 여기 CONTRACTS 를 같이 맞출 것.
+ * 별칭(`type Maybe<T> = T | undefined`)은 풀지 못한다. 동사 목록은 habits/00 표에서 읽는다 — 표에서 동사의 반환 계약을 바꾸면 여기 CONTRACTS 를 맞출 것.
  */
 const CONTRACTS = [
   // 없음은 null 하나로 표현한다 (habits/00) — undefined 는 "아직 안 정함"과 섞이고 TanStack queryFn 이 받지 못한다

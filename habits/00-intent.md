@@ -31,14 +31,16 @@
 
 ### 함수 이름 = 좁은 동사 + 좁은 명사
 
-> 이 표는 lint 의 `FUNCTION_VERBS`·`CONTRACTS` 와 1:1 이다. 한쪽을 바꾸면 다른 쪽도 맞출 것 — 루트 README 「강제 층 분업」.
+> lint 가 아래 **동사 표**와 **등록 불가 동사 표**를 이 파일에서 직접 읽는다(`lint/habit-lists.mjs`). 두 표의 첫 열은 `` `동사*` `` 형식을 지킬 것. 동사의 반환 계약을 바꾸면 `lint/rules/verb-return-contract.mjs` 의 `CONTRACTS` 도 맞춘다.
 
 **동사가 애매하면 함수가 애매하다.** 함수 이름의 동사는 **아래 표에 있는 것만 쓴다(화이트리스트).** 표의 동사는 관례가 있어서 **반환·실패·부수효과까지** 이름만으로 예측되고, 표에 없는 동사는 그 계약이 없어 예측할 수 없다. 애매한 동사를 고르게 되는 건 대개 **그 함수가 두 일을 하거나 책임이 안 정해졌기** 때문이다.
 
 - **금지 목록이 아니라 허용 목록인 이유**: 넓은 동사는 끝없이 새로 생겨서 금지 목록으로는 닫히지 않는다. 모르는 동사는 기본으로 막는다.
-- **새 동사가 필요하면 먼저 표에 올린다** — 도메인 동작(`confirm`·`checkout` 등)도 기본 금지다. 표에 올릴 때 그 동사의 계약(반환·부수효과)을 같이 적는다.
-  - **예외: 서버 명령을 부르는 API 함수.** 서버가 도메인 명령 엔드포인트(승인·반려·분석 요청)를 따로 두면, 그 엔드포인트를 부르는 API 함수는 서버의 동사를 그대로 쓴다(`approveAccessRequest`, `requestAnalysis`). 표의 동사로 바꾸면 `updateAccessRequest(id, { status: "APPROVED" })` 처럼 명령이 상태 변경으로 뭉개진다. 이름의 주인이 서버 계약이라([02-structure-cohesion](02-structure-cohesion.md) 「SSOT 는 API 응답 경계까지」) 동사 목록은 프로젝트가 lint config 의 `serverCommands` 에 API 파일 경로와 함께 올린다. 계약은 하나다: 서버에 그 명령을 보내는 쓰기. `post`·`patch` 같은 전송 동사는 명령이 아니므로 여기서도 쓰지 않는다.
-  - 화면 코드에는 이 예외가 필요 없다. 도메인 동사는 훅(`useApproveRequest`)과 핸들러(`handleApproveClick`) 이름 뒤에 붙는다.
+- **API 함수는 이 표를 따르지 않는다 — 엔드포인트 이름을 따른다.** 서버 엔드포인트를 부르는 API 함수 이름의 주인은 서버 계약이다([02-structure-cohesion](02-structure-cohesion.md) 「SSOT 는 API 응답 경계까지」). 승인 명령 엔드포인트를 `updateAccessRequest(id, { status: "APPROVED" })` 로 바꿔 부르면 명령이 상태 변경으로 뭉개진다 → `approveAccessRequest`. 그래서 lint 는 API 폴더(config 의 `apiFiles`)에서 동사 검사를 하지 않는다.
+- **인앱 도메인 동작은 프로젝트 도메인 동사로 올린다.** `signOut` 처럼 서버 엔드포인트가 아니라 **앱 안에서** 일어나는 도메인 동작인데 표의 동사로 바꾸면 뜻이 뭉개지는 것만이다(`signOut` → `deleteSession` 은 세션 삭제 이상의 일을 감춘다).
+  - 등록은 lint config 의 `domainVerbs` 한 곳에서 **계약 한 문장**(반환·부수효과)과 같이 한다. 계약을 정직하게 한 문장으로 못 쓰면 도메인 동사가 아니다 — 그 함수는 두 일을 하거나 책임이 안 정해진 것이다.
+  - 화면 코드의 훅·핸들러는 등록할 필요가 없다. 도메인 동사는 `use`·`handle` 뒤에 붙는다(`useSignOut`, `handleSignOutClick`).
+- **아래 「등록 불가 동사」는 도메인 동사로도 올릴 수 없다.** 화이트리스트에 확장 지점을 열면 넓은 동사가 그 문으로 들어오기 때문이다. 등록 불가는 탈출구가 아니라 개명·분해만 남긴다.
 - **예외: 조합자** — `all`·`any` 처럼 같은 타입을 받아 같은 타입을 돌려주는 조합 연산은 동사가 아니어도 된다([04-functional-domain](04-functional-domain.md) 「조합 닫힘」). 컴포넌트(PascalCase)는 대상이 아니다.
 
 | 동사 | 이름만 보고 예측되는 것 |
@@ -68,6 +70,16 @@
 | `on*` | 선언한 이름이 그대로 prop 키가 될 때(`return { onKeyDown, onChange }`) |
 
 테스트 파일은 testing-library 어휘(`setup`·`mock`·`expect`·`query`)를 추가로 쓴다 — `find*`·`query*` 의 반환 계약도 testing-library 쪽을 따른다.
+
+**등록 불가 동사** — 공통 표에도, 프로젝트 도메인 동사로도 올리지 않는다.
+
+| 동사 | 왜 · 대신 |
+|---|---|
+| `resolve*` | 찾기·꺼내기·변환·확정 중 무엇인지 모른다 → `find*`·`get*`·`to*` |
+| `process*`·`manage*`·`do*`·`run*`·`execute*`·`perform*`·`apply*` | 무엇을 하는지 말하지 않는다 → 하는 일의 동사로 쪼갠다 |
+| `map*`·`convert*`·`transform*`·`build*`·`extract*`·`make*` | `to*` 의 다른 이름이다 → `to*`(설정을 받아 함수·스토어를 만들면 `create*`) |
+| `fetch*`·`load*`·`retrieve*` | `get*` 의 다른 이름이다 → `get*` |
+| `post*`·`put*`·`patch*` | 전송 수단이지 명령이 아니다 → `create*`·`update*` 또는 서버 명령 동사 |
 
 ```ts
 // ❌ 표에 없는 동사 — 조회인지 생성인지 확정인지, 실패하면 어떻게 되는지 아무것도 모른다

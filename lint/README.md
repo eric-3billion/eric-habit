@@ -48,7 +48,8 @@ oxlint -c oxlint.config.mjs src
 | `testFiles` | 아래 「테스트 파일에서 달라지는 것」 | 테스트 파일로 취급할 경로 패턴. 여기 해당하는 파일은 룰이 일부 달라진다 |
 | `resultTypeNames` | `["Result"]` | 실패를 담는 결과 타입의 이름(#2). 팀에서 `Result` 대신 `Either` 같은 이름을 쓰면 여기에 넣는다 |
 | `andJoinedTerms` | `[]` | 이름에 `And` 가 들어가도 되는 도메인 용어(#1). 예: `"TermsAndConditions"` |
-| `serverCommands` | `{ files: [], verbs: [] }` | 서버의 도메인 명령 엔드포인트를 부르는 API 파일 경로와, 그 파일에서만 더 허용할 동사(#1). 예: `{ files: ["**/api/**"], verbs: ["approve", "request"] }` |
+| `apiFiles` | `[]` | 서버 엔드포인트를 부르는 API 파일 경로(#1). 함수 이름이 엔드포인트를 따르므로(`approveAccessRequest`) 동사 검사를 하지 않는다. 예: `["src/**/api/**"]` |
+| `domainVerbs` | `[]` | **인앱** 도메인 동작 동사(#1) — 서버 엔드포인트가 아니라 앱 안의 동작인데 표의 동사로 바꾸면 뜻이 뭉개지는 것만(`signOut`). 항목마다 `verb`·`contract`(계약 한 문장)를 적는다. 예: `[{ verb: "signOut", contract: "세션을 끝내는 쓰기 — 토큰 폐기 + 로컬 세션 제거" }]`. 등록 불가 동사이거나 계약이 비면 config 를 만들 때 throw 한다 |
 
 ### 알아둘 것
 
@@ -131,19 +132,16 @@ oxlint -c oxlint.config.mjs src
 
 **왜**: 동사마다 "이 함수는 이런 걸 돌려준다"는 약속이 있다(`find` 는 없을 수 있음, `get` 은 반드시 있음 등). 목록 밖의 동사(`resolve`·`process`·`manage`)는 그 약속이 없어서 이름만 보고 동작을 예측할 수 없다. `And` 는 함수 하나가 일을 두 개 한다는 신호다. `And` 뒤가 동사인지는 동사 목록으로 가릴 수 없어서(`sort`·`advance` 처럼 목록 밖의 동사가 끝없다) 전부 막고, 도메인 용어만 예외로 연다.
 
-**허용 동사** (`index.mjs` 의 `FUNCTION_VERBS`)
+**허용 동사**: habits/00 「함수 이름」의 동사 표를 `habit-lists.mjs` 가 **직접 읽는다**. 목록을 코드나 이 README 에 복제하지 않는다 — 동사를 더하거나 빼려면 habits/00 표만 고친다. 표를 못 찾거나 비면 config 를 만들 때 throw 한다.
 
-| 분류 | 동사 |
-|---|---|
-| 조회 | `get` `find` `list` |
-| 판정 | `is` `has` `can` |
-| 변환·계산 | `to` `format` `normalize` `calculate` `clamp` `compare` `filter` `group` |
-| 검증 | `parse` `validate` |
-| 쓰기 | `create` `update` `delete` `add` `remove` `reset` `set` |
-| UI | `open` `close` `render` |
-| 기타 | `subscribe` `use`(훅) `handle`(이벤트 핸들러) `on`(prop 이름 그대로 쓸 때) |
+**걸렸을 때 메시지는 두 갈래다**
 
-각 동사의 뜻은 habits/00 동사 표에 있다.
+| 상황 | 메시지 | 푸는 법 |
+|---|---|---|
+| 표에도 `domainVerbs` 에도 없는 동사(`confirmOrder`) | 미등록 | 표의 동사로 개명. 인앱 도메인 동작이면 `domainVerbs` 에 계약과 함께 등록 |
+| habits/00 「등록 불가 동사」(`resolveOrder`, `postOrder`) | 등록 불가 | 개명·분해만 가능. `domainVerbs` 에 올리면 config 가 throw 한다 |
+
+미등록은 **푸는 길이 정해진 error** 라 error 로 둬도 개발이 막히지 않는다 — 같은 PR 에서 config 에 한 줄 올리면 된다. 동사가 늘어나는 게 config diff 로 드러나는 게 이 룰의 목적이다.
 
 ```ts
 function resolveOrder(id) {}            // ❌ resolve 는 목록에 없다
@@ -159,7 +157,8 @@ function toBnd(bndDto: BndDto): Bnd {}  // ✅
 - 컴포넌트(대문자로 시작하는 이름)
 - `all`·`any` 처럼 함수를 조합하는 함수(habits/04 「조합 닫힘」)
 - 테스트 파일에서는 `setup`·`mock`·`expect`·`query` 동사와 단독 `setup()`·`wrapper` 도 허용
-- 서버의 도메인 명령 엔드포인트를 부르는 API 파일에서는 `createOxlintConfig({ serverCommands: { files, verbs } })` 에 올린 동사도 허용. `approveAccessRequest` 를 `updateAccessRequest` 로 바꾸면 서버가 따로 둔 "승인" 명령이 CRUD 로 뭉개지기 때문이다. 이 이름의 주인은 서버 계약이라 동사 목록은 소비처가 정한다. 화면 코드는 `useApproveRequest`·`handleApproveClick` 처럼 `use`·`handle` 뒤에 도메인 동사를 붙이면 되므로 열지 않는다. `post`·`patch` 같은 전송 동사는 API 파일에서도 막힌다
+- `apiFiles` 에 적은 API 파일 — 이름이 서버 엔드포인트를 따르므로 이 룰을 끈다(`postOrder` 같은 전송 동사도 거기선 통과)
+- `domainVerbs` 에 올린 인앱 도메인 동사. 동사 이름 단독(`signOut()`)도 된다. 화면의 훅·핸들러는 등록할 필요 없이 `use`·`handle` 뒤에 붙인다(`useSignOut`, `handleSignOutClick`) — habits/00 「함수 이름」
 
 코드: `rules/function-verb-whitelist.mjs`
 
@@ -536,13 +535,14 @@ oxlint(1.86 이상)를 쓰고, ESLint 플러그인 `eslint-plugin-testing-librar
 
 ```
 index.mjs            createOxlintConfig — 옵션을 받아 oxlint 설정 객체를 만든다
-                     FUNCTION_VERBS(허용 동사) · RESTRICTED_SYNTAX(error 셀렉터 목록) · DISCOURAGED_SYNTAX(warn 셀렉터 목록)
+                     FUNCTION_VERBS·BANNED_VERBS(habits/00 에서 읽음) · RESTRICTED_SYNTAX(error 셀렉터 목록) · DISCOURAGED_SYNTAX(warn 셀렉터 목록)
+habit-lists.mjs      habits/00 의 동사 표·등록 불가 동사 표를 읽는다 — 이 프리셋이 habits/ 와 같은 레포에 있어야 한다
 plugin.mjs           JS 플러그인 eric — rules/ 의 룰을 이름에 연결한다
 rules/               직접 만든 룰 — 파일 하나에 룰 하나
 test/
   oxlint.config.mjs  테스트용 설정 — 프리셋 + oxlint 기본 룰은 끔
   preset.test.mjs    samples/ 를 oxlint 로 검사하고 expect 주석과 비교
-  samples/           clean.tsx(경고 0건이어야 함) · violations.tsx · order-panel.test.tsx · external-sync/
+  samples/           clean.tsx(경고 0건이어야 함) · violations.tsx · order-panel.test.tsx · external-sync/ · api/
 ```
 
 `createOxlintConfig` 가 만드는 설정은 세 부분이다.
@@ -565,7 +565,7 @@ test/
 
 | 바꾸는 것 | 같이 바꿀 것 |
 |---|---|
-| habits/00 동사 표 | `index.mjs` 의 `FUNCTION_VERBS`, `rules/verb-return-contract.mjs` 의 `CONTRACTS`, 이 README 의 #1·#2 |
+| habits/00 동사 표·등록 불가 동사 표 | 동사 목록은 lint 가 직접 읽으므로 없음. 동사의 반환 계약을 바꿨을 때만 `rules/verb-return-contract.mjs` 의 `CONTRACTS` 와 이 README 의 #2 |
 | 룰 추가·완화·삭제 | 해당 habit 문구, `test/samples` 의 `expect` 주석, 이 README 의 「한눈에」·상세 설명·「리뷰와의 분업」 |
 | 룰 파일 새로 만들기 | `rules/` 에 파일 추가, `plugin.mjs` 에 등록, `index.mjs` 에서 켜기 |
 | 전체 원칙 | 루트 README 「강제 층 분업」 |

@@ -1,20 +1,15 @@
 import { fileURLToPath } from "node:url";
+import { listBannedVerbs, listFunctionVerbs } from "./habit-lists.mjs";
 
 const PLUGIN_PATH = fileURLToPath(new URL("./plugin.mjs", import.meta.url));
 // 소비처 config 파일 위치와 무관하게 이 프리셋 기준으로 찾는다. 소비처가 peerDependency 로 설치해야 한다
 const TESTING_LIBRARY_PLUGIN_PATH = fileURLToPath(import.meta.resolve("eslint-plugin-testing-library"));
 const TANSTACK_QUERY_PLUGIN_PATH = fileURLToPath(import.meta.resolve("@tanstack/eslint-plugin-query"));
 
-/** habits/00 동사 표 = 화이트리스트. 표를 바꾸면 여기와 rules/verb-return-contract 의 CONTRACTS 를 같이 맞출 것. */
-export const FUNCTION_VERBS = [
-  "get", "find", "list",
-  "is", "has", "can",
-  "to", "format", "normalize", "calculate", "clamp", "compare", "filter", "group",
-  "parse", "validate",
-  "create", "update", "delete", "add", "remove", "reset", "set",
-  "open", "close", "render",
-  "subscribe", "use", "handle", "on",
-];
+/** habits/00 동사 표 = 화이트리스트. 표가 SSOT 라 여기에 복제하지 않는다 (habit-lists.mjs) */
+export const FUNCTION_VERBS = listFunctionVerbs();
+/** habits/00 「등록 불가 동사」 — domainVerbs 로도 열 수 없다 */
+export const BANNED_VERBS = listBannedVerbs();
 
 // 테스트 어휘 — 테스트 파일에서만 추가로 허용한다
 export const TEST_FUNCTION_VERBS = ["setup", "mock", "expect", "query"];
@@ -95,8 +90,9 @@ const DISCOURAGED_SYNTAX = [
  * @param {string[]} [options.testFiles]
  * @param {string[]} [options.resultTypeNames] - parse·validate 함수가 반환해야 하는 Result 타입 이름
  * @param {string[]} [options.andJoinedTerms] - 함수 이름에 And 가 들어가도 되는 도메인 용어(예: "TermsAndConditions"). 두 동작의 나열이 아니라 한 명사구일 때만 올린다
- * @param {{ files: string[], verbs: string[] }} [options.serverCommands] - 서버의 도메인 명령 엔드포인트(approve·request 등)를 부르는 API 파일과, 그 파일에서만 더 허용할 동사.
- *   이 이름의 주인은 서버 계약이라 표의 동사로 바꾸면 명령이 CRUD 로 뭉개진다. 화면 코드는 use*·handle* 뒤에 도메인 동사를 붙이므로 열 필요가 없다
+ * @param {string[]} [options.apiFiles] - 서버 엔드포인트를 부르는 API 파일. 함수 이름이 엔드포인트를 따르므로 동사 검사를 하지 않는다 (habits/00)
+ * @param {{ verb: string, contract: string }[]} [options.domainVerbs] - 표의 동사로 바꾸면 뜻이 뭉개지는 인앱 도메인 동작(signOut 등)과 계약 한 문장(반환·부수효과).
+ *   등록 불가 동사이거나 계약이 비면 config 를 만들 때 throw 한다 (habits/00)
  */
 export function createOxlintConfig({
   effectAllowedFiles = [],
@@ -107,8 +103,20 @@ export function createOxlintConfig({
   ],
   resultTypeNames = ["Result"],
   andJoinedTerms = [],
-  serverCommands = { files: [], verbs: [] },
+  apiFiles = [],
+  domainVerbs = [],
 } = {}) {
+  const domainVerbErrors = listDomainVerbErrors(domainVerbs);
+  if (domainVerbErrors.length > 0) throw new Error(`domainVerbs 설정 오류 (habits/00):\n${domainVerbErrors.join("\n")}`);
+  const createVerbWhitelistRule = ({ isTest }) => [
+    "error",
+    {
+      verbs: [...FUNCTION_VERBS, ...domainVerbs.map(({ verb }) => verb), ...(isTest ? TEST_FUNCTION_VERBS : [])],
+      bannedVerbs: BANNED_VERBS,
+      exemptNames: isTest ? [...VERB_EXEMPT_NAMES, ...TEST_EXEMPT_NAMES] : VERB_EXEMPT_NAMES,
+      andJoinedTerms,
+    },
+  ];
   const createRestrictedImports = ({ allowEffect }) => [
     "error",
     {
@@ -193,7 +201,7 @@ export function createOxlintConfig({
       "unicorn/filename-case": ["error", { case: "kebabCase" }],
       // const [user, setUser] 처럼 값과 세터 이름이 짝을 이룬다 (habits/00)
       "react/hook-use-state": "error",
-      "eric/function-verb-whitelist": ["error", { verbs: FUNCTION_VERBS, exemptNames: VERB_EXEMPT_NAMES, andJoinedTerms }],
+      "eric/function-verb-whitelist": createVerbWhitelistRule({ isTest: false }),
       "eric/no-general-name": "error",
       "eric/verb-return-contract": ["error", { resultTypeNames }],
       "eric/no-sentinel-arithmetic": "error",
@@ -216,20 +224,15 @@ export function createOxlintConfig({
             },
           }]
         : []),
-      ...(serverCommands.files.length > 0
-        ? [{
-            files: serverCommands.files,
-            rules: {
-              "eric/function-verb-whitelist": ["error", { verbs: [...FUNCTION_VERBS, ...serverCommands.verbs], exemptNames: VERB_EXEMPT_NAMES, andJoinedTerms }],
-            },
-          }]
+      ...(apiFiles.length > 0
+        ? [{ files: apiFiles, rules: { "eric/function-verb-whitelist": "off" } }]
         : []),
       {
         files: testFiles,
         rules: {
           ...TEST_RULES,
           "eric/restricted-syntax": createRestrictedSyntax({ allowEffect: false, isTest: true }),
-          "eric/function-verb-whitelist": ["error", { verbs: [...FUNCTION_VERBS, ...TEST_FUNCTION_VERBS], exemptNames: [...VERB_EXEMPT_NAMES, ...TEST_EXEMPT_NAMES], andJoinedTerms }],
+          "eric/function-verb-whitelist": createVerbWhitelistRule({ isTest: true }),
           // 잘못된 타입이 거부되는지 확인하는 테스트에서는 @ts-expect-error 가 단언 역할을 한다. 왜 틀린지 설명을 붙이게 한다
           "typescript/ban-ts-comment": ["error", { "ts-expect-error": "allow-with-description", "ts-ignore": true, "ts-nocheck": true }],
           // AAA 패턴의 result(= actual)·renderHook 의 result 는 테스트 관용구라 끈다. 나머지 위생 룰은 테스트에도 그대로
@@ -240,4 +243,21 @@ export function createOxlintConfig({
       },
     ],
   };
+}
+
+const DOMAIN_VERB_FORMAT = /^[a-z][a-zA-Z]*$/;
+const toLeadingBannedVerb = (verb) => BANNED_VERBS.find((banned) => new RegExp(`^${banned}([A-Z]|$)`).test(verb)) ?? null;
+
+/** domainVerbs 한 항목마다 어긴 것을 모은다. 등록 자체가 화이트리스트의 확장 지점이라, 넓은 동사가 여기로 들어오지 못하게 config 단계에서 막는다 */
+function listDomainVerbErrors(domainVerbs) {
+  return domainVerbs.flatMap(({ verb, contract }) => {
+    const label = `- '${verb}'`;
+    const bannedVerb = toLeadingBannedVerb(verb);
+    return [
+      ...(DOMAIN_VERB_FORMAT.test(verb) ? [] : [`${label}: 소문자로 시작하는 camelCase 동사여야 한다`]),
+      ...(bannedVerb === null ? [] : [`${label}: '${bannedVerb}' 는 등록 불가 동사다 — 표의 동사로 개명하거나 쪼갠다`]),
+      ...(FUNCTION_VERBS.includes(verb) ? [`${label}: 이미 공통 동사 표에 있다`] : []),
+      ...(typeof contract === "string" && contract.trim().length > 0 ? [] : [`${label}: contract 에 계약 한 문장(반환·부수효과)을 적는다. 못 쓰면 도메인 동사가 아니다`]),
+    ];
+  });
 }
