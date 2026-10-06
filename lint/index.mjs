@@ -21,7 +21,14 @@ const VERB_EXEMPT_NAMES = ["all", "any"];
 const EFFECT_MESSAGE = "effect 는 최후 수단 — 파생은 렌더 중, 외부 값은 useSyncExternalStore. 허용 위치는 config 의 effectAllowedFiles 에만 (habits/01 §6)";
 
 const RESTRICTED_SYNTAX = [
-  { selector: "ForStatement, ForInStatement, ForOfStatement, WhileStatement, DoWhileStatement", message: "명시적 루프 금지 → map/filter/reduce (habits/04)" },
+  // for...of 는 순차 await 나 조기 반환처럼 배열 메서드로 옮기면 더 꼬이는 순회를 위해 허용한다.
+  // 결과를 쌓는 용도는 let 재할당 금지와 아래 컬렉션 변경 금지가 함께 막는다
+  { selector: "ForStatement, ForInStatement, WhileStatement, DoWhileStatement", message: "명시적 루프 금지 → map/filter/reduce, 순회가 꼭 필요하면 for...of (habits/04)" },
+  {
+    // esquery 는 스코프를 모르므로 루프 안에서 만든 지역 객체의 set 도 걸린다. 그런 자리는 disable 주석으로 남겨 리뷰에서 본다
+    selector: "ForOfStatement > :matches(BlockStatement, ExpressionStatement) CallExpression[callee.type='MemberExpression'][callee.property.name=/^(push|unshift|set|add)$/]",
+    message: "for...of 로 컬렉션에 값을 쌓지 않는다 → map/filter/reduce, Object.groupBy, new Map(entries) (habits/04)",
+  },
   { selector: "VariableDeclaration[kind='let']", message: "재할당 대신 섀도잉·새 값 반환 (habits/04)" },
   {
     // 옵션을 통째로 인라인에 쓰는 경우는 @tanstack/query/prefer-query-options 가 잡는다. 여기서는 팩토리를 펼친 뒤 덧붙이는 경우만 본다

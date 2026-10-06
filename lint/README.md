@@ -388,9 +388,11 @@ const LATE_RATE = 3;
 
 #### 17. `for`·`while` 루프 — `eric/restricted-syntax`
 
-**잡는 것**: `for`·`for…of`·`for…in`·`while`·`do…while` 을 막는다.
+**잡는 것**: `for`·`for…in`·`while`·`do…while` 을 막는다. `for…of` 는 허용하되, 본문에서 `push`·`unshift`·`set`·`add` 로 컬렉션에 값을 쌓으면 막는다.
 
 **왜**: 루프는 보통 바깥 변수를 바꾸면서 결과를 쌓는다. `map`·`filter`·`reduce` 로 쓰면 "무엇을 만드는지"가 드러나고 값을 바꾸지 않는다. 테스트에서 같은 테스트를 여러 입력으로 돌리려면 `it.each` 를 쓴다.
+
+**`for…of` 는 왜 허용하나**: 순차 `await`, 조기 `return`·`break` 처럼 배열 메서드로 옮기면 오히려 꼬이는 순회가 있다. 인덱스 관리(`for`)나 프로토타입 키 순회(`for…in`) 같은 실수 지점도 없다. 결과를 쌓는 쪽은 두 갈래로 막는다. 바깥 변수 재할당은 `let` 금지(#18)가, `const` 배열·Map·Set 에 `push`·`set`·`add` 하는 누산은 위 컬렉션 변경 셀렉터가 잡는다. 셀렉터는 스코프를 모르므로 루프 안에서 만든 지역 객체(`url.searchParams.set` 등)의 변경도 걸린다. 그런 자리는 disable 주석을 달고 리뷰에서 본다.
 
 #### 18. `let` — `eric/restricted-syntax`
 
@@ -474,7 +476,7 @@ const LATE_RATE = 3;
 | 더 허용 | #1 동사에 `setup`·`mock`·`expect`·`query` 추가, 단독 `setup()`·`wrapper` 허용 |
 | 꺼짐 | #2 리턴 타입 약속(testing-library 의 `find`·`query` 뜻이 다름), #3·#4 두루뭉술한 이름(테스트의 `result` 관용구) |
 | 바뀜 | #26 대신 #27 이 적용된다 |
-| 그대로 | 나머지 전부. `as`·`!`·`let`·루프도 테스트에 그대로 적용된다 |
+| 그대로 | 나머지 전부. `as`·`!`·`let`·루프(`for…of` 는 허용)도 테스트에 그대로 적용된다 |
 
 테스트에서 `as`·`!`·`let`·루프를 안 쓰는 방법
 
@@ -484,7 +486,7 @@ const LATE_RATE = 3;
 | `{ id: "1" } as Order` | 기본값을 채워주는 팩토리 `createOrderFixture({ id: "1" })` |
 | `getByText("A").parentElement!` | `getByRole(…)` + `within(…)` |
 | `let client; beforeEach(() => { client = … })` | 테스트마다 부르는 `setup()` 함수 |
-| `for (const x of cases) test(…)` | `it.each(cases)(…)` |
+| `for (const x of cases) test(…)` (lint 는 막지 않는다. 리뷰에서 본다) | `it.each(cases)(…)` |
 
 ## 검사하지 않는 것 (다른 곳이 맡는다)
 

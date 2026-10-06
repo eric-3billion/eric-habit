@@ -17,6 +17,8 @@
     .reduce((sum, it) => sum + it.price, 0);
   ```
 
+  - **`for…of` 는 허용한다** — 순차 `await`·조기 `return`/`break` 처럼 배열 메서드로 옮기면 더 꼬이는 순회만. 바깥 컬렉션에 `push`/`set`/`add` 로 쌓는 용도는 금지(위 ❌ 와 같은 누산이다). 인덱스 `for`·`for…in`·`while` 은 계속 금지.
+
 - **중첩 삼항 금지** → 조기 반환(`if … return`)으로 편다. 삼항은 한 단까지만 식으로 쓴다.
 
   ```ts

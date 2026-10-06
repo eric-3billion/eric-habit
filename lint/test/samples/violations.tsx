@@ -72,8 +72,14 @@ export function calculateFilledStepIndex(filledStepCount: number): number {
 
 export function calculateTotal(orders: Order[]): number {
   let total = 0; /* expect: eric/restricted-syntax */
-  for (const order of orders) total += order.total; /* expect: eric/restricted-syntax */
+  for (let i = 0; i < orders.length; i++) total += orders[i].total; /* expect: eric/restricted-syntax, eric/restricted-syntax */
   return total;
+}
+
+export function listOrderTotals(orders: Order[]): number[] {
+  const totals: number[] = [];
+  for (const order of orders) totals.push(order.total); /* expect: eric/restricted-syntax */
+  return totals;
 }
 
 export function calculateTier(score: number): string {

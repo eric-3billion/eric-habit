@@ -159,6 +159,13 @@ export function filterExpensiveOrders(orders: Order[]): Order[] {
   return orders.filter(isExpensiveOrder);
 }
 
+// 순차 await 처럼 배열 메서드로 옮기면 꼬이는 순회는 for...of 로 쓴다
+export async function updateOrdersInSequence(orders: Order[], updateOrder: (order: Order) => Promise<void>): Promise<void> {
+  for (const order of orders) {
+    await updateOrder(order);
+  }
+}
+
 export function normalizeOrder(order: Order): Order {
   return { ...order, total: Math.max(0, order.total) };
 }
