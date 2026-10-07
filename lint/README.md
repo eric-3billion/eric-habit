@@ -2,7 +2,7 @@
 
 `habits/` 에 적힌 코드 습관 중에서 **기계가 코드만 보고 판단할 수 있는 것**을 lint 로 자동 검사하는 설정 묶음이다. lint 도구는 [oxlint](https://oxc.rs/docs/guide/usage/linter) 를 쓴다.
 
-- **왜 이 룰인지**는 `habits/` 에 있다. 이 README 는 **무엇을 어떻게 잡는지**만 설명한다. lint 메시지 끝에 근거가 되는 habit 이 붙어 있다(예: `(habits/01 §3)`).
+- **왜 이 룰인지**의 원칙은 `habits/` 에 있다. 규칙 하나하나가 무엇을 잡고, 왜 문제이고, 지키면 무엇을 얻는지는 [RULES.md](RULES.md) 에 규칙 id 하나에 섹션 하나로 있다. lint 메시지 끝에 근거가 되는 habit 이 붙어 있다(예: `(habits/01 §3)`).
 - 사람이 판단해야 하는 것(설계가 맞는지, 이름이 적절한지 등)은 lint 가 아니라 리뷰(`eric-review`·`eric-refine`) 몫이다. → 「lint 로 안 되는 것」·「리뷰와의 분업」
 - 검사는 **27개**. 파일 5,454개짜리 레포 전체를 **약 2초**에 검사한다.
 
@@ -73,394 +73,58 @@ oxlint -c oxlint.config.mjs src
 
 | # | habit | 잡는 것 | 룰 |
 |---|---|---|---|
-| 1 | 00 | 동사 목록에 없는 동사로 시작하는 함수 이름, 이름 속 `And` | `eric/function-verb-whitelist` |
-| 2 | 00 | 동사가 약속한 것과 다른 리턴 타입(예: `find*` 가 `null` 없이 반환, 없음을 `undefined` 로 반환) | `eric/verb-return-contract` |
-| 3 | 00 | `data`·`item`·`value` 같은 두루뭉술한 변수·파라미터 이름 | `eric/no-general-name` |
-| 4 | 00 | `OrderInfo`·`UserData` 처럼 `Info`·`Data` 로 끝나는 타입 이름 | `eric/no-general-name` |
-| 5 | 00 | "없음"을 뜻하는 `-1` 상수를 계산에 섞기 | `eric/no-sentinel-arithmetic` |
-| 6 | 01 §3 | 조건부 조회가 아닌데 `useQuery` 쓰기, `useQueries`·`useInfiniteQuery` import | `eric/restricted-syntax`, `no-restricted-imports` |
-| 7 | 01 §6 | `useEffect`·`useLayoutEffect` import | `no-restricted-imports` |
-| 8 | 01 §6 | `React.useEffect(…)` 로 우회하기 | `eric/restricted-syntax` |
-| 9 | 01 §3 | 쿼리 하나만 감싸고 하는 일이 없는 커스텀 훅 | `eric/no-thin-query-hook` |
-| 10 | 01 §3 | 쿼리 팩토리를 펼친 뒤 옵션을 덧붙이기(통째로 인라인은 #48) | `eric/restricted-syntax` |
-| 11 | 01 §3 | 쿼리를 연달아 불러 순서대로 기다리게 만들기 (warn) | `eric/discouraged-syntax` |
-| 12 | 01 §7 | 객체 모양 타입을 `type` 으로 선언 | `typescript/consistent-type-definitions` |
-| 13 | 01 §7 | 여러 줄짜리 props 타입을 파라미터에 직접 적기 | `eric/props-inline-type-single-line` |
-| 14 | 01 §7 | "기존엔 ~였다" 같은 변경 이력 주석 (warn) | `no-warning-comments` |
-| 15 | 02 | 선언하기 전에 쓰기 | `no-use-before-define` |
-| 16 | 03 | `showXxx`·`hideXxx` boolean prop (warn) | `eric/discouraged-syntax` |
-| 17 | 04 | `for`·`while` 루프 | `eric/restricted-syntax` |
-| 18 | 04 | `let` | `eric/restricted-syntax` |
-| 19 | 04 | 파라미터에 다시 값 넣기 | `no-param-reassign` |
-| 20 | 04 | 삼항 연산자 안에 삼항 연산자 | `no-nested-ternary` |
-| 21 | 04 | `parse*`/`validate*` 함수 안의 `throw` | `eric/restricted-syntax` |
-| 22 | 04 | 리턴 타입을 안 적은 export 함수 | `eric/explicit-return-type` |
-| 23 | 05 | `as` 타입 단언 | `typescript/consistent-type-assertions` |
-| 24 | 05 | `!` non-null 단언 | `typescript/no-non-null-assertion` |
-| 25 | 05 | `any` | `typescript/no-explicit-any` |
-| 26 | 06 | 제품 코드의 `data-testid` 속성 | `eric/restricted-syntax` |
-| 27 | 06 | 테스트의 `getByTestId` | `eric/restricted-syntax` |
-| 28 | 00 | kebab-case 가 아닌 파일 이름 | `unicorn/filename-case` |
-| 29 | 00 | 일부러 넘기거나 반환하는 `undefined`(없음은 `null`) | `unicorn/no-useless-undefined` |
-| 30 | 01 §2 | 세 단을 넘는 블록 중첩 | `max-depth` |
-| 31 | 01 §1 | 다섯 개 이상의 파라미터 | `max-params` |
-| 32 | 00 | `if (!x) … else …`, `!x ? a : b` 처럼 부정으로 시작하는 양갈래 분기 | `unicorn/no-negated-condition` |
-| 33 | 02 | 바깥 스코프를 안 쓰는데 함수 안에 선언한 함수 | `unicorn/consistent-function-scoping` |
-| 34 | 04 | `forEach` | `unicorn/no-array-for-each` |
-| 35 | 00 | `const [open, setVisible]` 처럼 짝이 안 맞는 `useState` 이름 | `react/hook-use-state` |
-| 36 | 01 §7 | 화살표 함수로 선언한 이름 있는 컴포넌트 | `react/function-component-definition` |
-| 37 | 03 | 컴포넌트 안에서 선언한 컴포넌트(렌더마다 리마운트) | `react/no-unstable-nested-components` |
-| 38 | 04 | 원본을 바꾸는 `sort()`·`reverse()` | `unicorn/no-array-sort`, `unicorn/no-array-reverse` |
-| 39 | 05 | `@ts-ignore`·`@ts-expect-error`·`@ts-nocheck` (테스트는 설명이 붙은 `@ts-expect-error` 허용) | `typescript/ban-ts-comment` |
-| 40 | 05 | 룰 이름 없이 통째로 끄는 `/* oxlint-disable */` | `unicorn/no-abusive-eslint-disable` |
-| 41 | 04 | `{ [key: string]: V }` 인덱스 시그니처(→ `Record`) | `typescript/consistent-indexed-object-style` |
-| 42 | 04 | `delete obj[key]` | `typescript/no-dynamic-delete` |
-| 43 | 03 | `cloneElement`·`Children.map` 으로 children 고치기 | `react/no-clone-element`, `react/no-react-children` |
-| 44 | 03 | `= []`·`= {}` 같은 객체 기본값 prop | `react/no-object-type-as-default-prop` |
-| 45 | 03 | 렌더마다 새로 만드는 context value | `react/jsx-no-constructed-context-values` |
-| 46 | - | `console.warn`·`console.error` 가 아닌 `console.*` | `no-console` |
-| 47 | 04 | `reduce` 안에서 누적값을 매번 펼치기(O(n²)) | `oxc/no-accumulating-spread` |
-| 48 | 01 §3 | `queryKey` 에 빠진 `queryFn` 의존값, 인라인 쿼리 옵션, 결과 객체 rest 구조분해 등 | `@tanstack/query/*` 7개 |
-| 49 | 06 | 테스트 안의 분기·단언 없는 테스트·메시지 없는 `toThrow()` 등 | `vitest/*` 8개 |
-| 50 | 06 | DOM 구조 접근, `render` 결과 쿼리, `fireEvent`, 비동기 쿼리 미대기 등 | `testing-library/*` 14개 |
-
-### 00 이름
-
-#### 1. 함수 이름은 정해진 동사로 시작 — `eric/function-verb-whitelist`
-
-**잡는 것**: 함수를 **만드는 자리**의 이름이 허용된 동사로 시작하지 않으면 걸린다. 이름에 `And` 가 들어가도 걸린다. 단 `TermsAndConditions` 처럼 `And` 가 든 도메인 용어는 `createOxlintConfig({ andJoinedTerms })` 에 올리면 통과한다.
-
-**왜**: 동사마다 "이 함수는 이런 걸 돌려준다"는 약속이 있다(`find` 는 없을 수 있음, `get` 은 반드시 있음 등). 목록 밖의 동사(`resolve`·`process`·`manage`)는 그 약속이 없어서 이름만 보고 동작을 예측할 수 없다. `And` 는 함수 하나가 일을 두 개 한다는 신호다. `And` 뒤가 동사인지는 동사 목록으로 가릴 수 없어서(`sort`·`advance` 처럼 목록 밖의 동사가 끝없다) 전부 막고, 도메인 용어만 예외로 연다.
-
-**허용 동사**: habits/00 「함수 이름」의 동사 표를 `habit-lists.mjs` 가 **직접 읽는다**. 목록을 코드나 이 README 에 복제하지 않는다 — 동사를 더하거나 빼려면 habits/00 표만 고친다. 표를 못 찾거나 비면 config 를 만들 때 throw 한다.
-
-**걸렸을 때 메시지는 두 갈래다**
-
-| 상황 | 메시지 | 푸는 법 |
-|---|---|---|
-| 표에도 `domainVerbs` 에도 없는 동사(`confirmOrder`) | 미등록 | 표의 동사로 개명. 인앱 도메인 동작이면 `domainVerbs` 에 계약과 함께 등록 |
-| habits/00 「등록 불가 동사」(`resolveOrder`, `postOrder`) | 등록 불가 | 개명·분해만 가능. `domainVerbs` 에 올리면 config 가 throw 한다 |
-
-미등록은 **푸는 길이 정해진 error** 라 error 로 둬도 개발이 막히지 않는다 — 같은 PR 에서 config 에 한 줄 올리면 된다. 동사가 늘어나는 게 config diff 로 드러나는 게 이 룰의 목적이다.
-
-```ts
-function resolveOrder(id) {}            // ❌ resolve 는 목록에 없다
-function getCartAndResetCoupons() {}    // ❌ And — 두 함수로 쪼갠다
-function filterAndSortOrders() {}       // ❌ sort 가 목록에 없어도 And 는 두 동작이다
-function findPendingTermsAndConditions() {} // ✅ andJoinedTerms 에 "TermsAndConditions" 를 올린 경우
-const mapBndDtoToBnd = (dto) => …       // ❌ map 대신 to
-function toBnd(bndDto: BndDto): Bnd {}  // ✅
-```
-
-**괜찮은 경우**
-- 남이 이름을 정한 경우: `const { refetch } = useQuery(…)`(꺼내 쓴 이름), `const navigate = useNavigate()`(함수가 돌려준 값)
-- 컴포넌트(대문자로 시작하는 이름)
-- `all`·`any` 처럼 함수를 조합하는 함수(habits/04 「조합 닫힘」)
-- 테스트 파일에서는 `setup`·`mock`·`expect`·`query` 동사와 단독 `setup()`·`wrapper` 도 허용
-- `apiFiles` 에 적은 API 파일 — 이름이 서버 엔드포인트를 따르므로 이 룰을 끈다(`postOrder` 같은 전송 동사도 거기선 통과)
-- `domainVerbs` 에 올린 인앱 도메인 동사. 동사 이름 단독(`signOut()`)도 된다. 화면의 훅·핸들러는 등록할 필요 없이 `use`·`handle` 뒤에 붙인다(`useSignOut`, `handleSignOutClick`) — habits/00 「함수 이름」
-
-코드: `rules/function-verb-whitelist.mjs`
-
-#### 2. 동사가 약속한 리턴 타입 — `eric/verb-return-contract`
-
-**잡는 것**: 함수에 **적어둔 리턴 타입**이 동사의 약속과 다르면 걸린다.
-
-**왜**: 이름은 `find` 인데 항상 값이 있거나, 없음을 `undefined` 로 돌려주면 이름과 타입이 서로 다른 말을 한다. 없음은 `null` 하나로 모아야 `?? `·`=== null` 처리 방식이 갈라지지 않는다. #1 은 "목록에 있는 동사인가"만 보고, 이 룰은 "그 동사의 약속을 지키는가"를 본다.
-
-| 동사 | 리턴 타입이 이래야 한다 |
-|---|---|
-| `find*` | `null` 이 포함되고 `undefined` 는 없다 (없을 수 있다. 없음은 `null` 하나로 표현한다) |
-| `get*` | `undefined` 가 없다. 없을 수 있으면 `T \| null` 로 드러낸다 (`get` 은 꺼내기·만들기라는 동작을 말할 뿐 존재를 약속하지 않는다. 없을 수 있다는 건 타입이 알린다) |
-| `is*`·`has*`·`can*` | `boolean`, 또는 `x is Order` 같은 타입 가드 |
-| `compare*` | `number` (정렬 함수에 넘기는 비교 함수) |
-| `subscribe*` | 함수 (구독을 해제하는 함수를 돌려준다) |
-| `parse*`·`validate*` | `Result` 또는 `T \| null` (실패할 수 있다는 게 타입에 드러난다. `undefined` 는 쓰지 않는다) |
-| `filter*` | 배열 |
-| `normalize*` | 첫 파라미터와 같은 타입 |
-
-```ts
-function getOrder(id): Order | undefined   // ❌ 없음은 null 로
-function getOrderNote(o): string | null    // ✅ 꺼내기인데 없을 수 있다
-function findOrder(id): Order | undefined  // ❌ 없음은 null 로
-function findOrder(id): Order              // ❌ 찾기는 못 찾을 수 있다
-function isReady(o): string                // ❌ is 는 boolean
-function parsePort(s): number              // ❌ 실패하면 어떻게 되는지 타입에 없다
-function parsePort(s): number | null       // ✅
-```
-
-**알아둘 것**
-- `Promise<Order>` 는 `Order` 로 보고 검사한다.
-- **리턴 타입을 안 적은 함수는 검사하지 않는다.** 타입을 계산하지 않고 적힌 글자만 보기 때문이다. 대신 export 함수는 #22 가 리턴 타입을 적게 만든다.
-- `type Maybe<T> = T | null` 처럼 별명을 붙인 타입은 안을 풀어보지 못한다. `Maybe<Order>` 를 돌려주는 `find*` 는 "`null` 이 없다"로 잘못 걸린다.
-- **테스트 파일에서는 꺼진다.** 테스트 라이브러리(testing-library)에서는 `findBy*` 가 "기다렸다가 찾고 없으면 에러", `queryBy*` 가 "없으면 `null`" 이라 뜻이 다르기 때문이다.
-
-코드: `rules/verb-return-contract.mjs` 의 `CONTRACTS`
-
-#### 3. 두루뭉술한 이름 — `eric/no-general-name`
-
-**잡는 것**: 변수나 함수 파라미터 이름이 `data`·`item`·`value`·`state`·`info`·`result` 이거나, `Info`·`Data` 로 끝나면 걸린다. `const { data } = …` 처럼 꺼내 쓰는 이름도 본다.
-
-**왜**: 이런 이름은 무엇이든 가리킬 수 있어서 코드를 읽는 사람이 결국 안을 열어봐야 한다. `order`·`invoice` 처럼 무엇인지 드러나는 이름을 쓴다.
-
-```ts
-const { data } = useSuspenseQuery(orderQueries.detail(id));          // ❌
-const { data: order } = useSuspenseQuery(orderQueries.detail(id));   // ✅ 이름을 바꿔 꺼낸다
-function toTotal(value: number) {}                                   // ❌
-orders.map((item) => item.id);                                       // ✅ 한 줄짜리 콜백은 괜찮다
-```
-
-**괜찮은 경우**
-- `.map((item) => …)`, `cell: (info) => …` 처럼 **다른 함수에 바로 넘기는 한 줄짜리 콜백의 인자**. 라이브러리가 쓰는 관용 이름이고, 한 줄 안에서만 쓰여 헷갈릴 일이 적다.
-- 객체의 키(`{ data: … }`). API 응답처럼 바깥에서 정한 모양일 수 있다.
-- **테스트 파일에서는 꺼진다.** 테스트에서는 `const result = fn()` 이 "실제 결과"를 뜻하는 관용구이고, `renderHook` 이 돌려주는 값 이름도 `result` 다.
-
-코드: `rules/no-general-name.mjs`
-
-#### 4. `Info`·`Data` 로 끝나는 타입 이름 — `eric/no-general-name`
-
-**잡는 것**: `interface OrderInfo`, `type UserData` 처럼 타입 이름이 `Info`·`Data` 로 끝나면 걸린다. #3 과 같은 룰이 interface·type·class·enum 이름을 본다.
-
-**왜**: #3 과 같다. "주문에 관한 무언가"가 아니라 `OrderSummary`·`UserProfile` 처럼 무엇인지 이름에 드러낸다.
-
-#### 5. "없음" 상수를 계산에 섞기 — `eric/no-sentinel-arithmetic`
-
-**잡는 것**: `const X = -1` 로 만든 상수를 `+ - * / %` 계산에 쓰면 걸린다.
-
-**왜**: `-1` 같은 특수값에 `NO_FILLED_STEP`("채운 단계 없음") 같은 이름을 붙였다면, 그 이름은 "없음"만 뜻해야 한다. 그걸 `NO_FILLED_STEP + count` 처럼 계산에 쓰면 이름이 거짓말이 된다. 이런 계산이 필요해졌다면 애초에 `-1` 대신 개수(`0` = 없음)로 표현하는 게 맞다는 신호다.
-
-```ts
-const NO_FILLED_STEP = -1;
-return NO_FILLED_STEP + filledStepCount;   // ❌ "없음"이 계산 재료가 됐다
-if (index === NO_FILLED_STEP) …            // ✅ 비교는 괜찮다
-```
-
-어떤 값을 "없음 상수"로 볼지는 룰 옵션 `sentinels` 로 바꿀 수 있다(기본 `[-1]`).
-
-코드: `rules/no-sentinel-arithmetic.mjs` — 상수가 파일 어디에서 쓰이는지 전부 추적해서 계산에 쓰인 곳만 보고한다.
-
-### 01 컴포넌트
-
-#### 6. `useQuery` 는 조건부 조회에만 — `eric/restricted-syntax`, `no-restricted-imports`
-
-**잡는 것**
-- `useQuery(…)` 를 부르는데 옵션에 `enabled` 도 `skipToken` 도 없으면 걸린다.
-- `useQueries`·`useInfiniteQuery` 는 import 자체가 걸린다. `useSuspenseQueries`·`useSuspenseInfiniteQuery` 를 쓴다.
-
-**왜**: 조회는 `useSuspenseQuery` 가 기본이다. 로딩·에러를 바깥의 `<Suspense>`·`<ErrorBoundary>` 가 처리해 주고, 컴포넌트 안에서는 "데이터가 항상 있다"고 가정할 수 있다. `useQuery` 를 쓰면 컴포넌트마다 `isLoading`·`data?.` 처리가 번진다. 다만 **suspense 쿼리는 끌 수 없어서**, "검색어가 비었으면 조회하지 않는다" 같은 조건부 조회만은 `useQuery` 가 필요하다.
-
-```ts
-const { data } = useQuery(orderQueries.detail(id));                                             // ❌ 조건이 없다 → useSuspenseQuery
-const { data: order } = useQuery({ ...orderQueries.detail(keyword), enabled: keyword !== "" }); // ✅ 조건부 조회
-const { data: order } = useQuery({ queryKey, queryFn: id === undefined ? skipToken : fetchOrder }); // ✅ skipToken
-```
-
-**`useQuery` 를 쓰기 전에** suspense 로 풀 수 있는지 먼저 본다(habits/01 §3).
-- 조건을 위에서 판정해 **쿼리를 쓰는 컴포넌트 자체를 조건부로 렌더**할 수 있으면 그게 낫다.
-- 앞 결과가 필요한 의존 쿼리는 suspense 로 순서대로 부르면 된다.
-
-**한계**: 호출하는 자리에 `enabled`·`skipToken` 이 **보여야** 통과한다. 쿼리 팩토리 안에 `enabled` 를 넣어두면 lint 는 모른다 — 조건은 호출하는 쪽에 드러나게 쓴다.
-
-코드: `index.mjs` 의 `RESTRICTED_SYNTAX`(호출 검사)와 `createRestrictedImports`(import 검사)
-
-#### 7. `useEffect` 금지 — `no-restricted-imports`
-
-**잡는 것**: `react` 에서 `useEffect`·`useLayoutEffect` 를 import 하면 걸린다.
-
-**왜**: `useEffect` 로 "A 가 바뀌면 B state 를 맞춘다"는 식의 동기화를 하면 흐름이 꼬이고 한 프레임 늦게 반영된다. 다른 값에서 계산할 수 있는 건 렌더 중에 계산하고, 창 크기 같은 외부 값은 `useSyncExternalStore` 로 읽는다.
-
-**괜찮은 경우**: 옵션 `effectAllowedFiles` 에 적은 파일(외부 시스템과 동기화하는 전용 위치)에서는 허용한다.
-
-#### 8. `React.useEffect` 로 우회 — `eric/restricted-syntax`
-
-**잡는 것**: import 하지 않고 `React.useEffect(…)`·`React.useLayoutEffect(…)` 로 부르면 걸린다. #7 의 빈틈을 막는 룰이고, 예외도 #7 과 같다.
-
-코드: `index.mjs` 의 `REACT_MEMBER_EFFECT`
-
-#### 9. 쿼리만 감싼 커스텀 훅 — `eric/no-thin-query-hook`
-
-**잡는 것**: `use*` 훅이 **쿼리 하나를 부르고 그 결과를 돌려주는 것 말고는 아무것도 안 하면** 걸린다.
-
-**왜**: 이런 훅은 하는 일 없이 한 겹 감싸기만 한다. 게다가 훅으로만 쿼리를 쓸 수 있으면, 쿼리 여러 개를 `useSuspenseQueries` 로 **한 번에 병렬로** 불러야 할 때 묶을 수가 없다. 쿼리 설정은 `orderQueries.detail(id)` 같은 함수(쿼리 팩토리)로 공개하고, 쓰는 쪽이 그걸 직접 쓴다.
-
-```ts
-function useUnreadCount(): number {                             // ❌ 쿼리를 부르고 값 하나 꺼낼 뿐이다
-  const { data } = useSuspenseQuery(unreadCountQueries.total());
-  return data.unreadCount;
-}
-const useOrders = () => useSuspenseQuery(orderQueries.list());   // ❌
-```
-
-**괜찮은 경우**: 다른 훅과 조합하거나(`useState` 등) 결과를 가공하는 훅은 로직을 공유하는 훅이라 통과한다.
-
-```ts
-function useSelectableOrder(id: string) {                        // ✅ useState 와 조합한다
-  const { data: order } = useSuspenseQuery(orderQueries.detail(id));
-  const [isSelected, setIsSelected] = useState(false);
-  return { order, isSelected, setIsSelected };
-}
-```
-
-근거: TkDodo 「Creating Query Abstractions」 — 설정 공유는 `queryOptions`, 로직 공유는 그 위의 훅.
-
-코드: `rules/no-thin-query-hook.mjs`
-
-#### 10. 쿼리 설정을 호출하는 자리에 직접 적기 — `eric/restricted-syntax`
-
-**잡는 것**: `useSuspenseQuery({ queryKey, queryFn })` 처럼 쿼리 설정 객체를 그 자리에 직접 쓰면 걸린다. `useSuspenseQueries({ queries: [{ … }] })` 안도 마찬가지다.
-
-**왜**: 설정이 호출하는 곳마다 흩어지면 같은 쿼리의 키나 캐시 정책이 조금씩 달라진다. `orderQueries.detail(id)` 처럼 쿼리 설정을 만드는 함수에 모아두고, 캐시 정책(`refetchOnMount` 등)도 거기에 둔다. 이 룰 덕분에 쿼리 팩토리가 항상 존재하므로, #9 를 통과한 훅이 있어도 쓰는 쪽이 필요하면 팩토리를 직접 쓸 수 있다.
-
-코드: `index.mjs` 의 `RESTRICTED_SYNTAX`
-
-#### 11. 쿼리를 연달아 부르기 — `eric/discouraged-syntax` (warn)
-
-**잡는 것**: 같은 블록 안에서 `useSuspenseQuery` 를 담은 변수 선언이 연달아 나오면 경고한다.
-
-**왜**: suspense 쿼리는 데이터가 올 때까지 컴포넌트를 멈춘다. 그래서 두 개를 연달아 적으면 첫 번째가 끝나야 두 번째가 **시작**된다(워터폴). 서로 상관없는 쿼리라면 `useSuspenseQueries` 로 묶어 동시에 시작한다.
-
-```ts
-const order = useSuspenseQuery(orderQueries.detail(id));
-const catalog = useSuspenseQuery(productQueries.list());   // ⚠ order 가 끝난 뒤에야 시작한다
-const [order, catalog] = useSuspenseQueries({ queries: [orderQueries.detail(id), productQueries.list()] });  // ✅
-```
-
-**warn 인 이유**: 두 번째 쿼리가 첫 번째 결과를 써야 하는 경우(의존 쿼리)도 같이 걸린다. 그때는 순서대로 부를 수밖에 없으니 무시한다.
-
-코드: `index.mjs` 의 `DISCOURAGED_SYNTAX`
-
-#### 12. 객체 타입은 `interface` 로 — `typescript/consistent-type-definitions`
-
-**잡는 것**: `type Props = { … }` 처럼 객체 모양의 타입을 `type` 으로 선언하면 걸린다. `interface Props { … }` 로 쓴다.
-
-**괜찮은 경우**: `type ViewState = { type: "a" } | { type: "b" }` 처럼 여러 모양 중 하나인 타입(판별 유니온)은 `interface` 로 쓸 수 없으니 걸리지 않는다.
-
-#### 13. props 타입은 한 줄일 때만 직접 적기 — `eric/props-inline-type-single-line`
-
-**잡는 것**: 컴포넌트 파라미터에 직접 적은 props 타입이 여러 줄로 넘어가면 걸린다.
-
-**왜**: 짧으면 그 자리에 적는 게 읽기 편하지만, 길어지면 시그니처가 지저분해진다. 그때는 `XxxProps` interface 로 뺀다.
-
-```tsx
-function Badge({ label }: { label: string }) {}   // ✅ 한 줄
-function Header({ title, showSearch }: {          // ❌ HeaderProps 로 뺀다
-  title: string;
-  showSearch: boolean;
-}) {}
-```
-
-대문자로 시작하는 함수(컴포넌트)와 `VariantForm.error = (…) => …` 처럼 컴포넌트에 붙이는 함수를 본다.
-
-코드: `rules/props-inline-type-single-line.mjs`
-
-#### 14. 변경 이력 주석 — `no-warning-comments` (warn)
-
-**잡는 것**: 주석에 `기존엔`·`기존에는`·`원래는`·`예전엔` 이 들어 있으면 경고한다.
-
-**왜**: "기존엔 이렇게 했는데 바꿨다" 같은 설명은 PR 설명에 쓸 내용이다. 코드를 나중에 읽는 사람에게 "기존 코드"는 존재하지 않는다. 단어로만 찾기 때문에 일부만 잡히고, 나머지는 리뷰에서 본다.
-
-### 02 구조
-
-#### 15. 선언하기 전에 쓰기 — `no-use-before-define`
-
-**잡는 것**: 파일 최상위에서 아직 선언되지 않은 상수를 쓰거나, 타입을 선언보다 먼저 쓰면 걸린다.
-
-**왜**: `const`·`let` 은 선언된 줄보다 먼저 쓰면 실행할 때 에러가 난다(이 구간을 TDZ 라고 부른다).
-
-```ts
-export const earlyRate = LATE_RATE * 2;   // ❌ 파일을 읽는 순간 실행되는데 LATE_RATE 가 아직 없다
-const LATE_RATE = 3;
-```
-
-**괜찮은 경우**
-- **함수 안에서** 파일 아래쪽 상수를 쓰는 것. 함수는 나중에 호출되고, 그때는 상수가 이미 선언돼 있어서 에러가 안 난다. 그래서 styled 컴포넌트나 className 상수를 파일 맨 아래에 두는 배치는 괜찮다.
-- `function` 으로 선언한 함수. `function` 은 파일 어디에 있어도 맨 위로 끌어올려진 것처럼 동작해서(호이스팅) 순서가 상관없다. 그래서 "호출하는 쪽(진입점)을 위에, 쓰이는 조각을 아래에" 두는 배치(habits/01 §4)가 가능하다.
-
-### 03 조합
-
-#### 16. `showXxx`·`hideXxx` prop — `eric/discouraged-syntax` (warn)
-
-**잡는 것**: JSX 에 `showSearch`·`hideAvatar` 같은 prop 이 있으면 경고한다.
-
-**왜**: "검색 버튼 보여줄까 말까"를 boolean 으로 조종하면 화면에 뭐가 나오는지가 컴포넌트 안에 숨는다. 보여줄 조각 자체를 prop 으로 넘기면(`right={<SearchButton />}`) JSX 만 봐도 화면이 보인다.
-
-### 04 함수형
-
-#### 17. `for`·`while` 루프 — `eric/restricted-syntax`
-
-**잡는 것**: `for`·`for…in`·`while`·`do…while` 을 막는다. `for…of` 는 허용하되, 본문에서 `push`·`unshift`·`set`·`add` 로 컬렉션에 값을 쌓으면 막는다.
-
-**왜**: 루프는 보통 바깥 변수를 바꾸면서 결과를 쌓는다. `map`·`filter`·`reduce` 로 쓰면 "무엇을 만드는지"가 드러나고 값을 바꾸지 않는다. 테스트에서 같은 테스트를 여러 입력으로 돌리려면 `it.each` 를 쓴다.
-
-**`for…of` 는 왜 허용하나**: 순차 `await`, 조기 `return`·`break` 처럼 배열 메서드로 옮기면 오히려 꼬이는 순회가 있다. 인덱스 관리(`for`)나 프로토타입 키 순회(`for…in`) 같은 실수 지점도 없다. 결과를 쌓는 쪽은 두 갈래로 막는다. 바깥 변수 재할당은 `let` 금지(#18)가, `const` 배열·Map·Set 에 `push`·`set`·`add` 하는 누산은 위 컬렉션 변경 셀렉터가 잡는다. 셀렉터는 스코프를 모르므로 루프 안에서 만든 지역 객체(`url.searchParams.set` 등)의 변경도 걸린다. 그런 자리는 disable 주석을 달고 리뷰에서 본다.
-
-#### 18. `let` — `eric/restricted-syntax`
-
-**잡는 것**: `let` 선언을 막는다.
-
-**왜**: 값을 나중에 바꾸면 어느 시점에 무슨 값인지 따라가야 한다. 새 값이 필요하면 새 `const` 를 만든다. 테스트에서 `beforeEach` 로 채우던 `let` 은 `setup()` 함수로, 나중에 resolve 할 Promise 는 `Promise.withResolvers()` 로 바꾼다.
-
-#### 19. 파라미터에 다시 값 넣기 — `no-param-reassign`
-
-**잡는 것**: 받은 파라미터에 다시 값을 넣거나(`order = …`), 파라미터 객체의 속성을 바꾸면(`order.total = 0`) 걸린다.
-
-**왜**: 호출한 쪽의 객체가 몰래 바뀐다. 바뀐 값이 필요하면 새 객체를 만들어 돌려준다.
-
-#### 20. 삼항 안의 삼항 — `no-nested-ternary`
-
-**잡는 것**: `a ? x : b ? y : z` 를 막는다.
-
-**왜**: 조건이 늘수록 어느 조건이 어느 값인지 읽기 어렵다. `if (…) return …;` 를 줄마다 하나씩 쓴다.
-
-#### 21. `parse*`/`validate*` 안의 `throw` — `eric/restricted-syntax`
-
-**잡는 것**: 이름이 `parse`·`validate` 로 시작하는 함수 안에서 `throw` 하면 걸린다.
-
-**왜**: 입력이 잘못될 수 있다는 건 예상 가능한 실패다. `throw` 하면 호출하는 쪽이 시그니처만 보고는 실패 가능성을 모른다. `Result` 나 `T | null` 로 돌려주면 호출하는 쪽이 반드시 처리하게 된다.
-
-#### 22. export 함수의 리턴 타입 — `eric/explicit-return-type`
-
-**잡는 것**: `export function`, `export const x = () =>`, `export default function` 에 리턴 타입이 없으면 걸린다.
-
-**왜**: 바깥에 공개하는 함수는 시그니처가 약속이다. 리턴 타입을 적어두면 이름이 약속한 것과 맞는지(#2)도 검사할 수 있다.
-
-**괜찮은 경우**: 컴포넌트(대문자로 시작하는 이름)는 제외한다.
-
-코드: `rules/explicit-return-type.mjs`
-
-### 05 타입
-
-#### 23. `as` — `typescript/consistent-type-assertions`
-
-**잡는 것**: `x as Order`, `x as unknown as Order` 를 막는다. `as const` 는 허용한다.
-
-**왜**: `as` 는 "내가 맞다고 보장할게"라며 TypeScript 검사를 끈다. 틀려도 컴파일러가 못 잡는다. 테스트에서 mock 타입을 맞출 때는 `vi.mocked(x)` 를, 일부 필드만 있는 테스트 데이터는 기본값을 채워주는 팩토리 함수를 쓴다.
-
-#### 24. `!` — `typescript/no-non-null-assertion`
-
-**잡는 것**: `order!.total` 처럼 "절대 null 이 아니다"라고 단언하는 `!` 를 막는다.
-
-**왜**: `as` 와 같은 이유다. 값이 반드시 있다는 건 `!` 가 아니라 코드 구조(예: Suspense 안에서 `useSuspenseQuery` 로 받기)로 보장한다.
-
-#### 25. `any` — `typescript/no-explicit-any`
-
-**잡는 것**: `any` 타입을 막는다. `any` 는 타입 검사를 통째로 끈다.
-
-### 06 테스트
-
-#### 26. 제품 코드의 `data-testid` — `eric/restricted-syntax`
-
-**잡는 것**: 테스트가 아닌 파일의 JSX 에 `data-testid` 속성이 있으면 걸린다.
-
-**왜**: 테스트는 사용자가 보는 방식(버튼 이름, 역할)으로 요소를 찾아야 화면이 실제로 맞는지 검증된다. 테스트 전용 id 를 박으면 화면이 깨져도 테스트는 통과할 수 있다.
-
-#### 27. 테스트의 `getByTestId` — `eric/restricted-syntax`
-
-**잡는 것**: 테스트 파일에서 `getByTestId` 계열을 쓰면 걸린다.
-
-**왜**: #26 과 같은 이유다. `getByRole` 같은 쿼리와, 범위를 좁히는 `within` 을 쓴다.
-
-**괜찮은 경우**: `getComputedStyle` 은 막지 않는다. jest-dom `toHaveStyle` 도 내부에서 `getComputedStyle` 을 부르므로 jsdom 에서 정확도 차이가 없다. 스타일·레이아웃 단언은 실제 브라우저에서 도는 `*.browser.test.*` 에서 `getComputedStyle` 로 한다.
+| 1 | 00 | 동사 목록에 없는 동사로 시작하는 함수 이름, 이름 속 `And` | [`eric/function-verb-whitelist`](RULES.md#ericfunction-verb-whitelist) |
+| 2 | 00 | 동사가 약속한 것과 다른 리턴 타입(예: `find*` 가 `null` 없이 반환, 없음을 `undefined` 로 반환) | [`eric/verb-return-contract`](RULES.md#ericverb-return-contract) |
+| 3 | 00 | `data`·`item`·`value` 같은 두루뭉술한 변수·파라미터 이름 | [`eric/no-general-name`](RULES.md#ericno-general-name) |
+| 4 | 00 | `OrderInfo`·`UserData` 처럼 `Info`·`Data` 로 끝나는 타입 이름 | [`eric/no-general-name`](RULES.md#ericno-general-name) |
+| 5 | 00 | "없음"을 뜻하는 `-1` 상수를 계산에 섞기 | [`eric/no-sentinel-arithmetic`](RULES.md#ericno-sentinel-arithmetic) |
+| 6 | 01 §3 | 조건부 조회가 아닌데 `useQuery` 쓰기, `useQueries`·`useInfiniteQuery` import | [`eric/restricted-syntax`](RULES.md#ericrestricted-syntax), [`no-restricted-imports`](RULES.md#no-restricted-imports) |
+| 7 | 01 §6 | `useEffect`·`useLayoutEffect` import | [`no-restricted-imports`](RULES.md#no-restricted-imports) |
+| 8 | 01 §6 | `React.useEffect(…)` 로 우회하기 | [`eric/restricted-syntax`](RULES.md#ericrestricted-syntax) |
+| 9 | 01 §3 | 쿼리 하나만 감싸고 하는 일이 없는 커스텀 훅 | [`eric/no-thin-query-hook`](RULES.md#ericno-thin-query-hook) |
+| 10 | 01 §3 | 쿼리 팩토리를 펼친 뒤 옵션을 덧붙이기(통째로 인라인은 #48) | [`eric/restricted-syntax`](RULES.md#ericrestricted-syntax) |
+| 11 | 01 §3 | 쿼리를 연달아 불러 순서대로 기다리게 만들기 (warn) | [`eric/discouraged-syntax`](RULES.md#ericdiscouraged-syntax) |
+| 12 | 01 §7 | 객체 모양 타입을 `type` 으로 선언 | [`typescript/consistent-type-definitions`](RULES.md#typescriptconsistent-type-definitions) |
+| 13 | 01 §7 | 여러 줄짜리 props 타입을 파라미터에 직접 적기 | [`eric/props-inline-type-single-line`](RULES.md#ericprops-inline-type-single-line) |
+| 14 | 01 §7 | "기존엔 ~였다" 같은 변경 이력 주석 (warn) | [`no-warning-comments`](RULES.md#no-warning-comments) |
+| 15 | 02 | 선언하기 전에 쓰기 | [`no-use-before-define`](RULES.md#no-use-before-define) |
+| 16 | 03 | `showXxx`·`hideXxx` boolean prop (warn) | [`eric/discouraged-syntax`](RULES.md#ericdiscouraged-syntax) |
+| 17 | 04 | `for`·`while` 루프 | [`eric/restricted-syntax`](RULES.md#ericrestricted-syntax) |
+| 18 | 04 | `let` | [`eric/restricted-syntax`](RULES.md#ericrestricted-syntax) |
+| 19 | 04 | 파라미터에 다시 값 넣기 | [`no-param-reassign`](RULES.md#no-param-reassign) |
+| 20 | 04 | 삼항 연산자 안에 삼항 연산자 | [`no-nested-ternary`](RULES.md#no-nested-ternary) |
+| 21 | 04 | `parse*`/`validate*` 함수 안의 `throw` | [`eric/restricted-syntax`](RULES.md#ericrestricted-syntax) |
+| 22 | 04 | 리턴 타입을 안 적은 export 함수 | [`eric/explicit-return-type`](RULES.md#ericexplicit-return-type) |
+| 23 | 05 | `as` 타입 단언 | [`typescript/consistent-type-assertions`](RULES.md#typescriptconsistent-type-assertions) |
+| 24 | 05 | `!` non-null 단언 | [`typescript/no-non-null-assertion`](RULES.md#typescriptno-non-null-assertion) |
+| 25 | 05 | `any` | [`typescript/no-explicit-any`](RULES.md#typescriptno-explicit-any) |
+| 26 | 06 | 제품 코드의 `data-testid` 속성 | [`eric/restricted-syntax`](RULES.md#ericrestricted-syntax) |
+| 27 | 06 | 테스트의 `getByTestId` | [`eric/restricted-syntax`](RULES.md#ericrestricted-syntax) |
+| 28 | 00 | kebab-case 가 아닌 파일 이름 | [`unicorn/filename-case`](RULES.md#unicornfilename-case) |
+| 29 | 00 | 일부러 넘기거나 반환하는 `undefined`(없음은 `null`) | [`unicorn/no-useless-undefined`](RULES.md#unicornno-useless-undefined) |
+| 30 | 01 §2 | 세 단을 넘는 블록 중첩 | [`max-depth`](RULES.md#max-depth) |
+| 31 | 01 §1 | 다섯 개 이상의 파라미터 | [`max-params`](RULES.md#max-params) |
+| 32 | 00 | `if (!x) … else …`, `!x ? a : b` 처럼 부정으로 시작하는 양갈래 분기 | [`unicorn/no-negated-condition`](RULES.md#unicornno-negated-condition) |
+| 33 | 02 | 바깥 스코프를 안 쓰는데 함수 안에 선언한 함수 | [`unicorn/consistent-function-scoping`](RULES.md#unicornconsistent-function-scoping) |
+| 34 | 04 | `forEach` | [`unicorn/no-array-for-each`](RULES.md#unicornno-array-for-each) |
+| 35 | 00 | `const [open, setVisible]` 처럼 짝이 안 맞는 `useState` 이름 | [`react/hook-use-state`](RULES.md#reacthook-use-state) |
+| 36 | 01 §7 | 화살표 함수로 선언한 이름 있는 컴포넌트 | [`react/function-component-definition`](RULES.md#reactfunction-component-definition) |
+| 37 | 03 | 컴포넌트 안에서 선언한 컴포넌트(렌더마다 리마운트) | [`react/no-unstable-nested-components`](RULES.md#reactno-unstable-nested-components) |
+| 38 | 04 | 원본을 바꾸는 `sort()`·`reverse()` | [`unicorn/no-array-sort`](RULES.md#unicornno-array-sort), [`unicorn/no-array-reverse`](RULES.md#unicornno-array-reverse) |
+| 39 | 05 | `@ts-ignore`·`@ts-expect-error`·`@ts-nocheck` (테스트는 설명이 붙은 `@ts-expect-error` 허용) | [`typescript/ban-ts-comment`](RULES.md#typescriptban-ts-comment) |
+| 40 | 05 | 룰 이름 없이 통째로 끄는 `/* oxlint-disable */` | [`unicorn/no-abusive-eslint-disable`](RULES.md#unicornno-abusive-eslint-disable) |
+| 41 | 04 | `{ [key: string]: V }` 인덱스 시그니처(→ `Record`) | [`typescript/consistent-indexed-object-style`](RULES.md#typescriptconsistent-indexed-object-style) |
+| 42 | 04 | `delete obj[key]` | [`typescript/no-dynamic-delete`](RULES.md#typescriptno-dynamic-delete) |
+| 43 | 03 | `cloneElement`·`Children.map` 으로 children 고치기 | [`react/no-clone-element`](RULES.md#reactno-clone-element), [`react/no-react-children`](RULES.md#reactno-react-children) |
+| 44 | 03 | `= []`·`= {}` 같은 객체 기본값 prop | [`react/no-object-type-as-default-prop`](RULES.md#reactno-object-type-as-default-prop) |
+| 45 | 03 | 렌더마다 새로 만드는 context value | [`react/jsx-no-constructed-context-values`](RULES.md#reactjsx-no-constructed-context-values) |
+| 46 | - | `console.warn`·`console.error` 가 아닌 `console.*` | [`no-console`](RULES.md#no-console) |
+| 47 | 04 | `reduce` 안에서 누적값을 매번 펼치기(O(n²)) | [`oxc/no-accumulating-spread`](RULES.md#oxcno-accumulating-spread) |
+| 48 | 01 §3 | `queryKey` 에 빠진 `queryFn` 의존값, 인라인 쿼리 옵션, 결과 객체 rest 구조분해 등 | [`@tanstack/query/*`](RULES.md#tanstackqueryexhaustive-deps) 7개 |
+| 49 | 06 | 테스트 안의 분기·단언 없는 테스트·메시지 없는 `toThrow()` 등 | [`vitest/*`](RULES.md#vitestno-conditional-expect) 8개 |
+| 50 | 06 | DOM 구조 접근, `render` 결과 쿼리, `fireEvent`, 비동기 쿼리 미대기 등 | [`testing-library/*`](RULES.md#testing-libraryno-node-access) 14개 |
+
+규칙마다 **잡는 것·왜·효과·예시**는 [RULES.md](RULES.md) 에 규칙 id 하나에 섹션 하나로 있다. lint 경고도 그 섹션으로 링크된다.
 
 ## 테스트 파일에서 달라지는 것
 
@@ -473,10 +137,10 @@ const LATE_RATE = 3;
 
 | | 내용 |
 |---|---|
-| 더 허용 | #1 동사에 `setup`·`mock`·`expect`·`query` 추가, 단독 `setup()`·`wrapper` 허용 |
-| 꺼짐 | #2 리턴 타입 약속(testing-library 의 `find`·`query` 뜻이 다름), #3·#4 두루뭉술한 이름(테스트의 `result` 관용구) |
+| 더 허용 | #1 동사에 [`setup`](RULES.md#setup)·[`mock`](RULES.md#mock)·[`expect`](RULES.md#expect)·[`query`](RULES.md#query) 추가, 단독 `setup()`·[`wrapper`](RULES.md#wrapper) 허용 |
+| 꺼짐 | #2 리턴 타입 약속(testing-library 의 [`find`](RULES.md#find)·[`query`](RULES.md#query) 뜻이 다름), #3·#4 두루뭉술한 이름(테스트의 [`result`](RULES.md#result) 관용구) |
 | 바뀜 | #26 대신 #27 이 적용된다 |
-| 그대로 | 나머지 전부. `as`·`!`·`let`·루프(`for…of` 는 허용)도 테스트에 그대로 적용된다 |
+| 그대로 | 나머지 전부. [`as`](RULES.md#as)·`!`·[`let`](RULES.md#let)·루프(`for…of` 는 허용)도 테스트에 그대로 적용된다 |
 
 테스트에서 `as`·`!`·`let`·루프를 안 쓰는 방법
 
@@ -493,7 +157,7 @@ const LATE_RATE = 3;
 | 검사 | 맡는 곳 | 이유 |
 |---|---|---|
 | 순환 import | dependency-cruiser | 모든 파일의 import 관계를 다 따라가야 해서 느리다(ESLint 시절 전체 검사 시간의 76%) |
-| effect 안에서 setState | #7 | `useEffect` import 자체를 막으니 필요 없다 |
+| effect 안에서 setState | #7 | [`useEffect`](RULES.md#useeffect) import 자체를 막으니 필요 없다 |
 | lint 끄는 주석(`// oxlint-disable`) | 리뷰 | 끈 이유가 타당한지는 사람이 본다 |
 | 유니온 switch 에서 빠진 경우 | TypeScript(`never` 패턴)·리뷰 | 유니온에 값을 추가하면 **안 바뀐 기존 switch 줄**에서 경고가 나서, diff CI 에서는 걸러져 보이지 않는다 |
 | 옵셔널 필드(`?`)가 땜빵인지 | 리뷰 | 정말 없을 수 있는 값인지는 판단의 문제다 |
@@ -516,14 +180,14 @@ lint 는 "모양"만 볼 수 있다. 설계가 맞는지는 사람이 판단한�
 
 | habit | lint 가 잡는 것 | 리뷰가 잡는 것 |
 |---|---|---|
-| 00 동사 | 목록에 있는 동사인가, `And`(도메인 용어 예외 제외), 적어둔 리턴 타입이 동사 약속과 맞는가 | `to*` 와 `create*` 중 맞는 쪽인가(입력을 변환하는지, 설정을 받아 새로 만드는지), `get*`·`to*` 가 몰래 부수효과를 내지 않는가, `format*` 이 판정을 숨기지 않는가, `set*`/`update*`·`delete*`/`remove*` 중 맞는 쪽인가, `on*` 이 정말 prop 이름으로 쓰이는가 |
+| 00 동사 | 목록에 있는 동사인가, `And`(도메인 용어 예외 제외), 적어둔 리턴 타입이 동사 약속과 맞는가 | `to*` 와 `create*` 중 맞는 쪽인가(입력을 변환하는지, 설정을 받아 새로 만드는지), `get*`·`to*` 가 몰래 부수효과를 내지 않는가, `format*` 이 판정을 숨기지 않는가, `set*[`/`](RULES.md#)update*`·`delete*[`/`](RULES.md#)remove*` 중 맞는 쪽인가, `on*` 이 정말 prop 이름으로 쓰이는가 |
 | 00 명사 | `data`·`item`·`value`·`state`·`info`·`result`, `*Info`·`*Data` | 명사가 무엇인지 충분히 좁혀졌나, 이 제품의 말로 읽히나 |
 | 00 특수값·그릇 이름 | "없음" 상수의 계산 | 특수값의 의미가 드러났나, 내용이 하나뿐인데 `*Config`·`*Options` 같은 그릇 이름을 쓰지 않았나 |
 | 01 §3 데이터 조회 | 조건부 조회가 아닌 `useQuery`, 쿼리만 감싼 훅, 설정 직접 적기, 연달아 부르기(warn) | 조회 위치가 맞나, 쿼리를 쓰는 커스텀 훅 둘을 나란히 불러 순서대로 기다리게 되지 않았나, 병렬로 부르려고 상태를 위로 끌어올리지 않았나 |
-| 01 §6 effect | `useEffect`·`useLayoutEffect` import, `React.useEffect` | 허용 파일 안에서 state 를 복제하지 않았나, 렌더 중 계산으로 바꿀 수 있나, 외부 값이면 `useSyncExternalStore` 인가 |
-| 01 §7 props·주석 | `interface`, 한 줄 props 타입, 이력 주석 일부 단어 | 컴포넌트가 `"-"` 같은 문자열 대신 `ReactNode` 로 일관 반환하나, 주석이 코드로는 안 보이는 제약만 담고 있나 |
+| 01 §6 effect | `useEffect`·`useLayoutEffect` import, `React.useEffect` | 허용 파일 안에서 state 를 복제하지 않았나, 렌더 중 계산으로 바꿀 수 있나, 외부 값이면 [`useSyncExternalStore`](RULES.md#usesyncexternalstore) 인가 |
+| 01 §7 props·주석 | `interface`, 한 줄 props 타입, 이력 주석 일부 단어 | 컴포넌트가 `"-"` 같은 문자열 대신 [`ReactNode`](RULES.md#reactnode) 로 일관 반환하나, 주석이 코드로는 안 보이는 제약만 담고 있나 |
 | 02 구조 | 선언 전 사용 | 다른 모듈의 내부 파일을 직접 import 하지 않았나(공개 입구로만), 유한한 이름 집합을 배열이 아니라 유니온 타입을 원본으로 뒀나 |
-| 04 함수형 | 루프·`let`·중첩 삼항·`parse*` 의 throw | 호출하는 쪽이 처리할 실패(`Result`)인지 경계가 처리할 실패(throw)인지, 유니온 분기에서 빠진 경우를 `never` 로 막았나, 판정 규칙을 배열로 박지 않았나 |
+| 04 함수형 | 루프·`let`·중첩 삼항·`parse*` 의 throw | 호출하는 쪽이 처리할 실패([`Result`](RULES.md#result))인지 경계가 처리할 실패(throw)인지, 유니온 분기에서 빠진 경우를 [`never`](RULES.md#never) 로 막았나, 판정 규칙을 배열로 박지 않았나 |
 | 05 타입 | `as`·`!`·`any` | lint 끄는 주석으로 피하지 않았나, 옵셔널이 땜빵이 아닌가, 옛 데이터 형식 처리를 데이터가 들어오는 한 곳에서 했나 |
 | 06 테스트 | `*ByTestId`·제품 코드의 `data-testid` | mock 이 파라미터를 실제로 반영하나, 분기·예외 경로를 다 테스트했나 |
 
@@ -567,9 +231,9 @@ test/
 
 | 바꾸는 것 | 같이 바꿀 것 |
 |---|---|
-| habits/00 동사 표·등록 불가 동사 표 | 동사 목록은 lint 가 직접 읽으므로 없음. 동사의 반환 계약을 바꿨을 때만 `rules/verb-return-contract.mjs` 의 `CONTRACTS` 와 이 README 의 #2 |
-| 룰 추가·완화·삭제 | 해당 habit 문구, `test/samples` 의 `expect` 주석, 이 README 의 「한눈에」·상세 설명·「리뷰와의 분업」 |
-| 룰 파일 새로 만들기 | `rules/` 에 파일 추가, `plugin.mjs` 에 등록, `index.mjs` 에서 켜기 |
+| habits/00 동사 표·등록 불가 동사 표 | 동사 목록은 lint 가 직접 읽으므로 없음. 동사의 반환 계약을 바꿨을 때만 `rules/verb-return-contract.mjs` 의 [`CONTRACTS`](RULES.md#contracts) 와 이 README 의 #2 |
+| 룰 추가·완화·삭제 | 해당 habit 문구, [`test/samples`](RULES.md#testsamples) 의 [`expect`](RULES.md#expect) 주석, 이 README 의 「한눈에」·상세 설명·「리뷰와의 분업」 |
+| 룰 파일 새로 만들기 | [`rules/`](RULES.md#rules) 에 파일 추가, `plugin.mjs` 에 등록, `index.mjs` 에서 켜기 |
 | 전체 원칙 | 루트 README 「강제 층 분업」 |
 
 ## 테스트

@@ -65,3 +65,28 @@ test("domainVerbs 는 config 를 만들 때 검증한다", () => {
   assert.throws(() => createOxlintConfig({ domainVerbs: [{ ...signOut, contract: " " }] }), /contract/);
   assert.throws(() => createOxlintConfig({ domainVerbs: [{ ...signOut, verb: "get" }] }), /공통 동사 표/);
 });
+
+const RULES_DOC = readFileSync(path.join(TEST_DIR, "..", "RULES.md"), "utf8");
+
+/** effect 허용·API·테스트 override 까지 켜서 config 가 쓰는 규칙과 셀렉터를 빠짐없이 모은다 */
+function listConfiguredRules() {
+  const config = createOxlintConfig({ effectAllowedFiles: ["effect/**"], apiFiles: ["api/**"] });
+  return [config.rules, ...config.overrides.map(({ rules }) => rules)];
+}
+
+test("RULES.md 는 config 의 규칙마다 같은 이름의 섹션을 하나씩 둔다", () => {
+  const ruleIds = [...new Set(listConfiguredRules().flatMap((rules) => Object.keys(rules)))].sort();
+  const sectionIds = [...RULES_DOC.matchAll(/^## (\S+)$/gm)].map(([, id]) => id).sort();
+  assert.deepEqual(sectionIds, ruleIds);
+});
+
+test("RULES.md 는 셀렉터 규칙의 메시지마다 하위 섹션을 둔다", () => {
+  const selectorMessages = new Set(
+    listConfiguredRules()
+      .flatMap((rules) => [rules["eric/restricted-syntax"], rules["eric/discouraged-syntax"]])
+      .flatMap((entry) => (Array.isArray(entry) ? entry[1] : []))
+      .map(({ message }) => message),
+  );
+  const documentedMessages = new Set([...RULES_DOC.matchAll(/^메시지: `(.+)`$/gm)].map(([, message]) => message));
+  assert.deepEqual(documentedMessages, selectorMessages);
+});
