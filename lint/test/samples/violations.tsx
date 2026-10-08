@@ -113,8 +113,8 @@ export function useOrderDetail(id: string): Order { /* expect: eric/no-thin-quer
 
 export function OrderPanel({ orderId }: { orderId: string }): ReactNode {
   const order = useSuspenseQuery({ queryKey: ["order", orderId], queryFn: async () => orderId }); /* expect: @tanstack/query/prefer-query-options */
-  const freshOrder = useSuspenseQuery({ ...orderQueries.detail(orderId), staleTime: 0 }); /* expect: eric/discouraged-syntax, eric/restricted-syntax */
-  const catalog = useSuspenseQuery(orderQueries.list()); /* expect: eric/discouraged-syntax */
+  const freshOrder = useSuspenseQuery({ ...orderQueries.detail(orderId), staleTime: 0 }); /* expect: eric/no-suspense-query-waterfall, eric/restricted-syntax */
+  const catalog = useSuspenseQuery(orderQueries.list()); /* expect: eric/no-suspense-query-waterfall */
   const legacy = useQuery(orderQueries.list()); /* expect: eric/restricted-syntax */
   const [width, setWidth] = useState(0);
   const [mirror, setMirror] = useState(orderId);
@@ -126,6 +126,14 @@ export function OrderPanel({ orderId }: { orderId: string }): ReactNode {
   return (
     <OrderHeader showSearch data-testid="order-panel" title={`${mirror}${width}${String(order.data)}${String(catalog.data)}${String(legacy.data)}`} /> /* expect: eric/discouraged-syntax, eric/restricted-syntax */
   );
+}
+
+// 의존 쿼리 뒤에 와도 앞 결과를 쓰지 않으면 워터폴이다
+export function useOrderWithCatalog(orderId: string): number {
+  const { data: order } = useSuspenseQuery(orderQueries.detail(orderId));
+  const { data: parentOrder } = useSuspenseQuery(orderQueries.detail(`${order.id}-parent`));
+  const { data: orders } = useSuspenseQuery(orderQueries.list()); /* expect: eric/no-suspense-query-waterfall */
+  return parentOrder.total + orders.length;
 }
 
 export function OrderHeader({ title }: { /* expect: eric/props-inline-type-single-line */

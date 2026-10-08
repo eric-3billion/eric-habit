@@ -2,6 +2,7 @@ import explicitReturnType from "./rules/explicit-return-type.mjs";
 import functionVerbWhitelist from "./rules/function-verb-whitelist.mjs";
 import noGeneralName from "./rules/no-general-name.mjs";
 import noSentinelArithmetic from "./rules/no-sentinel-arithmetic.mjs";
+import noSuspenseQueryWaterfall from "./rules/no-suspense-query-waterfall.mjs";
 import noThinQueryHook from "./rules/no-thin-query-hook.mjs";
 import propsInlineTypeSingleLine from "./rules/props-inline-type-single-line.mjs";
 import syntaxSelectors from "./rules/syntax-selectors.mjs";
@@ -17,6 +18,7 @@ export default {
     "function-verb-whitelist": functionVerbWhitelist,
     "no-general-name": noGeneralName,
     "no-sentinel-arithmetic": noSentinelArithmetic,
+    "no-suspense-query-waterfall": noSuspenseQueryWaterfall,
     "no-thin-query-hook": noThinQueryHook,
     "props-inline-type-single-line": propsInlineTypeSingleLine,
     "verb-return-contract": verbReturnContract,

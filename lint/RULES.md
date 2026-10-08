@@ -10,7 +10,7 @@
 **목차**
 
 - [00 이름](#00-이름): [eric/function-verb-whitelist](#ericfunction-verb-whitelist) · [eric/verb-return-contract](#ericverb-return-contract) · [eric/no-general-name](#ericno-general-name) · [eric/no-sentinel-arithmetic](#ericno-sentinel-arithmetic) · [unicorn/filename-case](#unicornfilename-case) · [unicorn/no-useless-undefined](#unicornno-useless-undefined) · [react/hook-use-state](#reacthook-use-state) · [no-console](#no-console)
-- [01 컴포넌트](#01-컴포넌트): [no-restricted-imports](#no-restricted-imports) · [eric/no-thin-query-hook](#ericno-thin-query-hook) · [@tanstack/query/*](#tanstackqueryexhaustive-deps) · [typescript/consistent-type-definitions](#typescriptconsistent-type-definitions) · [eric/props-inline-type-single-line](#ericprops-inline-type-single-line) · [no-warning-comments](#no-warning-comments) · [react/function-component-definition](#reactfunction-component-definition) · [react/no-object-type-as-default-prop](#reactno-object-type-as-default-prop) · [react/jsx-no-constructed-context-values](#reactjsx-no-constructed-context-values) · [max-depth](#max-depth) · [max-params](#max-params) · [unicorn/no-negated-condition](#unicornno-negated-condition) · [unicorn/consistent-function-scoping](#unicornconsistent-function-scoping)
+- [01 컴포넌트](#01-컴포넌트): [no-restricted-imports](#no-restricted-imports) · [eric/no-thin-query-hook](#ericno-thin-query-hook) · [eric/no-suspense-query-waterfall](#ericno-suspense-query-waterfall) · [@tanstack/query/*](#tanstackqueryexhaustive-deps) · [typescript/consistent-type-definitions](#typescriptconsistent-type-definitions) · [eric/props-inline-type-single-line](#ericprops-inline-type-single-line) · [no-warning-comments](#no-warning-comments) · [react/function-component-definition](#reactfunction-component-definition) · [react/no-object-type-as-default-prop](#reactno-object-type-as-default-prop) · [react/jsx-no-constructed-context-values](#reactjsx-no-constructed-context-values) · [max-depth](#max-depth) · [max-params](#max-params) · [unicorn/no-negated-condition](#unicornno-negated-condition) · [unicorn/consistent-function-scoping](#unicornconsistent-function-scoping)
 - [02 구조](#02-구조): [no-use-before-define](#no-use-before-define)
 - [03 조합](#03-조합): [react/no-unstable-nested-components](#reactno-unstable-nested-components) · [react/no-clone-element](#reactno-clone-element) · [react/no-react-children](#reactno-react-children)
 - [04 함수형](#04-함수형): [no-param-reassign](#no-param-reassign) · [no-nested-ternary](#no-nested-ternary) · [eric/explicit-return-type](#ericexplicit-return-type) · [typescript/consistent-indexed-object-style](#typescriptconsistent-indexed-object-style) · [typescript/no-dynamic-delete](#typescriptno-dynamic-delete) · [unicorn/no-array-for-each](#unicornno-array-for-each) · [oxc/no-accumulating-spread](#oxcno-accumulating-spread) · [unicorn/no-array-sort](#unicornno-array-sort) · [unicorn/no-array-reverse](#unicornno-array-reverse)
@@ -236,6 +236,32 @@ function useSelectableOrder(id: string) {                         // ✅ useStat
 ```
 
 코드: `rules/no-thin-query-hook.mjs`
+
+## eric/no-suspense-query-waterfall
+
+근거: [habits/01 「조달은 팩토리로 노출하고, 둘 이상이면 병렬로 묶는다」](../habits/01-component-design.md#조달은-팩토리로-노출하고-둘-이상이면-병렬로-묶는다)
+
+warn 이다. 의존이 이름에 드러나지 않는 경우가 있어서 막지 않고 알려만 준다.
+
+**잡는 것**: 같은 블록에서 앞에 suspense 쿼리(`useSuspenseQuery`·`useSuspenseQueries`) 선언이 있는데, 그 결과를 쓰지 않는 `useSuspenseQuery` 선언.
+앞 쿼리 결과를 담은 이름이나, 그 이름에서 파생한 선언(`const parentId = order.parentId`)을 인자에서 쓰면 의존 쿼리로 보고 넘어간다.
+
+**왜**: suspense 쿼리는 데이터가 올 때까지 컴포넌트를 멈춘다. 연달아 적으면 첫 번째가 끝나야 두 번째가 시작되어(워터폴) 대기 시간이 합쳐진다.
+앞 결과로 키를 만드는 의존 쿼리는 원래 순서대로 불러야 하므로 걸지 않는다.
+
+**효과**: 서로 상관없는 쿼리를 `useSuspenseQueries` 로 묶으면 동시에 시작해서 가장 느린 쿼리 하나만큼만 기다린다.
+의존 쿼리에는 경고가 나지 않아 경고가 곧 묶을 자리다.
+
+```ts
+const { data: order } = useSuspenseQuery(orderQueries.detail(id));
+const { data: catalog } = useSuspenseQuery(productQueries.list());                // ⚠ order 를 안 쓰는데 order 가 끝난 뒤에야 시작
+const [order, catalog] = useSuspenseQueries({ queries: [orderQueries.detail(id), productQueries.list()] });  // ✅
+const { data: customer } = useSuspenseQuery(customerQueries.detail(order.customerId)); // ✅ 앞 결과가 있어야 키를 만든다
+```
+
+이름만 비교하고 스코프는 보지 않는다. 의존이 이름을 거치지 않는 경우(앞 쿼리가 채운 store 를 읽는 등)는 잘못 걸리니 리뷰에서 본다.
+
+코드: `rules/no-suspense-query-waterfall.mjs`
 
 ## @tanstack/query/exhaustive-deps
 
@@ -974,26 +1000,6 @@ within(screen.getByRole("region", { name: "주문" })).getByRole("button"); // �
 ## eric/discouraged-syntax
 
 warn 이다. 정당한 경우가 섞여 있어서 막지 않고 알려만 준다.
-
-### 연달아 부르는 useSuspenseQuery
-
-근거: [habits/01 「조달은 팩토리로 노출하고, 둘 이상이면 병렬로 묶는다」](../habits/01-component-design.md#조달은-팩토리로-노출하고-둘-이상이면-병렬로-묶는다)
-
-메시지: `같은 경계의 useSuspenseQuery 연속 호출은 워터폴이다 — 독립 조달이면 useSuspenseQueries 로 묶는다. 의존 쿼리면 무시 (habits/01 §3)`
-
-**잡는 것**: 같은 블록에서 `useSuspenseQuery` 를 담은 변수 선언이 연달아 나오는 코드.
-
-**왜**: suspense 쿼리는 데이터가 올 때까지 컴포넌트를 멈춘다. 연달아 적으면 첫 번째가 끝나야 두 번째가 시작되어(워터폴) 대기 시간이 합쳐진다.
-
-**효과**: 서로 상관없는 쿼리를 `useSuspenseQueries` 로 묶으면 동시에 시작해서 가장 느린 쿼리 하나만큼만 기다린다.
-
-```ts
-const order = useSuspenseQuery(orderQueries.detail(id));
-const catalog = useSuspenseQuery(productQueries.list());   // ⚠ order 가 끝난 뒤에야 시작
-const [order, catalog] = useSuspenseQueries({ queries: [orderQueries.detail(id), productQueries.list()] });  // ✅
-```
-
-두 번째 쿼리가 첫 번째 결과를 써야 하는 의존 쿼리면 무시한다.
 
 ### show·hide boolean prop
 

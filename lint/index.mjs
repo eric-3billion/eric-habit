@@ -81,10 +81,6 @@ const TEST_RULES = {
 };
 
 const DISCOURAGED_SYNTAX = [
-  {
-    selector: "VariableDeclaration:has(CallExpression[callee.name='useSuspenseQuery']) ~ VariableDeclaration:has(CallExpression[callee.name='useSuspenseQuery'])",
-    message: "같은 경계의 useSuspenseQuery 연속 호출은 워터폴이다 — 독립 조달이면 useSuspenseQueries 로 묶는다. 의존 쿼리면 무시 (habits/01 §3)",
-  },
   { selector: "JSXAttribute[name.name=/^(show|hide)[A-Z]/]", message: "show*/hide* boolean prop 대신 슬롯으로 화면을 JSX 에 드러낸다 (habits/03)" },
 ];
 
@@ -176,6 +172,8 @@ export function createOxlintConfig({
       "typescript/consistent-type-definitions": ["error", "interface"],
       "eric/props-inline-type-single-line": "error",
       "eric/no-thin-query-hook": "error",
+      // 앞 쿼리 결과를 쓰는 의존 쿼리는 순서대로 부르는 게 맞아서 걸리지 않는다. 의존이 이름에 드러나지 않는 경우가 있어 warn 이다
+      "eric/no-suspense-query-waterfall": "warn",
       // queryFn 이 쓰는 값이 queryKey 에 빠지면 다른 조건의 결과를 캐시에서 돌려준다 (habits/01 §3)
       "@tanstack/query/exhaustive-deps": "error",
       "@tanstack/query/prefer-query-options": "error",

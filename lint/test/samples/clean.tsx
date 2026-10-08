@@ -201,6 +201,14 @@ export function useSelectableOrder(orderId: string): { order: Order; isSelected:
   return { order, isSelected, setIsSelected };
 }
 
+// 앞 쿼리 결과로 키를 만드는 의존 쿼리는 순서대로 부른다. 결과에서 파생한 이름을 거쳐도 의존이다
+export function useParentOrderTotal(orderId: string): number {
+  const { data: order } = useSuspenseQuery(orderQueries.detail(orderId));
+  const parentOrderId = `${order.id}-parent`;
+  const { data: parentOrder } = useSuspenseQuery(orderQueries.detail(parentOrderId));
+  return parentOrder.total;
+}
+
 // 함수 몸통 안에서만 쓰는 상수는 아래에 둬도 된다 (TDZ 에 안 걸림)
 export function OrderCaption({ caption }: { caption: string }) {
   return <p className={CAPTION_CLASS_NAME}>{caption}</p>;

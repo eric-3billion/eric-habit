@@ -83,7 +83,7 @@ oxlint -c oxlint.config.mjs src
 | 8 | 01 §6 | `React.useEffect(…)` 로 우회하기 | [`eric/restricted-syntax`](RULES.md#ericrestricted-syntax) |
 | 9 | 01 §3 | 쿼리 하나만 감싸고 하는 일이 없는 커스텀 훅 | [`eric/no-thin-query-hook`](RULES.md#ericno-thin-query-hook) |
 | 10 | 01 §3 | 쿼리 팩토리를 펼친 뒤 옵션을 덧붙이기(통째로 인라인은 #48) | [`eric/restricted-syntax`](RULES.md#ericrestricted-syntax) |
-| 11 | 01 §3 | 쿼리를 연달아 불러 순서대로 기다리게 만들기 (warn) | [`eric/discouraged-syntax`](RULES.md#ericdiscouraged-syntax) |
+| 11 | 01 §3 | 앞 쿼리 결과를 쓰지 않는 쿼리를 연달아 불러 순서대로 기다리게 만들기 (warn) | [`eric/no-suspense-query-waterfall`](RULES.md#ericno-suspense-query-waterfall) |
 | 12 | 01 §7 | 객체 모양 타입을 `type` 으로 선언 | [`typescript/consistent-type-definitions`](RULES.md#typescriptconsistent-type-definitions) |
 | 13 | 01 §7 | 여러 줄짜리 props 타입을 파라미터에 직접 적기 | [`eric/props-inline-type-single-line`](RULES.md#ericprops-inline-type-single-line) |
 | 14 | 01 §7 | "기존엔 ~였다" 같은 변경 이력 주석 (warn) | [`no-warning-comments`](RULES.md#no-warning-comments) |
