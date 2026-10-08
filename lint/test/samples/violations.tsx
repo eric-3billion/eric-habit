@@ -136,6 +136,14 @@ export function useOrderWithCatalog(orderId: string): number {
   return parentOrder.total + orders.length;
 }
 
+// 바로 앞 쿼리가 아니라 더 앞의 쿼리만 쓰는 형제 쿼리도 바로 앞 쿼리를 기다린다
+export function useOrderSiblings(orderId: string): number {
+  const { data: order } = useSuspenseQuery(orderQueries.detail(orderId));
+  const { data: parentOrder } = useSuspenseQuery(orderQueries.detail(`${order.id}-parent`));
+  const { data: childOrder } = useSuspenseQuery(orderQueries.detail(`${order.id}-child`)); /* expect: eric/no-suspense-query-waterfall */
+  return parentOrder.total + childOrder.total;
+}
+
 export function OrderHeader({ title }: { /* expect: eric/props-inline-type-single-line */
   title: string;
   showSearch: boolean;
