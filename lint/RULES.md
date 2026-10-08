@@ -243,9 +243,10 @@ function useSelectableOrder(id: string) {                         // ✅ useStat
 
 warn 이다. 의존이 이름에 드러나지 않는 경우가 있어서 막지 않고 알려만 준다.
 
-**잡는 것**: 같은 블록에서 바로 앞 suspense 쿼리(`useSuspenseQuery`·`useSuspenseQueries`) 선언의 결과를 쓰지 않는 `useSuspenseQuery` 선언.
+**잡는 것**: 같은 블록에서 바로 앞 suspense 쿼리(`useSuspenseQuery`·`useSuspenseQueries`) 호출의 결과를 쓰지 않는 `useSuspenseQuery` 호출.
 바로 앞 쿼리 결과를 담은 이름이나, 그 이름에서 파생한 선언(`const parentId = order.parentId`)을 인자에서 쓰면 의존 쿼리로 보고 넘어간다.
 더 앞의 쿼리만 쓰는 형제 쿼리(`order` → `customer`, `order` → `items`)도 바로 앞 쿼리가 끝나야 시작하므로 걸린다.
+한 문장에 여러 개 선언한 쿼리(`const a = useSuspenseQuery(A), b = useSuspenseQuery(B)`)도 호출 하나씩 순서대로 본다.
 
 **왜**: suspense 쿼리는 데이터가 올 때까지 컴포넌트를 멈춘다. 연달아 적으면 첫 번째가 끝나야 두 번째가 시작되어(워터폴) 대기 시간이 합쳐진다.
 앞 결과로 키를 만드는 의존 쿼리는 원래 순서대로 불러야 하므로 걸지 않는다.

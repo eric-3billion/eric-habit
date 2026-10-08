@@ -144,6 +144,12 @@ export function useOrderSiblings(orderId: string): number {
   return parentOrder.total + childOrder.total;
 }
 
+// 한 문장에 여러 개 선언해도 앞 호출이 suspend 하면 뒤 호출은 시작하지 않는다
+export function useInlineOrderCatalog(orderId: string): number {
+  const { data: order } = useSuspenseQuery(orderQueries.detail(orderId)), { data: orders } = useSuspenseQuery(orderQueries.list()); /* expect: eric/no-suspense-query-waterfall */
+  return order.total + orders.length;
+}
+
 export function OrderHeader({ title }: { /* expect: eric/props-inline-type-single-line */
   title: string;
   showSearch: boolean;

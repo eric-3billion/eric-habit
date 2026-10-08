@@ -2,7 +2,7 @@ const SUSPENSE_QUERY_HOOK = /^useSuspenseQuer(y|ies)$/;
 const NON_RUNTIME_KEYS = new Set(["parent", "typeAnnotation", "typeArguments", "typeParameters", "returnType"]);
 
 /**
- * 같은 블록에서 바로 앞 suspense 쿼리 결과를 쓰지 않는 useSuspenseQuery 선언을 워터폴로 보고한다 (habits/01 §3).
+ * 같은 블록에서 바로 앞 suspense 쿼리 결과를 쓰지 않는 useSuspenseQuery 호출을 워터폴로 보고한다 (habits/01 §3).
  * suspense 쿼리는 바로 앞 쿼리가 끝나야 시작하므로, 더 앞의 쿼리만 쓰는 형제 쿼리(A → B, A → C)도 워터폴이다.
  * 이름마다 그 값을 만든 쿼리의 순번을 기록하고, 파생 선언(`const qcCriteria = getQcCriteria(test)`)은 참조한 이름 중 가장 늦은 순번을 물려받는다.
  * 이름만 비교하고 스코프는 보지 않는다. 안쪽 함수가 같은 이름을 다시 선언하면 의존으로 잘못 보고 놓친다.
@@ -17,27 +17,32 @@ export default {
     },
   },
   create(context) {
+    // 쿼리 호출 하나를 지난다. 바로 앞 쿼리 결과를 쓰지 않는 useSuspenseQuery 면 보고하고 순번을 하나 올린다
+    const passQueryCall = (queryCount, call, queryOrdinalByName) => {
+      const usesPrecedingQuery = findLatestQueryOrdinal(call.arguments, queryOrdinalByName) === queryCount;
+      if (queryCount > 0 && !usesPrecedingQuery && call.callee.name === "useSuspenseQuery") context.report({ node: call, messageId: "waterfall" });
+      return queryCount + 1;
+    };
+
+    // 한 문장에 declarator 가 여럿이거나 한 식에 쿼리가 여럿이어도 앞 호출이 suspend 하면 뒤 호출은 시작하지 않으므로, 호출 하나를 한 단계로 센다
+    const passDeclarator = ({ queryCount, queryOrdinalByName }, declarator) => {
+      const declaredNames = listPatternNames(declarator.id);
+      const queryCalls = listSuspenseQueryCalls(declarator.init);
+      if (queryCalls.length === 0) {
+        const derivedOrdinal = findLatestQueryOrdinal([declarator.init], queryOrdinalByName);
+        if (derivedOrdinal === null) return { queryCount, queryOrdinalByName };
+        return { queryCount, queryOrdinalByName: new Map([...queryOrdinalByName, ...declaredNames.map((name) => [name, derivedOrdinal])]) };
+      }
+      const nextQueryCount = queryCalls.reduce((count, call) => passQueryCall(count, call, queryOrdinalByName), queryCount);
+      return { queryCount: nextQueryCount, queryOrdinalByName: new Map([...queryOrdinalByName, ...declaredNames.map((name) => [name, nextQueryCount])]) };
+    };
+
+    // queryCount 는 지금까지 지난 suspense 쿼리 호출 수이자 바로 앞 쿼리의 순번이다(0 = 아직 없음)
     const checkStatements = (statements) => {
-      const declarations = statements.filter((statement) => statement.type === "VariableDeclaration");
-      // queryCount 는 지금까지 지난 suspense 쿼리 선언 수이자 바로 앞 쿼리의 순번이다(0 = 아직 없음)
-      declarations.reduce(
-        ({ queryCount, queryOrdinalByName }, declaration) => {
-          const queryCalls = listSuspenseQueryCalls(declaration);
-          const declaredNames = listDeclaredNames(declaration);
-          if (queryCalls.length === 0) {
-            const inits = declaration.declarations.map((declarator) => declarator.init);
-            const derivedOrdinal = findLatestQueryOrdinal(inits, queryOrdinalByName);
-            if (derivedOrdinal === null) return { queryCount, queryOrdinalByName };
-            return { queryCount, queryOrdinalByName: new Map([...queryOrdinalByName, ...declaredNames.map((name) => [name, derivedOrdinal])]) };
-          }
-          const usesPrecedingQuery = queryCalls.some((call) => findLatestQueryOrdinal(call.arguments, queryOrdinalByName) === queryCount);
-          const isWaterfall = queryCount > 0 && !usesPrecedingQuery && queryCalls.some((call) => call.callee.name === "useSuspenseQuery");
-          if (isWaterfall) context.report({ node: declaration, messageId: "waterfall" });
-          const ordinal = queryCount + 1;
-          return { queryCount: ordinal, queryOrdinalByName: new Map([...queryOrdinalByName, ...declaredNames.map((name) => [name, ordinal])]) };
-        },
-        { queryCount: 0, queryOrdinalByName: new Map() },
-      );
+      statements
+        .filter((statement) => statement.type === "VariableDeclaration")
+        .flatMap((declaration) => declaration.declarations)
+        .reduce(passDeclarator, { queryCount: 0, queryOrdinalByName: new Map() });
     };
 
     return {
@@ -69,10 +74,6 @@ function listReferencedNames(node) {
   if (node.type === "MemberExpression" && !node.computed) return listReferencedNames(node.object);
   if (node.type === "Property" && !node.computed) return listReferencedNames(node.value);
   return listChildNodes(node).flatMap(listReferencedNames);
-}
-
-function listDeclaredNames(declaration) {
-  return declaration.declarations.flatMap((declarator) => listPatternNames(declarator.id));
 }
 
 function listPatternNames(pattern) {
