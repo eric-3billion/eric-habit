@@ -1,5 +1,6 @@
 // 각 줄 끝의 expect 주석 = 그 줄에서 나와야 하는 룰 id. 테스트가 과소·과대 보고를 둘 다 잡는다
-import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query"; /* expect: import/no-duplicates */
+import { useQueryClient } from "@tanstack/react-query";
 import React, { Children, cloneElement, createContext, useEffect, useState, type ReactNode } from "react"; /* expect: no-restricted-imports */
 
 import { orderQueries, type Order } from "./domain";
@@ -119,9 +120,9 @@ export function OrderPanel({ orderId }: { orderId: string }): ReactNode {
   const [width, setWidth] = useState(0);
   const [mirror, setMirror] = useState(orderId);
   useEffect(() => {
-    setMirror(orderId);
+    setMirror(orderId); /* expect: react/set-state-in-effect */
   }, [orderId]);
-  React.useLayoutEffect(() => setWidth(1), []); /* expect: eric/restricted-syntax */
+  React.useLayoutEffect(() => setWidth(1), []); /* expect: eric/restricted-syntax, react/set-state-in-effect */
 
   return (
     <OrderHeader showSearch data-testid="order-panel" title={`${mirror}${width}${String(order.data)}${String(catalog.data)}${String(legacy.data)}`} /> /* expect: eric/discouraged-syntax, eric/restricted-syntax */
@@ -233,6 +234,7 @@ export function OrderToggle(): ReactNode {
   const [open, setVisible] = useState(false); /* expect: react/hook-use-state */
   return <button type="button" onClick={() => setVisible(!open)}>{String(open)}</button>;
 }
+OrderToggle.Loading = (): ReactNode => <span />; /* expect: react/function-component-definition */
 
 // 바깥 스코프를 안 쓰는 중첩 컴포넌트는 consistent-function-scoping 도 같이 잡는다
 export function OrderTable({ orders }: { orders: Order[] }): ReactNode { /* expect: unicorn/consistent-function-scoping */
@@ -295,3 +297,107 @@ export function groupOrdersById(orders: Order[]): Record<string, Order> {
 
 export const createOrderTotalQuery = (orderId: string) => /* expect: eric/explicit-return-type */
   queryOptions({ queryKey: ["order-total"], queryFn: async () => orderId }); /* expect: @tanstack/query/exhaustive-deps */
+
+// ── 렌더 순수성 ──
+let renderCount = 0; /* expect: eric/restricted-syntax */
+
+export function OrderClock(): ReactNode {
+  renderCount = renderCount + 1; /* expect: react/globals */
+  return <time>{Date.now()}</time>; /* expect: react/purity */
+}
+
+export function OrderTotalLabel({ order }: { order: Order }): ReactNode {
+  order.total = 0; /* expect: no-param-reassign, react/immutability */
+  return <span>{order.total}</span>;
+}
+
+declare function toOrderRowComponent(kind: string): () => ReactNode;
+
+export function OrderRowSwitch({ kind }: { kind: string }): ReactNode {
+  const Row = toOrderRowComponent(kind);
+  return <Row />; /* expect: react/static-components */
+}
+
+export function OrderIdList({ ids }: { ids: string[] }): ReactNode {
+  return <ul>{ids.map((id, index) => <li key={index}>{id}</li>)}</ul>; /* expect: react/no-array-index-key */
+}
+
+export function OrderLinks(): ReactNode {
+  return <a href="https://example.com" target="_blank" class="link">주문</a>; /* expect: react/jsx-no-target-blank, react/no-unknown-property */
+}
+
+export function OrderTree(): ReactNode {
+  return (
+    <div>
+      <section>
+        <article>
+          <ul>
+            <li>
+              <span>
+                <b>
+                  <i>주문</i> {/* expect: react/jsx-max-depth */}
+                </b>
+              </span>
+            </li>
+          </ul>
+        </article>
+      </section>
+    </div>
+  );
+}
+
+// ── 모양 ──
+export function calculateOrderTier(total: number): string {
+  if (total > 100) {
+    return "gold"; /* expect: no-else-return */
+  } else {
+    return "bronze";
+  }
+}
+
+export function isZeroTotal(total: number | string): boolean {
+  return total == 0; /* expect: eqeqeq */
+}
+
+export function isMissingTotal(total: number | null): boolean {
+  return total == null; /* expect: eqeqeq */
+}
+
+export function createOrderIdSet(id: string): Set<string> {
+  const ids = new Set<string>();
+  ids.add(id); /* expect: unicorn/no-immediate-mutation */
+  return ids;
+}
+
+export function listOrderIds(orders: Order[]): string[] {
+  return orders.map((order) => { /* expect: array-callback-return */
+    if (order.total > 0) return order.id;
+  });
+}
+
+export class OrderUtil { /* expect: typescript/no-extraneous-class */
+  static toLabel(order: Order): string {
+    return order.id;
+  }
+}
+
+declare function getOrderTotal(id: string): Promise<number>;
+
+export function handleTotalClick(id: string): void {
+  getOrderTotal(id).then((total) => total); /* expect: promise/catch-or-return */
+}
+
+export function calculateShippingFee(order: Order, region: string, isMember: boolean): number { /* expect: complexity */
+  if (region === "jeju" && order.total < 100) return 5;
+  if (region === "jeju" || region === "ulleung") return 4;
+  if (isMember && order.total > 50) return 0;
+  if (isMember || order.total > 200) return 1;
+  if (order.createdAt > 0 && order.total > 10) return 2;
+  return order.total > 0 ? 3 : 6;
+}
+
+// ── 타입 ──
+export const getFirstOrder = (orders?: Order[]): Order => orders?.[0]!; /* expect: typescript/no-non-null-asserted-optional-chain, typescript/no-non-null-assertion */
+export type OrderCallback = Function; /* expect: typescript/no-unsafe-function-type */
+export type OrderLabel = String; /* expect: typescript/no-wrapper-object-types */
+export interface OrderFormatter { (order: Order): string } /* expect: typescript/prefer-function-type */

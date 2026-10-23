@@ -10,11 +10,11 @@
 **목차**
 
 - [00 이름](#00-이름): [eric/function-verb-whitelist](#ericfunction-verb-whitelist) · [eric/verb-return-contract](#ericverb-return-contract) · [eric/no-general-name](#ericno-general-name) · [eric/no-sentinel-arithmetic](#ericno-sentinel-arithmetic) · [unicorn/filename-case](#unicornfilename-case) · [unicorn/no-useless-undefined](#unicornno-useless-undefined) · [react/hook-use-state](#reacthook-use-state) · [no-console](#no-console)
-- [01 컴포넌트](#01-컴포넌트): [no-restricted-imports](#no-restricted-imports) · [eric/no-thin-query-hook](#ericno-thin-query-hook) · [eric/no-suspense-query-waterfall](#ericno-suspense-query-waterfall) · [@tanstack/query/*](#tanstackqueryexhaustive-deps) · [typescript/consistent-type-definitions](#typescriptconsistent-type-definitions) · [eric/props-inline-type-single-line](#ericprops-inline-type-single-line) · [no-warning-comments](#no-warning-comments) · [react/function-component-definition](#reactfunction-component-definition) · [react/no-object-type-as-default-prop](#reactno-object-type-as-default-prop) · [react/jsx-no-constructed-context-values](#reactjsx-no-constructed-context-values) · [max-depth](#max-depth) · [max-params](#max-params) · [unicorn/no-negated-condition](#unicornno-negated-condition) · [unicorn/consistent-function-scoping](#unicornconsistent-function-scoping)
-- [02 구조](#02-구조): [no-use-before-define](#no-use-before-define)
-- [03 조합](#03-조합): [react/no-unstable-nested-components](#reactno-unstable-nested-components) · [react/no-clone-element](#reactno-clone-element) · [react/no-react-children](#reactno-react-children)
-- [04 함수형](#04-함수형): [no-param-reassign](#no-param-reassign) · [no-nested-ternary](#no-nested-ternary) · [eric/explicit-return-type](#ericexplicit-return-type) · [typescript/consistent-indexed-object-style](#typescriptconsistent-indexed-object-style) · [typescript/no-dynamic-delete](#typescriptno-dynamic-delete) · [unicorn/no-array-for-each](#unicornno-array-for-each) · [oxc/no-accumulating-spread](#oxcno-accumulating-spread) · [unicorn/no-array-sort](#unicornno-array-sort) · [unicorn/no-array-reverse](#unicornno-array-reverse)
-- [05 타입](#05-타입): [typescript/consistent-type-assertions](#typescriptconsistent-type-assertions) · [typescript/no-non-null-assertion](#typescriptno-non-null-assertion) · [typescript/no-explicit-any](#typescriptno-explicit-any) · [typescript/ban-ts-comment](#typescriptban-ts-comment) · [unicorn/no-abusive-eslint-disable](#unicornno-abusive-eslint-disable)
+- [01 컴포넌트](#01-컴포넌트): [no-restricted-imports](#no-restricted-imports) · [eric/no-thin-query-hook](#ericno-thin-query-hook) · [eric/no-suspense-query-waterfall](#ericno-suspense-query-waterfall) · [@tanstack/query/*](#tanstackqueryexhaustive-deps) · [typescript/consistent-type-definitions](#typescriptconsistent-type-definitions) · [eric/props-inline-type-single-line](#ericprops-inline-type-single-line) · [no-warning-comments](#no-warning-comments) · [react/function-component-definition](#reactfunction-component-definition) · [react/no-object-type-as-default-prop](#reactno-object-type-as-default-prop) · [react/jsx-no-constructed-context-values](#reactjsx-no-constructed-context-values) · [max-depth](#max-depth) · [max-params](#max-params) · [unicorn/no-negated-condition](#unicornno-negated-condition) · [unicorn/consistent-function-scoping](#unicornconsistent-function-scoping) · [react/set-state-in-effect](#reactset-state-in-effect) · [react/purity](#reactpurity) · [react/immutability](#reactimmutability) · [react/globals](#reactglobals) · [react/no-array-index-key](#reactno-array-index-key) · [react/jsx-max-depth](#reactjsx-max-depth) · [complexity](#complexity) · [no-else-return](#no-else-return) · [react/no-unknown-property](#reactno-unknown-property) · [react/jsx-no-target-blank](#reactjsx-no-target-blank)
+- [02 구조](#02-구조): [no-use-before-define](#no-use-before-define) · [import/no-duplicates](#importno-duplicates)
+- [03 조합](#03-조합): [react/no-unstable-nested-components](#reactno-unstable-nested-components) · [react/no-clone-element](#reactno-clone-element) · [react/no-react-children](#reactno-react-children) · [react/static-components](#reactstatic-components)
+- [04 함수형](#04-함수형): [no-param-reassign](#no-param-reassign) · [no-nested-ternary](#no-nested-ternary) · [eric/explicit-return-type](#ericexplicit-return-type) · [typescript/consistent-indexed-object-style](#typescriptconsistent-indexed-object-style) · [typescript/no-dynamic-delete](#typescriptno-dynamic-delete) · [unicorn/no-array-for-each](#unicornno-array-for-each) · [oxc/no-accumulating-spread](#oxcno-accumulating-spread) · [unicorn/no-array-sort](#unicornno-array-sort) · [unicorn/no-array-reverse](#unicornno-array-reverse) · [unicorn/no-immediate-mutation](#unicornno-immediate-mutation) · [array-callback-return](#array-callback-return) · [typescript/no-extraneous-class](#typescriptno-extraneous-class) · [promise/catch-or-return](#promisecatch-or-return)
+- [05 타입](#05-타입): [typescript/consistent-type-assertions](#typescriptconsistent-type-assertions) · [typescript/no-non-null-assertion](#typescriptno-non-null-assertion) · [typescript/no-explicit-any](#typescriptno-explicit-any) · [typescript/ban-ts-comment](#typescriptban-ts-comment) · [unicorn/no-abusive-eslint-disable](#unicornno-abusive-eslint-disable) · [eqeqeq](#eqeqeq) · [typescript/no-non-null-asserted-optional-chain](#typescriptno-non-null-asserted-optional-chain) · [typescript/no-unsafe-function-type](#typescriptno-unsafe-function-type) · [typescript/no-wrapper-object-types](#typescriptno-wrapper-object-types) · [typescript/prefer-function-type](#typescriptprefer-function-type)
 - [셀렉터 규칙](#셀렉터-규칙): [eric/restricted-syntax](#ericrestricted-syntax) · [eric/discouraged-syntax](#ericdiscouraged-syntax)
 - [06 테스트](#06-테스트): [vitest/*](#vitestno-conditional-expect) · [testing-library/*](#testing-libraryno-node-access)
 
@@ -432,15 +432,20 @@ function Header({ title, onClose }: {             // ❌ → HeaderProps
 
 근거: [habits/01](../habits/01-component-design.md)
 
-**잡는 것**: 이름 있는 컴포넌트를 화살표 함수로 선언하면 걸린다. 반대로 이름 없는 컴포넌트(render prop 등)를 `function` 표현식으로 쓰면 걸린다.
+**잡는 것**: 컴포넌트를 화살표 함수로 쓰면 걸린다. 이름 있는 컴포넌트는 `function` 선언으로 쓴다. `X.Loading = …` 같은 정적 컴포넌트와 `memo`·`forwardRef` 인자는 `function` 표현식으로 쓴다.
+`fallback={() => …}` 같은 JSX 속성이나 테이블 `cell: () => …` 같은 객체 속성의 render prop 은 이 규칙이 컴포넌트로 보지 않아 걸리지 않는다.
 
 **왜**: 컴포넌트 선언 방식이 섞이면 파일마다 모양이 달라진다. `function` 선언은 호이스팅되어 진입점 컴포넌트를 파일 위에, 쓰이는 조각을 아래에 둘 수 있다.
+규칙은 정적 컴포넌트와 `memo`·`forwardRef` 인자를 이름 없는 컴포넌트로 분류한다. 이 자리를 화살표로 쓰면 이름이 추론되지 않아 DevTools 와 에러 스택에 `Anonymous` 로 찍힌다.
 
-**효과**: 모든 컴포넌트가 같은 모양이라 파일을 훑을 때 컴포넌트가 바로 보이고, "위에서 아래로 흐르는" 배치(habits/01 §4)가 가능하다.
+**효과**: 모든 컴포넌트가 같은 모양이라 파일을 훑을 때 컴포넌트가 바로 보이고, "위에서 아래로 흐르는" 배치가 가능하다. 정적 컴포넌트도 이름이 남는다.
 
 ```tsx
 const OrderBadge = ({ id }: OrderBadgeProps) => <span>{id}</span>;   // ❌
 function OrderBadge({ id }: OrderBadgeProps) { return <span>{id}</span>; }  // ✅
+
+OrderForm.Loading = () => <Skeleton />;   // ❌ 이름이 사라진다
+OrderForm.Loading = function OrderFormLoading() { return <Skeleton />; };  // ✅
 ```
 
 ## react/no-object-type-as-default-prop
@@ -536,6 +541,161 @@ function OrderTable() {
 const toOrderLabel = (order: Order): string => `#${order.id}`;  // ✅ 모듈 최상위
 ```
 
+## react/set-state-in-effect
+
+근거: [habits/01 §6](../habits/01-component-design.md#6-단방향-흐름--useeffect)
+
+**잡는 것**: `useEffect`·`useLayoutEffect` 본문에서 바로 부르는 `setState`. 비동기 콜백(`then`, 구독 콜백) 안에서 부르는 것은 걸리지 않는다.
+
+**왜**: effect 안의 동기 `setState` 는 거의 항상 다른 값에서 파생되는 state 를 손으로 맞추는 거울 state 다. 렌더가 한 번 더 일어나고, 그 사이 한 프레임은 낡은 값을 보여 준다. `useEffect` import 는 `effectAllowedFiles` 안에서 열려 있으므로, 이 규칙이 그 허용 구역 안의 거울 state 를 잡는다.
+
+**효과**: 파생값은 렌더 중에 계산하고, "props 가 바뀌면 초기화"는 `key` 리마운트로, 외부 값은 `useSyncExternalStore` 로 옮겨 간다.
+
+```tsx
+useEffect(() => { setMirror(orderId); }, [orderId]);   // ❌ 거울 state
+<OrderMenu key={orderId} />                             // ✅ 바뀌면 리마운트해 초기값으로 시작한다
+```
+
+## react/purity
+
+근거: [habits/04 「함수형 원칙」](../habits/04-functional-domain.md#함수형-원칙)
+
+**잡는 것**: 렌더 중(컴포넌트 본문, `useMemo` 콜백)에 부르는 `Date.now()`, `new Date()`, `Math.random()`, `crypto.randomUUID()` 처럼 호출마다 결과가 다른 함수.
+
+**왜**: React 는 같은 props·state 면 같은 화면이 나온다고 가정하고 렌더를 다시 하거나 건너뛴다. 렌더 중에 시간을 읽으면 언제 렌더되느냐에 따라 화면이 달라지고, `memo` 는 낡은 시간을 계속 보여 준다. 렌더 중 `randomUUID()` 를 key 로 쓰면 렌더마다 모든 행이 리마운트된다.
+
+**효과**: 시간·난수가 언제 정해지는지가 코드에 드러난다. 사용자 동작 시점이면 이벤트 핸들러에서, 고정값이면 모듈 상수로, 마운트 시각이면 부모가 props 로 넘긴다.
+
+```tsx
+return <p>© {new Date().getFullYear()} 3billion</p>;   // ❌
+const COPYRIGHT_YEAR = new Date().getFullYear();        // ✅ 모듈 로드 때 한 번
+```
+
+`const [mountedAt] = useState(() => Date.now())` 는 이 규칙은 통과하지만 `react/hook-use-state` 에 걸린다.
+
+## react/immutability
+
+근거: [habits/04 「함수형 원칙」](../habits/04-functional-domain.md#함수형-원칙)
+
+**잡는 것**: props, state, 훅이 돌려준 값, 렌더 중에 쓰는 값을 직접 바꾸는 코드(속성 대입, `push`, `delete`).
+
+**왜**: React 는 참조가 바뀌어야 값이 바뀐 줄 안다. 직접 바꾸면 화면이 갱신되지 않거나, 같은 객체를 참조하는 다른 컴포넌트까지 몰래 바뀐다. TanStack Query 캐시에서 받은 객체를 바꾸면 같은 쿼리를 읽는 다른 화면까지 오염된다.
+
+**효과**: 바꾸려면 새 값을 만들어 setter·`setQueryData` 나 그 객체를 소유한 라이브러리 API 로 넘기게 되어, 변경 지점이 한 곳으로 모인다.
+
+```tsx
+order.total = 0;                                                  // ❌ props 를 직접 바꾼다
+queryClient.setQueryData(key, (previous) => previous && { ...previous, total: 0 }); // ✅
+```
+
+## react/globals
+
+근거: [habits/04 「함수형 원칙」](../habits/04-functional-domain.md#함수형-원칙)
+
+**잡는 것**: 렌더 중에 모듈 변수나 전역 변수에 값을 대입하는 코드.
+
+**왜**: 렌더는 몇 번이고 다시 일어나거나 건너뛰어진다. 렌더 중 전역 대입은 렌더 횟수에 따라 결과가 달라지고, 같은 컴포넌트가 화면에 둘이면 서로의 값을 덮는다.
+
+**효과**: 전역 상태는 이벤트 핸들러나 외부 저장소로만 바뀐다. 컴포넌트마다 다른 값이면 state·ref 로, 앱 전체 값이면 외부 저장소 + `useSyncExternalStore` 로 옮긴다.
+
+```tsx
+let renderCount = 0;
+function OrderClock() { renderCount = renderCount + 1; … }   // ❌
+```
+
+## react/no-array-index-key
+
+근거: 없음(렌더 정확성)
+
+**잡는 것**: `map` 콜백의 인덱스를 `key` 로 쓰거나 key 템플릿에 섞은 것.
+
+**왜**: React 는 key 로 "이 행이 이전 렌더의 어느 행인지"를 판단한다. 인덱스 key 는 항목이 추가·삭제·정렬될 때 다른 항목을 가리켜, 행 안의 입력값·펼침 상태·선택이 엉뚱한 행으로 옮겨 간다.
+
+**효과**: 도메인 식별자가 key 가 된다. 식별자가 없으면 경계 매퍼에서 안정된 키를 만든다. 렌더 중 `crypto.randomUUID()` 는 렌더마다 리마운트되므로 대안이 아니다.
+
+```tsx
+variants.map((variant, index) => <VariantRow key={index} … />)   // ❌
+variants.map((variant) => <VariantRow key={variant.id} … />)     // ✅
+```
+
+## react/jsx-max-depth
+
+근거: [habits/01 §1](../habits/01-component-design.md#1-단일-관심사), [habits/01 §4](../habits/01-component-design.md#4-위에서-아래로-흐르는-코드--jsx--ui)
+
+**잡는 것**: 한 컴포넌트 안에서 JSX 요소가 6단을 넘게 중첩된 것.
+
+**왜**: `max-depth` 는 함수 안의 `if`·루프 중첩만 본다. 컴포넌트 복잡도의 대부분은 JSX 트리에 있다. JSX 가 깊다는 것은 대개 한 컴포넌트가 헤더·필터·표·빈 상태 같은 여러 관심사를 한꺼번에 그린다는 뜻이고, 부모 JSX 로 화면 구조를 읽을 수 없게 된다.
+
+**효과**: 하나의 관심사(섹션, 행, 카드)를 컴포넌트로 빼게 되어, 부모 JSX 가 화면의 목차처럼 읽힌다. 깊이를 줄이려고 이름만 바꾼 래퍼를 만들지는 않는다(얕은 포장). 그건 lint 가 아니라 리뷰가 본다.
+
+```tsx
+<Page><Card><CardContent><Table><TableBody><TableRow><TableCell>…   // ❌ 한 컴포넌트가 다 그린다
+<Page><SampleFilterSection /><SampleTableSection /></Page>          // ✅ 관심사마다 컴포넌트
+```
+
+## complexity
+
+근거: [habits/00 「의도가 안 드러날 때 나타나는 신호 4종」](../habits/00-intent.md#의도가-안-드러날-때-나타나는-신호-4종), [habits/04 「판정은 함수, Record 는 매핑」](../habits/04-functional-domain.md#판정은-함수-record-는-매핑--규칙을-데이터로-박아두지-마라)
+
+**잡는 것**: 함수 하나의 분기 경로(`if`, 삼항, `&&`, `||`, `??`, `case`, `catch`, 루프)가 10 을 넘는 것. 컴포넌트는 JSX 안의 조건부 렌더도 센다.
+
+**왜**: 분기가 많은 함수는 이름에 `And` 를 쓰지 않아도 대개 일을 둘 이상 한다. 분기 수만큼 테스트 경로가 필요한데, 10 을 넘으면 사실상 모든 경로를 테스트하지 않는다.
+
+**효과**: 조건 묶음이 `is*`·`find*` 판정 함수로 빠지고, 같은 값에 대한 긴 `if` 사슬은 유니온을 반환하는 판정 + `Record` 매핑으로 바뀐다. 컴포넌트는 분기를 상위로 올려 분기별 컴포넌트로 나눈다.
+
+```ts
+function formatSampleBadge(sample) { if (…) …; if (… && …) …; if (… || …) … }   // ❌ 판정과 표시가 한 함수에
+const badge = findSampleBadge(sample);                                          // ✅ 판정은 유니온을 반환
+return SAMPLE_BADGE_LABEL[badge];                                               //    표시는 Record
+```
+
+## no-else-return
+
+근거: [habits/04 「함수형 원칙」](../habits/04-functional-domain.md#함수형-원칙)
+
+**잡는 것**: `return` 으로 끝나는 `if` 뒤의 `else`·`else if`.
+
+**왜**: `return` 뒤의 `else` 는 이미 끝난 분기를 한 번 더 감싸 들여쓰기만 늘린다. 조기 반환으로 펴라는 습관의 가장 단순한 형태다.
+
+**효과**: 예외 경우가 위에서 차례로 끝나고 본 흐름이 왼쪽 끝에 남는다. `max-depth`, `unicorn/no-negated-condition` 과 같은 방향이다. 자동 수정된다.
+
+```ts
+if (score > 90) { return "gold"; } else if (score > 70) { return "silver"; } else { return "bronze"; }  // ❌
+if (score > 90) return "gold";                                                                         // ✅
+if (score > 70) return "silver";
+return "bronze";
+```
+
+## react/no-unknown-property
+
+근거: 없음(정확성)
+
+**잡는 것**: `class`, `for`, `onclick` 처럼 React DOM 에 없는 속성.
+
+**왜**: 모르는 속성은 경고만 남기고 조용히 무시되거나 DOM 에 그대로 붙어, 의도한 스타일·이벤트가 동작하지 않는다.
+
+**효과**: `className`, `htmlFor`, `onClick` 같은 React 속성 이름만 쓰게 된다.
+
+```tsx
+<label class="field" for="name">   // ❌
+<label className="field" htmlFor="name">  // ✅
+```
+
+## react/jsx-no-target-blank
+
+근거: 없음(보안 위생)
+
+**잡는 것**: `rel="noreferrer"` 없이 `target="_blank"` 로 여는 외부 링크.
+
+**왜**: 새 탭의 페이지가 `window.opener` 로 원래 탭을 다른 주소로 바꿀 수 있고, referrer 로 현재 URL(샘플·환자 화면 경로 포함)이 외부로 샌다.
+
+**효과**: 외부 링크가 항상 `rel="noreferrer"` 와 함께 열린다.
+
+```tsx
+<a href={url} target="_blank">         // ❌
+<a href={url} target="_blank" rel="noreferrer">  // ✅
+```
+
 ---
 
 # 02 구조
@@ -556,6 +716,22 @@ const LATE_RATE = 3;
 ```
 
 **괜찮은 경우**: 함수 몸통 안에서 파일 아래쪽 상수를 쓰는 것(호출될 때는 이미 선언돼 있다), `function` 선언(호이스팅된다).
+
+## import/no-duplicates
+
+근거: [habits/02 「응집 · 선언 = 의존성 순서」](../habits/02-structure-cohesion.md#응집--선언--의존성-순서)
+
+**잡는 것**: 같은 모듈을 두 줄 이상에서 값으로 import 하는 것. 값 import 와 `import type` 을 따로 두는 것은 허용한다.
+
+**왜**: 한 모듈에서 무엇을 가져오는지가 두 곳에 흩어진다. import 를 덧붙일 때 기존 줄을 못 보고 새 줄을 만들어 자주 생긴다.
+
+**효과**: 모듈당 값 import 한 줄. 자동 수정된다.
+
+```ts
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";                    // ❌
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";  // ✅
+```
 
 ---
 
@@ -607,6 +783,21 @@ cloneElement(child, { selected: true });                  // ❌
 ```tsx
 Children.map(children, (child) => …);   // ❌
 <List items={orders} renderItem={(order) => <OrderRow order={order} />} />  // ✅
+```
+
+## react/static-components
+
+근거: [habits/03 「조합 우선」](../habits/03-composition.md#조합-우선-compound--render-props--명시적-슬롯--prop-드릴링)
+
+**잡는 것**: 렌더 중에 만든 컴포넌트를 변수에 담아 JSX 태그로 쓰는 것(`const Row = toRowComponent(kind); <Row />`).
+
+**왜**: React 는 컴포넌트 함수의 참조로 같은 컴포넌트인지 판단한다. 렌더마다 새 함수면 그 아래 트리가 통째로 리마운트되어 입력 포커스와 state 가 사라진다. `react/no-unstable-nested-components` 는 컴포넌트 안에 선언한 함수만 보고, 함수가 돌려준 컴포넌트는 놓친다.
+
+**효과**: 컴포넌트가 모듈 최상위에서 한 번만 만들어진다. 종류별로 고를 때는 모듈 최상위의 `Record<Kind, ComponentType>` 에서 꺼낸다.
+
+```tsx
+const Row = toRowComponent(kind); return <Row />;   // ❌ 렌더마다 새 컴포넌트
+const Row = ROW_BY_KIND[kind]; return <Row />;      // ✅ 참조가 고정된 컴포넌트
 ```
 
 ---
@@ -754,6 +945,66 @@ steps.reverse();                          // ❌
 const latestFirst = steps.toReversed();   // ✅
 ```
 
+## unicorn/no-immediate-mutation
+
+근거: [habits/04 「함수형 원칙」](../habits/04-functional-domain.md#함수형-원칙)
+
+**잡는 것**: 배열·객체·Map·Set 을 만든 바로 다음 문장에서 `push`·`set`·`add`·속성 대입으로 바꾸는 것.
+
+**왜**: 만들자마자 고칠 거면 처음부터 그 모양으로 만들 수 있다. 빈 그릇을 만들고 채우는 모양은 루프 누산으로 번진다.
+
+**효과**: 값이 선언 한 곳에서 완성된 모양으로 보이고, 그 값이 나중에 바뀌는지 찾지 않아도 된다.
+
+```ts
+const ids = new Set<string>(); ids.add(id);   // ❌
+const ids = new Set([id]);                    // ✅
+```
+
+## array-callback-return
+
+근거: [habits/04 「함수형 원칙」](../habits/04-functional-domain.md#함수형-원칙)
+
+**잡는 것**: `map`·`filter`·`find`·`some`·`every`·`reduce`·`flatMap`·`toSorted` 콜백이 어떤 경로에서 값을 반환하지 않는 것.
+
+**왜**: `map` 콜백의 한 분기에서 `return` 을 빠뜨리면 그 자리가 `undefined` 가 되고, 받는 타입이 넓으면 컴파일러도 모른다. `filter` 에서 빠뜨리면 아무것도 통과하지 않는다.
+
+**효과**: 배열 메서드가 이름대로의 일(변환, 판정, 탐색)만 한다. 일부만 바꾸려면 `filter` 뒤에 `map` 한다.
+
+```ts
+orders.map((order) => { if (order.total > 0) return order.id; });   // ❌ 0 원 주문은 undefined
+orders.filter((order) => order.total > 0).map((order) => order.id); // ✅
+```
+
+## typescript/no-extraneous-class
+
+근거: [habits/04](../habits/04-functional-domain.md)
+
+**잡는 것**: 비어 있거나, 생성자만 있거나, `static` 멤버만 있는 클래스. 데코레이터가 붙은 클래스는 허용한다.
+
+**왜**: 상태도 인스턴스 메서드도 없는 클래스는 함수 묶음을 클래스로 감싼 것이다. 모듈이 이미 네임스페이스 역할을 한다. 쓰지 않는 static 메서드가 번들에서 빠지지 않고, 메서드는 동사 표 검사(`eric/function-verb-whitelist`)를 피해 간다.
+
+**효과**: 함수를 바로 export 하게 된다. 클래스를 풀면 그 함수들이 이름 규칙 검사를 처음 받으므로, 함께 경고가 나올 수 있다.
+
+```ts
+export class OrderUtil { static toLabel(order: Order): string { … } }   // ❌
+export function toOrderLabel(order: Order): string { … }               // ✅
+```
+
+## promise/catch-or-return
+
+근거: [habits/04 「함수형 원칙」](../habits/04-functional-domain.md#함수형-원칙)
+
+**잡는 것**: `return` 하지도 `.catch()` 로 끝내지도 않은 `.then()` 체인.
+
+**왜**: 그 체인이 실패하면 받는 곳이 없다. 사용자는 반응 없는 화면을 보고, 콘솔에는 unhandled rejection 만 남는다.
+
+**효과**: 비동기 실패가 반드시 누군가에게 도착한다. 대개 `async`/`await` + `try`/`catch` 로 다시 쓰게 되어 흐름이 위에서 아래로 읽힌다.
+
+```ts
+copyToClipboard(text).then(() => toast("복사했습니다"));                                         // ❌
+copyToClipboard(text).then(() => toast("복사했습니다")).catch(() => toast("복사하지 못했습니다")); // ✅
+```
+
 ---
 
 # 05 타입
@@ -834,6 +1085,83 @@ function toOrder(response: unknown) {}   // ✅ 검사하고 좁힌다
 ```ts
 /* eslint-disable */                                   // ❌
 // oxlint-disable-next-line no-console -- 사유        // △ 규칙을 적되, 되도록 코드를 고친다
+```
+
+## eqeqeq
+
+근거: [habits/05 「타입 일관성」](../habits/05-types.md#타입-일관성)
+
+**잡는 것**: `==`·`!=`. `x == null` 도 잡는다.
+
+**왜**: `==` 는 타입 변환 규칙을 외워야 결과를 안다(`0 == ""`, `"0" == false` 는 참). API 가 숫자를 문자열로 주는 필드를 `== 0` 으로 비교하면 지금은 동작하지만 왜 동작하는지 아무도 모른다.
+
+**효과**: 비교가 한 가지 뜻으로 읽히고, 타입이 다른 값을 비교하던 자리가 드러나 경계에서 타입을 맞추게 된다.
+`null` 과 `undefined` 를 함께 거를 때는 `@fxts/core` 의 `isNil` 을 써서, 그 의도가 연산자 규칙이 아니라 함수 이름으로 읽히게 한다.
+
+```ts
+if (retryCount == 0)    // ❌ "0" 문자열이어도 참
+if (retryCount === 0)   // ✅
+if (total == null)      // ❌ null 과 undefined 를 함께 거른다는 뜻이 == 규칙에 숨어 있다
+if (isNil(total))       // ✅ import { isNil } from "@fxts/core"
+```
+
+## typescript/no-non-null-asserted-optional-chain
+
+근거: [habits/05 「타입 일관성」](../habits/05-types.md#타입-일관성)
+
+**잡는 것**: `orders?.[0]!` 처럼 옵셔널 체인 결과에 붙인 `!`.
+
+**왜**: `?.` 로 없을 수 있다고 말해 놓고 `!` 로 반드시 있다고 말한다. 둘 중 하나는 거짓이고, 없으면 `!` 가 지운 `undefined` 가 그대로 흘러간다.
+
+**효과**: 없을 수 있는지에 대한 판단이 한 가지로 정해진다. 반드시 있으면 조달 구조가 보장하게 하고, 없을 수 있으면 분기한다.
+
+```ts
+const first = orders?.[0]!;   // ❌
+```
+
+## typescript/no-unsafe-function-type
+
+근거: [habits/05 「타입 일관성」](../habits/05-types.md#타입-일관성)
+
+**잡는 것**: 타입 자리에 쓴 `Function`.
+
+**왜**: `Function` 은 인자도 반환도 모르는 함수라 `any` 와 같다. 아무 인자로 불러도, 반환값을 아무렇게나 써도 통과한다.
+
+**효과**: 함수 타입이 `(order: Order) => string` 처럼 시그니처를 드러낸다.
+
+```ts
+type OrderCallback = Function;                  // ❌
+type OrderCallback = (order: Order) => void;    // ✅
+```
+
+## typescript/no-wrapper-object-types
+
+근거: [habits/05 「타입 일관성」](../habits/05-types.md#타입-일관성)
+
+**잡는 것**: 타입 자리에 쓴 `String`·`Number`·`Boolean`·`Object`·`Symbol`·`BigInt`.
+
+**왜**: 대문자 타입은 원시값이 아니라 래퍼 객체 타입이다. `new String("a")` 같은 객체도 받아들이고, 원시 타입과 섞으면 비교가 어긋난다.
+
+**효과**: 원시값은 `string`·`number`·`boolean` 으로 쓴다. 자동 수정된다.
+
+```ts
+type OrderLabel = String;   // ❌
+type OrderLabel = string;   // ✅
+```
+
+## typescript/prefer-function-type
+
+근거: [habits/05 「타입 일관성」](../habits/05-types.md#타입-일관성)
+
+**잡는 것**: 호출 시그니처 하나만 있는 interface·타입 리터럴.
+
+**왜**: `interface OrderFormatter { (order: Order): string }` 은 함수 타입을 객체 문법으로 감싼 것이라, 읽는 사람이 함수인지 객체인지 한 번 더 따져야 한다.
+
+**효과**: 함수 타입이 한눈에 함수로 읽힌다. `typescript/consistent-type-definitions` 는 객체 타입에만 interface 를 요구하므로 둘은 부딪히지 않는다.
+
+```ts
+interface OrderFormatter { (order: Order): string }   // ❌
+type OrderFormatter = (order: Order) => string;      // ✅
 ```
 
 ---
@@ -1118,6 +1446,67 @@ await expect(saveOrder()).rejects.toThrow("권한");  // ✅
 ```ts
 expect(() => parseOrder("{")).toThrow();                  // ❌
 expect(() => parseOrder("{")).toThrow("주문 형식");        // ✅
+```
+
+## vitest/no-disabled-tests
+
+**잡는 것**: `it.skip`, `describe.skip`, `xit`, `test.todo` 없이 비워 둔 테스트처럼 꺼 둔 테스트.
+
+**왜**: 꺼 둔 테스트는 아무도 다시 켜지 않는다. 테스트 수는 그대로 보이는데 그 기능은 검증되지 않는다.
+
+**효과**: 깨진 테스트는 고치거나 지운다. 꺼 둔 채로 머지되지 않는다.
+
+```ts
+it.skip("행을 누르면 상세가 열린다", …);   // ❌
+```
+
+## vitest/no-focused-tests
+
+**잡는 것**: `it.only`, `describe.only`.
+
+**왜**: 커밋되면 그 파일의 나머지 테스트가 CI 에서 돌지 않는다. 결과는 초록불이라 아무도 모른다.
+
+**효과**: 로컬에서 하나만 돌리려고 붙인 `.only` 가 머지되지 않는다.
+
+```ts
+it.only("하나만 도는 테스트", …);   // ❌
+```
+
+## vitest/no-conditional-tests
+
+**잡는 것**: `if`·`switch` 안에서 선언한 `it`·`describe`.
+
+**왜**: 조건이 거짓이면 테스트가 아예 등록되지 않는다. 테스트가 사라져도 결과는 통과로 보인다.
+
+**효과**: 모든 테스트가 항상 등록된다. 환경에 따라 달라야 하면 `it.each` 나 별도 파일로 나눈다.
+
+```ts
+if (isFeatureOn) { it("새 화면을 보여 준다", …); }   // ❌
+```
+
+## vitest/no-test-return-statement
+
+**잡는 것**: 테스트 본문의 `return`.
+
+**왜**: 반환한 값이 Promise 가 아니면 의미가 없고, Promise 여도 `await` 로 쓰는 것과 달리 중간 단언의 실패 위치가 흐려진다.
+
+**효과**: 비동기 단언은 `await` 로 쓰고, 테스트 본문은 단언만 남는다.
+
+```ts
+it("목록을 보여 준다", () => { return expect(…).toBeInTheDocument(); });   // ❌
+it("목록을 보여 준다", async () => { expect(await screen.findByRole("list")).toBeInTheDocument(); });   // ✅
+```
+
+## vitest/max-nested-describe
+
+**잡는 것**: 5단을 넘게 중첩한 `describe`.
+
+**왜**: 중첩이 깊으면 테스트 이름이 길어지고, `beforeEach` 가 어느 단에서 무엇을 준비했는지 따라가기 어렵다.
+
+**효과**: 시나리오를 평평하게 나누거나 `it.each` 로 접는다.
+
+```ts
+describe("a", () => describe("b", () => describe("c", () => describe("d", () => describe("e", () => describe("f", …))))));   // ❌
 ```
 
 ## testing-library/no-node-access

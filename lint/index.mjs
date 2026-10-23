@@ -78,6 +78,12 @@ const TEST_RULES = {
   "testing-library/no-unnecessary-act": "error",
   "testing-library/no-manual-cleanup": "error",
   "testing-library/no-debugging-utils": "error",
+  // 꺼 두거나 하나만 돌리는 테스트가 커밋되면 나머지가 CI 에서 조용히 빠진다
+  "vitest/no-disabled-tests": "error",
+  "vitest/no-focused-tests": "error",
+  "vitest/no-conditional-tests": "error",
+  "vitest/no-test-return-statement": "error",
+  "vitest/max-nested-describe": "error",
 };
 
 const DISCOURAGED_SYNTAX = [
@@ -140,8 +146,8 @@ export function createOxlintConfig({
   ];
 
   return {
-    // plugins 를 적으면 oxlint 기본 묶음(typescript·unicorn·oxc)을 덮으므로 기본 묶음에 react 만 더한다
-    plugins: ["typescript", "unicorn", "oxc", "react", "vitest"],
+    // plugins 를 적으면 oxlint 기본 묶음(typescript·unicorn·oxc)을 덮으므로 기본 묶음에 필요한 플러그인을 더한다
+    plugins: ["typescript", "unicorn", "oxc", "react", "vitest", "import", "promise"],
     jsPlugins: [PLUGIN_PATH, TESTING_LIBRARY_PLUGIN_PATH, TANSTACK_QUERY_PLUGIN_PATH],
     rules: {
       // ── habits/05 타입 위생 ─────────────────────────────
@@ -153,6 +159,12 @@ export function createOxlintConfig({
       "unicorn/no-abusive-eslint-disable": "error",
       // 없음은 null 하나로 표현한다 (habits/00) — undefined 를 일부러 넘기거나 반환하지 않는다
       "unicorn/no-useless-undefined": "error",
+      "typescript/no-non-null-asserted-optional-chain": "error",
+      "typescript/no-unsafe-function-type": "error",
+      "typescript/no-wrapper-object-types": "error",
+      "typescript/prefer-function-type": "error",
+      // == 는 타입 변환 규칙을 외워야 결과를 안다. null 과 undefined 를 함께 거를 때도 == null 대신 @fxts/core 의 isNil 을 쓴다 (habits/05)
+      eqeqeq: ["error", "always"],
 
       // ── habits/04 함수형 · 합타입 ────────────────────────
       "eric/explicit-return-type": "error",
@@ -167,6 +179,12 @@ export function createOxlintConfig({
       "oxc/no-accumulating-spread": "error",
       "unicorn/no-array-sort": "error",
       "unicorn/no-array-reverse": "error",
+      // 만들자마자 바꾸지 말고 처음부터 완성된 모양으로 만든다 (habits/04 불변 기본)
+      "unicorn/no-immediate-mutation": "error",
+      "array-callback-return": "error",
+      // static 만 있거나 비어 있는 클래스는 함수 묶음을 감싼 것이다. static 만 있는 클래스도 이 규칙이 잡는다 (habits/04 OOP 상용구 배제)
+      "typescript/no-extraneous-class": ["error", { allowWithDecorator: true }],
+      "promise/catch-or-return": "error",
 
       // ── habits/01 컴포넌트 설계 ──────────────────────────
       "typescript/consistent-type-definitions": ["error", "interface"],
@@ -182,7 +200,9 @@ export function createOxlintConfig({
       "@tanstack/query/no-unstable-deps": "error",
       "@tanstack/query/infinite-query-property-order": "error",
       "@tanstack/query/mutation-property-order": "error",
-      "react/function-component-definition": ["error", { namedComponents: "function-declaration", unnamedComponents: "arrow-function" }],
+      // 규칙은 X.Loading = … 같은 정적 컴포넌트와 memo·forwardRef 인자를 이름 없는 컴포넌트로 본다.
+      // 여기를 화살표로 쓰면 DevTools 와 에러 스택에서 컴포넌트 이름이 사라지므로 function 표현식으로 쓴다
+      "react/function-component-definition": ["error", { namedComponents: "function-declaration", unnamedComponents: "function-expression" }],
       // 렌더할 때마다 새 컴포넌트가 되어 리마운트된다. ErrorBoundary fallback 같은 render prop 은 슬롯이라 허용한다 (habits/03)
       "react/no-unstable-nested-components": ["error", { allowAsProps: true }],
       // children 을 뜯어 고치지 말고 슬롯·컴파운드로 조합한다 (habits/03)
@@ -191,9 +211,24 @@ export function createOxlintConfig({
       // 렌더마다 새 참조가 되어 memo·deps·context 소비처가 매번 바뀐 것으로 본다
       "react/no-object-type-as-default-prop": "error",
       "react/jsx-no-constructed-context-values": "error",
+      // 렌더는 같은 입력에 같은 결과를 내야 한다(React Compiler 계열 규칙, 컴파일러 없이도 위반은 버그다) (habits/01 §6, habits/04)
+      "react/set-state-in-effect": "error",
+      "react/purity": "error",
+      "react/immutability": "error",
+      "react/static-components": "error",
+      "react/globals": "error",
+      // 인덱스 key 는 추가·정렬 때 다른 항목을 가리켜 행 상태가 엉뚱한 행으로 옮겨 간다
+      "react/no-array-index-key": "error",
+      "react/no-unknown-property": "error",
+      "react/jsx-no-target-blank": "error",
       // 분기는 조기 반환으로 편다 — 중첩이 깊으면 분기를 상위로 끌어올리거나 쪼갤 신호
       "max-depth": ["error", 3],
       "max-params": ["error", 4],
+      "no-else-return": ["error", { allowElseIf: false }],
+      // 분기 경로가 많으면 함수가 일을 둘 이상 한다. 판정을 이름 붙은 함수로 뺀다 (habits/00 신호표, habits/04)
+      complexity: ["error", 10],
+      // JSX 가 깊으면 한 컴포넌트가 여러 관심사를 그린다. 관심사 컴포넌트로 쪼갠다 (habits/01 §1)
+      "react/jsx-max-depth": ["error", { max: 6 }],
       "unicorn/no-negated-condition": "error",
       // 바깥 스코프를 쓰지 않는 함수는 모듈 최상위로 뺀다(렌더마다 새로 만들지 않고, 순수함을 위치로 드러낸다)
       "unicorn/consistent-function-scoping": "error",
@@ -201,6 +236,7 @@ export function createOxlintConfig({
       // ── habits/02 구조 · 선언 순서 ───────────────────────
       // variables: false — 함수 몸통 안에서 아래 선언을 참조하는 건 TDZ 에 안 걸리므로 허용(styled·className 을 파일 아래에 두는 배치)
       "no-use-before-define": ["error", { functions: false, classes: true, variables: false, typedefs: true, ignoreTypeReferences: false }],
+      "import/no-duplicates": "error",
 
       // ── habits/00 이름 ──────────────────────────────────
       "unicorn/filename-case": ["error", { case: "kebabCase" }],

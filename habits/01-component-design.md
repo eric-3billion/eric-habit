@@ -77,7 +77,7 @@ function PostDialogBranch({ postId }) {
 ## 3. Compound Pattern + Suspense
 
 - Suspense는 "로딩 UI 도구"가 아니라 **성공 케이스만 신경쓰게 해주는 경계**. 경계 안은 "데이터가 항상 준비됨"으로 가정 → 옵셔널 체이닝(`?.`) 전염 차단.
-- `Component.loading` / `Component.error`를 **정적 프로퍼티로 붙여** 성공·로딩·에러 UI를 한 파일에 응집.
+- `Component.loading` / `Component.error`를 **정적 프로퍼티로 붙여** 성공·로딩·에러 UI를 한 파일에 응집. 정적 프로퍼티는 이름 있는 `function` 표현식으로 쓴다 — 화살표로 쓰면 이름이 추론되지 않아 DevTools·에러 스택에 `Anonymous` 로 찍힌다.
 - **조회는 `useSuspenseQuery` 가 기본이다. `useQuery` 는 조건부 조회가 꼭 필요할 때만** 쓴다 — `enabled`·`skipToken` 으로 조회를 끄고 켜야 하는 경우(검색어가 비었을 때, 선택값이 아직 없을 때). suspense 쿼리는 끌 수 없기 때문이다. 단 그 전에 suspense 로 풀 수 있는지 먼저 본다:
   - 조건을 위에서 판정해 **쿼리를 쓰는 컴포넌트 자체를 조건부로 렌더**한다(§2 분기는 상위로).
   - 앞 결과가 필요한 의존 쿼리는 한 컴포넌트 안에서 순서대로 부르면 된다 — suspense 는 원래 직렬로 조회한다.
@@ -98,8 +98,8 @@ function VariantForm({ variantId, onClose }: VariantFormProps) {
   const { data: variant } = useSuspenseQuery(variantQueries.detail(variantId)); // 항상 존재 가정 → ?. 없음
   return <Form variant={variant} onClose={onClose} />;
 }
-VariantForm.loading = () => <FormSkeleton />;
-VariantForm.error = ({ resetError }: { resetError: () => void }) => <FormError onRetry={resetError} />;
+VariantForm.loading = function VariantFormLoading() { return <FormSkeleton />; };
+VariantForm.error = function VariantFormError({ resetError }: { resetError: () => void }) { return <FormError onRetry={resetError} />; };
 
 // 사용부 — 조립이 JSX에 드러남
 <ErrorBoundary fallback={({ resetError }) => <VariantForm.error resetError={resetError} />}>

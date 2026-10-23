@@ -144,8 +144,12 @@ export function OrderSelection({ orderId }: { orderId: string }): ReactNode {
 export function OrderForm({ orderId }: { orderId: string }): ReactNode {
   return <form>{orderId}</form>;
 }
-OrderForm.loading = (): ReactNode => <p>로딩</p>;
-OrderForm.error = ({ resetError }: { resetError: () => void }): ReactNode => <button type="button" onClick={resetError}>재시도</button>;
+OrderForm.loading = function OrderFormLoading(): ReactNode {
+  return <p>로딩</p>;
+};
+OrderForm.error = function OrderFormError({ resetError }: { resetError: () => void }): ReactNode {
+  return <button type="button" onClick={resetError}>재시도</button>;
+};
 
 export function getStatusBadge(status: Status): ReactNode {
   return status.type === "error" ? <span>{status.message}</span> : null;

@@ -34,4 +34,35 @@ describe("주문 목록", () => {
   it("단언이 없다", () => { /* expect: vitest/expect-expect */
     render(<ul />);
   });
+  it.skip("꺼 둔 테스트", () => { /* expect: vitest/no-disabled-tests */
+    expect(screen.getByRole("list")).toBeInTheDocument();
+  });
+
+  it.only("하나만 도는 테스트", () => { /* expect: vitest/no-focused-tests */
+    expect(screen.getByRole("list")).toBeInTheDocument();
+  });
+
+  it("값을 반환하는 테스트", () => {
+    return expect(screen.getByRole("list")).toBeInTheDocument(); /* expect: vitest/no-test-return-statement */
+  });
+
+  if (screen.queryByRole("row") !== null) { /* expect: vitest/no-conditional-tests */
+    it("조건 안에서 선언한 테스트", () => {
+      expect(screen.getByRole("row")).toBeInTheDocument();
+    });
+  }
+
+  describe("1", () => {
+    describe("2", () => {
+      describe("3", () => {
+        describe("4", () => {
+          describe("5", () => { /* expect: vitest/max-nested-describe */
+            it("깊다", () => {
+              expect(screen.getByRole("list")).toBeInTheDocument();
+            });
+          });
+        });
+      });
+    });
+  });
 });

@@ -108,7 +108,7 @@ oxlint -c oxlint.config.mjs src
 | 33 | 02 | 바깥 스코프를 안 쓰는데 함수 안에 선언한 함수 | [`unicorn/consistent-function-scoping`](RULES.md#unicornconsistent-function-scoping) |
 | 34 | 04 | `forEach` | [`unicorn/no-array-for-each`](RULES.md#unicornno-array-for-each) |
 | 35 | 00 | `const [open, setVisible]` 처럼 짝이 안 맞는 `useState` 이름 | [`react/hook-use-state`](RULES.md#reacthook-use-state) |
-| 36 | 01 §7 | 화살표 함수로 선언한 이름 있는 컴포넌트 | [`react/function-component-definition`](RULES.md#reactfunction-component-definition) |
+| 36 | 01 §7 | 화살표 함수로 선언한 이름 있는 컴포넌트, 화살표로 쓴 `X.loading` 같은 정적 컴포넌트 | [`react/function-component-definition`](RULES.md#reactfunction-component-definition) |
 | 37 | 03 | 컴포넌트 안에서 선언한 컴포넌트(렌더마다 리마운트) | [`react/no-unstable-nested-components`](RULES.md#reactno-unstable-nested-components) |
 | 38 | 04 | 원본을 바꾸는 `sort()`·`reverse()` | [`unicorn/no-array-sort`](RULES.md#unicornno-array-sort), [`unicorn/no-array-reverse`](RULES.md#unicornno-array-reverse) |
 | 39 | 05 | `@ts-ignore`·`@ts-expect-error`·`@ts-nocheck` (테스트는 설명이 붙은 `@ts-expect-error` 허용) | [`typescript/ban-ts-comment`](RULES.md#typescriptban-ts-comment) |
@@ -121,8 +121,25 @@ oxlint -c oxlint.config.mjs src
 | 46 | - | `console.warn`·`console.error` 가 아닌 `console.*` | [`no-console`](RULES.md#no-console) |
 | 47 | 04 | `reduce` 안에서 누적값을 매번 펼치기(O(n²)) | [`oxc/no-accumulating-spread`](RULES.md#oxcno-accumulating-spread) |
 | 48 | 01 §3 | `queryKey` 에 빠진 `queryFn` 의존값, 인라인 쿼리 옵션, 결과 객체 rest 구조분해 등 | [`@tanstack/query/*`](RULES.md#tanstackqueryexhaustive-deps) 7개 |
-| 49 | 06 | 테스트 안의 분기·단언 없는 테스트·메시지 없는 `toThrow()` 등 | [`vitest/*`](RULES.md#vitestno-conditional-expect) 8개 |
+| 49 | 06 | 테스트 안의 분기·단언 없는 테스트·메시지 없는 `toThrow()`·꺼 둔 테스트·`.only` 등 | [`vitest/*`](RULES.md#vitestno-conditional-expect) 13개 |
 | 50 | 06 | DOM 구조 접근, `render` 결과 쿼리, `fireEvent`, 비동기 쿼리 미대기 등 | [`testing-library/*`](RULES.md#testing-libraryno-node-access) 14개 |
+| 51 | 01 §6 | effect 안에서 바로 부르는 `setState`(거울 state) | [`react/set-state-in-effect`](RULES.md#reactset-state-in-effect) |
+| 52 | 04 | 렌더 중의 `Date.now()`·`Math.random()` 같은 매번 다른 값 | [`react/purity`](RULES.md#reactpurity) |
+| 53 | 04 | props·state·훅이 돌려준 값을 직접 바꾸기 | [`react/immutability`](RULES.md#reactimmutability) |
+| 54 | 04 | 렌더 중에 바깥 변수에 대입 | [`react/globals`](RULES.md#reactglobals) |
+| 55 | 03 | 렌더 중에 만든 컴포넌트를 태그로 쓰기 | [`react/static-components`](RULES.md#reactstatic-components) |
+| 56 | - | `map` 인덱스를 `key` 로 쓰기 | [`react/no-array-index-key`](RULES.md#reactno-array-index-key) |
+| 57 | 01 §1 | 여섯 단을 넘는 JSX 중첩 | [`react/jsx-max-depth`](RULES.md#reactjsx-max-depth) |
+| 58 | 00 | 분기 경로가 10개를 넘는 함수 | [`complexity`](RULES.md#complexity) |
+| 59 | 04 | `return` 뒤의 `else` | [`no-else-return`](RULES.md#no-else-return) |
+| 60 | 05 | `==`·`!=`(`== null` 대신 `isNil`) | [`eqeqeq`](RULES.md#eqeqeq) |
+| 61 | 04 | 만든 바로 다음 줄에서 값 바꾸기 | [`unicorn/no-immediate-mutation`](RULES.md#unicornno-immediate-mutation) |
+| 62 | 04 | 어떤 경로에서 값을 반환하지 않는 `map`·`filter` 콜백 | [`array-callback-return`](RULES.md#array-callback-return) |
+| 63 | 04 | `static` 만 있거나 비어 있는 클래스 | [`typescript/no-extraneous-class`](RULES.md#typescriptno-extraneous-class) |
+| 64 | 04 | `return` 도 `.catch()` 도 없는 `.then()` 체인 | [`promise/catch-or-return`](RULES.md#promisecatch-or-return) |
+| 65 | 02 | 같은 모듈의 중복 import | [`import/no-duplicates`](RULES.md#importno-duplicates) |
+| 66 | 05 | `a?.b!`, `Function`·`String` 같은 타입, 호출 시그니처 하나뿐인 interface | [`typescript/no-non-null-asserted-optional-chain`](RULES.md#typescriptno-non-null-asserted-optional-chain), [`typescript/no-unsafe-function-type`](RULES.md#typescriptno-unsafe-function-type), [`typescript/no-wrapper-object-types`](RULES.md#typescriptno-wrapper-object-types), [`typescript/prefer-function-type`](RULES.md#typescriptprefer-function-type) |
+| 67 | - | DOM 에 없는 속성, `rel="noreferrer"` 없는 `target="_blank"` | [`react/no-unknown-property`](RULES.md#reactno-unknown-property), [`react/jsx-no-target-blank`](RULES.md#reactjsx-no-target-blank) |
 
 규칙마다 **잡는 것·왜·효과·예시**는 [RULES.md](RULES.md) 에 규칙 id 하나에 섹션 하나로 있다. lint 경고도 그 섹션으로 링크된다.
 
